@@ -1,6 +1,5 @@
 package application
 
-import commands.client.*
 import database.DatabaseInterface
 import exceptions.KeyboardInterruptException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -11,6 +10,8 @@ import lib.BufferedReaderWithQueueOfStreams
 import lib.Localization
 import lib.collections.CircledStorage
 import network.client.DatabaseCommand
+import org.example.client.commands.*
+import org.example.client.commands.core.Command
 import java.io.InputStreamReader
 
 class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatcher) {
@@ -39,7 +40,9 @@ class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatch
         DatabaseCommand.ADD_IF_MAX to AddIfMaxCommand(database),
         DatabaseCommand.HISTORY to PrintHistoryCommand(this),
         DatabaseCommand.MAX_BY_FULL_NAME to MaxByFullNameCommand(database),
-        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to RemoveAllByPostalAddressCommand(database),
+        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to RemoveAllByPostalAddressCommand(
+            database
+        ),
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to SumOfAnnualTurnoverCommand(database)
     )
 

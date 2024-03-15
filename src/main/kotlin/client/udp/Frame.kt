@@ -1,6 +1,8 @@
-package network.client.udp
+package client.udp
 
-import network.client.DatabaseCommand
+import kotlinx.serialization.Serializable
+import org.example.client.udp.CommandWithArgument
 import server.AuthorizationInfo
 
-data class Frame(val authorization: AuthorizationInfo, val command: DatabaseCommand, val value: Any?)
+@Serializable
+data class Frame(val authorization: AuthorizationInfo, val value: CommandWithArgument)

@@ -1,5 +1,6 @@
 package database
 
+import kotlinx.serialization.Serializable
 import lib.CSV.CSVStreamWriter
 import lib.WritableToCSVStream
 
@@ -7,6 +8,7 @@ import lib.WritableToCSVStream
  * @param z    can not be null
  * @param name nullable, length can not be greater than 933
  */
+@Serializable
 data class Location(val x: Double?, val y: Float?, val z: Long?, val name: String?) : WritableToCSVStream {
     fun validate() {
         requireNotNull(z) { "OrganizationDatabase.Location() z must not be null" }

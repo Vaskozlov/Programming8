@@ -3,7 +3,7 @@ package application
 import database.Address
 import database.Organization
 import lib.BufferedReaderWithQueueOfStreams
-import java.time.LocalDate
+import org.example.lib.getLocalDate
 
 object OrganizationBuilder {
     fun constructOrganization(reader: BufferedReaderWithQueueOfStreams, prototypedFromAnother: Boolean): Organization {
@@ -13,7 +13,7 @@ object OrganizationBuilder {
             null,
             organizationBuilder.getName(),
             organizationBuilder.getCoordinates(),
-            LocalDate.now(),
+            getLocalDate(),
             organizationBuilder.getAnnualTurnover(),
             organizationBuilder.getFullName(),
             organizationBuilder.getEmployeesCount(),

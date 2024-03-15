@@ -1,11 +1,13 @@
 package database
 
 import exceptions.IllegalArgumentsForOrganizationException
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.Serializable
 import lib.CSV.CSVStreamWriter
 import lib.WritableToCSVStream
 import lib.collections.ImmutablePair
-import java.time.LocalDate
 
+@Serializable
 data class Organization(
     var id: Int?,
     var name: String?,

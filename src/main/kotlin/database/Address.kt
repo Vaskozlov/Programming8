@@ -1,5 +1,6 @@
 package database
 
+import kotlinx.serialization.Serializable
 import lib.CSV.CSVStreamWriter
 import lib.WritableToCSVStream
 
@@ -7,6 +8,7 @@ import lib.WritableToCSVStream
  * @param zipCode nullable, must contain at least 3 character
  * @param town    can not be null
  */
+@Serializable
 class Address(val zipCode: String?, val town: Location?) : WritableToCSVStream {
     fun validate() {
         require(!(zipCode != null && zipCode.length < 3)) { "Invalid zip code" }

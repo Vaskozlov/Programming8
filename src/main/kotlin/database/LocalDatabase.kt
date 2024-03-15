@@ -1,9 +1,11 @@
 package database
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import exceptions.OrganizationAlreadyPresentedException
 import exceptions.OrganizationNotFoundException
 import kotlinx.coroutines.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import lib.CSV.CSVStreamLikeReader
 import lib.CSV.CSVStreamWriter
 import lib.ExecutionStatus
@@ -11,17 +13,13 @@ import lib.IOHelper
 import lib.IdFactory
 import lib.Localization
 import lib.collections.ImmutablePair
-import lib.json.ObjectMapperWithModules
-import lib.json.prettyWrite
-import lib.json.write
+import org.example.lib.getLocalDate
 import java.io.FileWriter
 import java.io.IOException
 import java.io.StringWriter
 import java.nio.file.Path
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 import kotlin.io.path.absolutePathString
 import kotlin.math.max
 
@@ -31,8 +29,16 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
     private val databaseScope = CoroutineScope(dispatcher)
 
     private val initializationDate: LocalDateTime = LocalDateTime.now()
-    private val organizations = LinkedList<Organization>()
+    private val organizations = mutableListOf<Organization>()
     private val storedOrganizations = HashSet<ImmutablePair<String?, OrganizationType?>>()
+
+    companion object {
+        @OptIn(ExperimentalSerializationApi::class)
+        val prettyJson = Json {
+            prettyPrint = true
+            prettyPrintIndent = "  "
+        }
+    }
 
     init {
         runBlocking { loadFromFile(path.absolutePathString()) }
@@ -56,7 +62,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
 
     override suspend fun add(organization: Organization) {
         organization.id = organization.id ?: idFactory.nextId
-        organization.creationDate = LocalDate.now()
+        organization.creationDate = getLocalDate()
 
         if (isOrganizationAlreadyPresented(organization)) {
             throw OrganizationAlreadyPresentedException()
@@ -196,14 +202,8 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         }
     }
 
-    override suspend fun toYaml(): String {
-        val objectMapper = ObjectMapperWithModules(YAMLFactory())
-        return objectMapper.write(organizations)
-    }
-
     override suspend fun toJson(): String {
-        val objectMapper = ObjectMapperWithModules()
-        return objectMapper.prettyWrite(organizations)
+        return prettyJson.encodeToString(organizations)
     }
 
     private fun completeModification(organization: Organization, updatedOrganization: Organization) {

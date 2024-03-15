@@ -13,7 +13,7 @@ class CSVStreamLikeReader(data: String) {
     private data class ReadResult(val elem: String, val lineIndex: Int, val column: Int)
 
     val isEndOfLine: Boolean
-        get() = column >= data[lineIndex].size
+        get() = lineIndex >= data.size || column >= data[lineIndex].size
 
     val isEndOfStream: Boolean
         get() = lineIndex + (if (isEndOfLine) 1 else 0) >= data.size

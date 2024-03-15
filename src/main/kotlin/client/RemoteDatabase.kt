@@ -1,31 +1,43 @@
 package client
 
+import client.udp.ResultFrame
 import database.Address
+import database.DatabaseInterface
 import database.NetworkCode
 import database.Organization
-import database.DatabaseInterface
 import exceptions.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
-import lib.json.read
 import network.client.DatabaseCommand
-import java.net.InetAddress
+import server.AuthorizationInfo
+import java.net.InetSocketAddress
 
-class RemoteDatabase(address: InetAddress, port: Int, dispatcher: CoroutineDispatcher = Dispatchers.IO) :
-    DatabaseInterface {
-    private val commandSender = CommandSender(address, port)
+class RemoteDatabase(
+    authorizationInfo: AuthorizationInfo,
+    address: InetSocketAddress,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : DatabaseInterface {
+    private val commandSender = CommandSender(authorizationInfo, address)
     private val databaseScope = CoroutineScope(dispatcher)
 
-    constructor(address: String, port: Int)
-            : this(InetAddress.getByName(address), port)
+    constructor(authorizationInfo: AuthorizationInfo, address: String, port: Int)
+            : this(authorizationInfo, InetSocketAddress(address, port))
 
-    private suspend fun sendCommandAndReceiveResult(command: DatabaseCommand, argument: Any?): Result<Any?> {
+    private suspend fun sendCommandAndReceiveResult(
+        command: DatabaseCommand,
+        argument: JsonElement
+    ): Result<JsonElement> {
         commandSender.sendCommand(command, argument)
-        val json = commandSender.receiveJson()
-        val code = NetworkCode.valueOf(json.getNode("code").asText())
+        val json = commandSender.network.receiveStringInPackets()
+        val frame = Json.decodeFromJsonElement<ResultFrame>(json.jsonNodeRoot)
+        val code = frame.code
 
         return when (code) {
-            NetworkCode.SUCCESS -> Result.success(commandSender.objectMapperWithModules.read(json.getNode("value")))
+            NetworkCode.SUCCESS -> Result.success(frame.value)
             NetworkCode.NOT_SUPPOERTED_COMMAND -> Result.failure(CommandNotExistsException())
             NetworkCode.NOT_A_MAXIMUM_ORGANIZATION -> Result.failure(NotMaximumOrganizationException())
             NetworkCode.ORGANIZATION_ALREADY_EXISTS -> Result.failure(OrganizationAlreadyPresentedException())
@@ -39,82 +51,91 @@ class RemoteDatabase(address: InetAddress, port: Int, dispatcher: CoroutineDispa
     }
 
     override suspend fun getInfo(): String {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.INFO, null)
+        val result = sendCommandAndReceiveResult(DatabaseCommand.INFO, Json.encodeToJsonElement(null as Int?))
         result.onFailure { throw it }
-        return result.getOrNull()!! as String
+        return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
     override suspend fun getSumOfAnnualTurnover(): Double {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, null)
+        val result =
+            sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, Json.encodeToJsonElement(null as Int?))
         result.onFailure { throw it }
-        return result.getOrNull()!! as Double
+        return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
     override suspend fun maxByFullName(): Organization? {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.MAX_BY_FULL_NAME, null)
+        val result =
+            sendCommandAndReceiveResult(DatabaseCommand.MAX_BY_FULL_NAME, Json.encodeToJsonElement(null as Int?))
 
         if (result.isSuccess) {
-            return result.getOrNull() as Organization
+            return Json.decodeFromJsonElement(result.getOrNull()!!)
         }
 
         return null
     }
 
     override suspend fun add(organization: Organization) {
-        sendCommandAndReceiveResult(DatabaseCommand.ADD, organization).onFailure { throw it }
+        sendCommandAndReceiveResult(DatabaseCommand.ADD, Json.encodeToJsonElement(organization)).onFailure { throw it }
     }
 
     override suspend fun addIfMax(newOrganization: Organization): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.ADD_IF_MAX, newOrganization)
+        val result = sendCommandAndReceiveResult(DatabaseCommand.ADD_IF_MAX, Json.encodeToJsonElement(newOrganization))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 
     override suspend fun modifyOrganization(updatedOrganization: Organization) {
-        sendCommandAndReceiveResult(DatabaseCommand.UPDATE, updatedOrganization).onFailure { throw it }
+        sendCommandAndReceiveResult(
+            DatabaseCommand.UPDATE,
+            Json.encodeToJsonElement(updatedOrganization)
+        ).onFailure { throw it }
     }
 
     override suspend fun removeById(id: Int): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_BY_ID, id)
+        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_BY_ID, Json.encodeToJsonElement(id))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 
     override suspend fun removeAllByPostalAddress(address: Address) {
-        sendCommandAndReceiveResult(DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS, address).onFailure { throw it }
+        sendCommandAndReceiveResult(
+            DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS,
+            Json.encodeToJsonElement(address)
+        ).onFailure { throw it }
     }
 
     override suspend fun removeHead(): Organization? {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_HEAD, null)
+        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_HEAD, Json.encodeToJsonElement(null as Int?))
 
         if (result.isSuccess) {
-            return result.getOrNull() as Organization
+            return Json.decodeFromJsonElement(result.getOrNull()!!)
         }
 
         return null
     }
 
     override suspend fun clear() {
-        sendCommandAndReceiveResult(DatabaseCommand.CLEAR, null).onFailure { throw it }
+        sendCommandAndReceiveResult(
+            DatabaseCommand.CLEAR,
+            Json.encodeToJsonElement(null as Int?)
+        ).onFailure { throw it }
     }
 
     override suspend fun save(path: String): Deferred<ExecutionStatus> {
         return databaseScope.async {
-            val result = sendCommandAndReceiveResult(DatabaseCommand.SAVE, path)
+            val result = sendCommandAndReceiveResult(DatabaseCommand.SAVE, Json.encodeToJsonElement(path))
             ExecutionStatus.getByValue(result.isSuccess)
         }
     }
 
     override suspend fun loadFromFile(path: String): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.READ, path)
+        val result = sendCommandAndReceiveResult(DatabaseCommand.READ, Json.encodeToJsonElement(path))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 
     private suspend fun sendShowCommand(format: String): String {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.SHOW, format)
+        val result = sendCommandAndReceiveResult(DatabaseCommand.SHOW, Json.encodeToJsonElement(format))
         result.onFailure { throw it }
-        return result.getOrNull() as String
+        return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
-
-    override suspend fun toYaml() = sendShowCommand("yaml")
 
     override suspend fun toJson() = sendShowCommand("json")
 

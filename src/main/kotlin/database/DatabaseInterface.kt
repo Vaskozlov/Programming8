@@ -28,8 +28,6 @@ interface DatabaseInterface {
 
     suspend fun loadFromFile(path: String): ExecutionStatus
 
-    suspend fun toYaml(): String
-
     suspend fun toJson(): String
 
     suspend fun toCSV(): String

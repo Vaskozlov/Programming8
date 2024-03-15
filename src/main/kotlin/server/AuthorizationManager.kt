@@ -1,17 +1,14 @@
 package server
 
-import lib.json.ObjectMapperWithModules
-import lib.json.read
-import lib.json.write
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import lib.IOHelper
 import org.apache.logging.log4j.kotlin.Logging
 import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.writeText
 
-class AuthorizationManager(
-    private val usersInfoDirectory: Path,
-    private val objectMapperWithModules: ObjectMapperWithModules = ObjectMapperWithModules()
-) : Logging {
+class AuthorizationManager(private val usersInfoDirectory: Path) : Logging {
     private val authorizedUsers: HashSet<AuthorizationInfo> = HashSet()
 
     init {
@@ -26,7 +23,7 @@ class AuthorizationManager(
         userAuthorizationFile
             .walk()
             .filter { it.isFile } // shall I just write filter(File::isFile) instead?
-            .map { objectMapperWithModules.read<AuthorizationInfo>(it) }
+            .map { Json.decodeFromString<AuthorizationInfo>(IOHelper.readFile(it.absolutePath)!!) }
             .forEach(authorizedUsers::add)
 
         logger.info("Users info loaded")
@@ -39,7 +36,7 @@ class AuthorizationManager(
     fun addUser(authorizationInfo: AuthorizationInfo) {
         authorizedUsers.add(authorizationInfo)
         getAuthorizationFilePath(authorizationInfo).writeText(
-            objectMapperWithModules.write(authorizationInfo)
+            Json.encodeToString(authorizationInfo)
         )
     }
 

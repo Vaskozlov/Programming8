@@ -21,6 +21,10 @@ class CircledStorage<T>(size: Int) {
         return buffer.size
     }
 
+    fun getArray(): Array<T?> {
+        return buffer
+    }
+
     /**
      * Appends value to the CircleStorage, if storage is out of spaces overrides the oldest-added element
      */

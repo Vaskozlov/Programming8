@@ -1,4 +1,4 @@
-package network.client.udp
+package client.udp
 
 import java.net.InetAddress
 

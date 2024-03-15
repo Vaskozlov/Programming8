@@ -1,9 +1,9 @@
 package server
 
-import commands.server.*
 import database.NetworkCode
 import exceptions.*
 import network.client.DatabaseCommand
+import org.example.server.commands.*
 
 var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     DatabaseCommand.ADD to AddCommand(),

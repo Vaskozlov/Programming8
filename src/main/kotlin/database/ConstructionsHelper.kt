@@ -1,8 +1,8 @@
 package database
 
+import kotlinx.datetime.LocalDate
 import lib.CSV.CSVStreamLikeReader
 import lib.valueOrNull
-import java.time.LocalDate
 
 fun fillAddressWithMissedInformation(first: Address?, second: Address?): Address? {
     if (first == null && second == null) {
