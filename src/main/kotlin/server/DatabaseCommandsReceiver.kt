@@ -86,7 +86,7 @@ class DatabaseCommandsReceiver(
         database: DatabaseInterface,
         argument: Any?
     ): Result<Any?> {
-        val result = commandMap[command]?.execute(user, database, argument) as Result<Any?>
+        val result = commandMap[command]!!.execute(user, database, argument)
         return result.onFailure { Result.failure<Any?>(it) }
     }
 
