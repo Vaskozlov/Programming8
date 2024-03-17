@@ -1,23 +1,31 @@
 package application
 
+import database.Address
 import database.DatabaseInterface
-import exceptions.KeyboardInterruptException
+import database.Organization
+import exceptions.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import lib.BufferedReaderWithQueueOfStreams
+import lib.ExecutionStatus
+import lib.IOHelper
 import lib.Localization
-import lib.collections.CircledStorage
 import network.client.DatabaseCommand
-import org.example.client.commands.*
-import org.example.client.commands.core.Command
+import org.example.client.commands.Command
+import server.AuthorizationInfo
+import java.io.IOException
 import java.io.InputStreamReader
 
-class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatcher) {
+class Application(
+    private val authFile: String?,
+    private val database: DatabaseInterface,
+    dispatcher: CoroutineDispatcher
+) {
     private val applicationScope = CoroutineScope(dispatcher)
-    val commandsHistory: CircledStorage<String> = CircledStorage(11)
-    val bufferedReaderWithQueueOfStreams: BufferedReaderWithQueueOfStreams = BufferedReaderWithQueueOfStreams(
+    private val bufferedReaderWithQueueOfStreams: BufferedReaderWithQueueOfStreams = BufferedReaderWithQueueOfStreams(
         InputStreamReader(System.`in`)
     )
 
@@ -25,25 +33,124 @@ class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatch
     private var localNameToDatabaseCommand: HashMap<String, DatabaseCommand> = HashMap()
 
     private val databaseCommandToExecutor = mapOf(
-        DatabaseCommand.HELP to HelpCommand(),
-        DatabaseCommand.INFO to InfoCommand(database),
-        DatabaseCommand.SHOW to ShowCommand(database),
-        DatabaseCommand.ADD to AddCommand(database),
-        DatabaseCommand.UPDATE to UpdateCommand(database),
-        DatabaseCommand.REMOVE_BY_ID to RemoveByIdCommand(database),
-        DatabaseCommand.CLEAR to ClearCommand(database),
-        DatabaseCommand.SAVE to SaveCommand(database),
-        DatabaseCommand.READ to ReadCommand(database),
-        DatabaseCommand.EXECUTE_SCRIPT to ExecuteScriptCommand(this),
-        DatabaseCommand.EXIT to ExitCommand(this),
-        DatabaseCommand.REMOVE_HEAD to RemoveHeadCommand(database),
-        DatabaseCommand.ADD_IF_MAX to AddIfMaxCommand(database),
-        DatabaseCommand.HISTORY to PrintHistoryCommand(this),
-        DatabaseCommand.MAX_BY_FULL_NAME to MaxByFullNameCommand(database),
-        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to RemoveAllByPostalAddressCommand(
-            database
-        ),
-        DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to SumOfAnnualTurnoverCommand(database)
+        DatabaseCommand.HELP to Command
+        { _, _ ->
+            Result.success(Localization.get("message.help"))
+
+        },
+        DatabaseCommand.INFO to Command
+        { oDatabase, _ ->
+            Result.success(oDatabase.getInfo())
+        },
+
+        DatabaseCommand.SHOW to Command
+        { oDatabase, argument ->
+            when (argument) {
+                null, "json" -> Result.success(oDatabase.toJson())
+                "csv" -> Result.success(oDatabase.toCSV())
+                else -> Result.failure(InvalidOutputFormatException())
+            }
+        },
+
+        DatabaseCommand.ADD to Command
+        { oDatabase, argument ->
+            oDatabase.add(argument as Organization)
+            Result.success(null)
+        },
+
+        DatabaseCommand.UPDATE to Command
+        { oDatabase, argument ->
+            oDatabase.modifyOrganization(argument as Organization)
+            Result.success(null)
+        },
+
+        DatabaseCommand.REMOVE_BY_ID to Command
+        { oDatabase, argument ->
+            oDatabase.removeById(argument as Int)
+                .takeIf { it == ExecutionStatus.SUCCESS }
+                ?.let { Result.success(null) }
+                ?: Result.failure<Organization>(OrganizationKeyException("$argument"))
+        },
+
+        DatabaseCommand.CLEAR to Command
+        { oDatabase, _ ->
+            oDatabase.clear()
+            Result.success(null)
+        },
+
+        DatabaseCommand.SAVE to Command
+        { oDatabase, argument ->
+            oDatabase.save(argument as String)
+                .await()
+                .takeIf { it == ExecutionStatus.SUCCESS }
+                ?.let { Result.success(null) }
+                ?: Result.failure(FileWriteException())
+        },
+
+        DatabaseCommand.READ to Command
+        { oDatabase, argument ->
+            val filename = argument as String
+            oDatabase.loadFromFile(filename)
+                .takeIf { it == ExecutionStatus.SUCCESS }
+                ?.let { Result.success(null) }
+                ?: Result.failure(FileReadException(filename))
+        },
+
+        DatabaseCommand.EXECUTE_SCRIPT to Command
+        { _, argument ->
+            val filename = argument as String
+            this.bufferedReaderWithQueueOfStreams
+                .runCatching {
+                    this.pushStream(filename)
+                    Result.success(filename)
+                }
+                .onFailure { Result.failure<Command>(it) }
+        },
+
+        DatabaseCommand.EXIT to Command
+        { _, _ ->
+            this.stop()
+            Result.success(null)
+        },
+
+        DatabaseCommand.REMOVE_HEAD to Command
+        { oDatabase, _ ->
+            oDatabase.removeHead()
+                ?.let { Result.success(it) }
+                ?: Result.failure(OrganizationNotFoundException())
+        },
+
+        DatabaseCommand.ADD_IF_MAX to Command
+        { oDatabase, argument ->
+
+            oDatabase.addIfMax(argument as Organization)
+                .takeIf { it == ExecutionStatus.SUCCESS }
+                ?.let { Result.success(null) }
+                ?: Result.failure(NotMaximumOrganizationException())
+        },
+
+        DatabaseCommand.HISTORY to Command
+        { oDatabase, _ ->
+            Result.success(oDatabase.getHistory())
+        },
+
+        DatabaseCommand.MAX_BY_FULL_NAME to Command
+        { oDatabase, _ ->
+            oDatabase.maxByFullName()
+                ?.let { Result.success(it) }
+                ?: Result.failure(OrganizationNotFoundException())
+        },
+
+        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to Command
+        { oDatabase, argument ->
+            oDatabase.removeAllByPostalAddress(argument as Address)
+            Result.success(null)
+        },
+
+        DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to Command
+        { oDatabase, _ ->
+            Result.success(oDatabase.getSumOfAnnualTurnover())
+        }
     )
 
     private val argumentForCommand: Map<DatabaseCommand, (String?) -> Any?> = mapOf(
@@ -101,8 +208,26 @@ class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatch
         loadCommands()
     }
 
+    private fun login() {
+        val authorizationInfo: AuthorizationInfo
+
+        if (authFile != null) {
+            val fileContext = IOHelper.readFile(authFile) ?: throw IOException("Unable to read from file $authFile")
+            authorizationInfo = Json.decodeFromString(fileContext)
+        } else {
+            print(Localization.get("message.ask.login"))
+            val login = bufferedReaderWithQueueOfStreams.readLine()
+            print(Localization.get("message.ask.password"))
+            val password = bufferedReaderWithQueueOfStreams.readLine()
+            authorizationInfo = AuthorizationInfo(login, password)
+        }
+
+        database.login(authorizationInfo)
+    }
+
     fun start() = runBlocking {
         localize()
+        login()
         println(Localization.get("message.introduction"))
         running = true
 
@@ -110,7 +235,7 @@ class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatch
             try {
                 val line = bufferedReaderWithQueueOfStreams.readLine()
                 processCommand(line.trim())
-            } catch (error: KeyboardInterruptException) {
+            } catch (error: Throwable) {
                 println(exceptionToMessage(error))
             }
         }
@@ -148,7 +273,7 @@ class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatch
 
     private suspend fun executeCommand(databaseCommand: DatabaseCommand, argument: Any?) {
         val executor = databaseCommandToExecutor[databaseCommand]
-        val result = executor!!.execute(argument)
+        val result = executor!!.execute(database, argument)
 
         if (result.isSuccess) {
             val successMessage = commandSuccessMessage(databaseCommand, result.getOrNull())
@@ -158,7 +283,5 @@ class Application(val database: DatabaseInterface, dispatcher: CoroutineDispatch
             val errorMessage = exceptionToMessage(exception)
             println(errorMessage)
         }
-
-        commandsHistory.add(databaseCommand.name)
     }
 }

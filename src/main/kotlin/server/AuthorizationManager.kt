@@ -33,6 +33,10 @@ class AuthorizationManager(private val usersInfoDirectory: Path) : Logging {
         return authorizedUsers.contains(authorizationInfo)
     }
 
+    fun hasLogin(login: String): Boolean {
+        return authorizedUsers.any { it.login == login }
+    }
+
     fun addUser(authorizationInfo: AuthorizationInfo) {
         authorizedUsers.add(authorizationInfo)
         getAuthorizationFilePath(authorizationInfo).writeText(

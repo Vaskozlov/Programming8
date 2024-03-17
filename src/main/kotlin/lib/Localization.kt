@@ -44,7 +44,7 @@ object Localization {
         }
     }
 
-    private fun loadBundle(filename: String, locale: String) {
+    fun loadBundle(filename: String, locale: String) {
         bundle = ResourceBundle.getBundle(filename, Locale.of(locale))
     }
 }

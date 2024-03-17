@@ -20,7 +20,6 @@ class PacketSlicer(val network: UDPNetwork) : Logging {
     ) {
         val packetId = Random.nextInt()
         val packetCount = calculatePacketCount(data, packetSize)
-        logger.trace("Sending $packetCount packets to $address with packetId $packetId")
 
         for (i in 0 until packetCount) {
             val start = i * packetSize
@@ -39,11 +38,6 @@ class PacketSlicer(val network: UDPNetwork) : Logging {
 
         do {
             val (user, packetHeader) = receiveJson()
-
-            if (packetHeader.packetIndex == 1) {
-                logger.trace("Receiving ${packetHeader.packagesCount} packets from $user with packetId ${packetHeader.packetId}")
-            }
-
             handlePacket(user, slicedPacketsFrame, packetHeader)
         } while (!slicedPacketsFrame.receivedAllPackets())
 

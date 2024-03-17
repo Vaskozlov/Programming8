@@ -3,15 +3,17 @@ package server
 import client.udp.ResultFrame
 import client.udp.User
 import database.*
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import lib.net.udp.JsonHolder
 import network.client.DatabaseCommand
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.client.udp.CommandWithArgument
+import java.io.Closeable
 import java.net.InetSocketAddress
 import java.nio.file.Path
 import kotlin.coroutines.CoroutineContext
@@ -22,7 +24,9 @@ class DatabaseCommandsReceiver(
     context: CoroutineContext,
     userStoragePath: Path,
     private val databaseStoragePath: Path
-) : ServerWithAuthorization(port, context, "command", AuthorizationManager(userStoragePath)), Logging {
+) : Logging,
+    Closeable,
+    ServerWithAuthorization(port, context, "command", AuthorizationManager(userStoragePath)) {
     private var usersDatabases: MutableMap<AuthorizationInfo, LocalDatabase> = HashMap()
     private val commandArguments: MutableMap<DatabaseCommand, (AuthorizationInfo, JsonElement) -> Any?> = mutableMapOf(
         DatabaseCommand.ADD to { _, jsonElement ->
@@ -30,23 +34,23 @@ class DatabaseCommandsReceiver(
                 jsonElement
             )
         },
-        DatabaseCommand.REMOVE_BY_ID to { _, jsonHolder ->
+        DatabaseCommand.REMOVE_BY_ID to { _, jsonElement ->
             Json.decodeFromJsonElement<Int>(
-                jsonHolder
+                jsonElement
             )
         },
-        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to { _, jsonHolder ->
+        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to { _, jsonElement ->
             Json.decodeFromJsonElement<Address>(
-                jsonHolder
+                jsonElement
             )
         },
-        DatabaseCommand.READ to { _, jsonHolder ->
+        DatabaseCommand.READ to { _, jsonElement ->
             Json.decodeFromJsonElement<String>(
-                jsonHolder
+                jsonElement
             )
         },
-        DatabaseCommand.SAVE to { authorizationHeader, _ ->
-            getUserDatabaseFile(authorizationHeader).absolutePathString()
+        DatabaseCommand.SAVE to { authorizationInfo, _ ->
+            getUserDatabaseFile(authorizationInfo).absolutePathString()
         },
         DatabaseCommand.EXIT to { _, _ -> null },
         DatabaseCommand.CLEAR to { _, _ -> null },
@@ -81,8 +85,9 @@ class DatabaseCommandsReceiver(
         user: User,
         database: DatabaseInterface,
         argument: Any?
-    ): Result<Any?>? {
-        return commandMap[command]?.execute(user, database, argument)
+    ): Result<Any?> {
+        val result = commandMap[command]?.execute(user, database, argument) as Result<Any?>
+        return result.onFailure { Result.failure<Any?>(it) }
     }
 
     private fun getArgumentForTheCommand(
@@ -107,48 +112,65 @@ class DatabaseCommandsReceiver(
             else -> Json.encodeToJsonElement(null as Int?)
         }
 
-    private suspend fun sendResult(
+    private suspend fun send(
         user: User,
-        result: Result<Any?>
+        code: NetworkCode,
+        data: JsonElement
     ) {
-        val code = if (result.isSuccess) NetworkCode.SUCCESS else errorToNetworkCode(result.exceptionOrNull())
-        logger.trace("Sending result to $user, code: $code")
-
-        val data = serialize(result.getOrNull())
         val frame = ResultFrame(code, data)
         val encodedFrame = Json.encodeToString(frame)
-
         network.sendStringInPackets(
             encodedFrame,
             InetSocketAddress(user.address, user.port)
         )
     }
 
+    private suspend fun sendResult(
+        user: User,
+        result: Result<Any?>
+    ) {
+        val code = if (result.isSuccess) NetworkCode.SUCCESS else errorToNetworkCode(result.exceptionOrNull())
+        logger.trace("Sending result to $user, code: $code")
+        send(user, code, serialize(result.getOrNull()))
+    }
+
+
+    override suspend fun handleUnauthorized(user: User, commandWithArgument: CommandWithArgument) {
+        send(user, NetworkCode.UNAUTHORIZED, Json.encodeToJsonElement(""))
+    }
+
     override suspend fun handleAuthorized(
         user: User,
         authorizationInfo: AuthorizationInfo,
-        jsonHolder: JsonHolder
+        commandWithArgument: CommandWithArgument
     ) {
-        val commandAndArgument: CommandWithArgument = Json.decodeFromJsonElement(
-            jsonHolder.getNode("value")
-        )
-        val command = commandAndArgument.command
+        val command = commandWithArgument.command
         val database = getUserDatabase(authorizationInfo)
         logger.trace("Received command $command, from $user")
 
         if (!commandArguments.containsKey(command)) {
             logger.trace("Command: $command not found, from $user")
-            //send(user, NetworkCode.NOT_SUPPOERTED_COMMAND, null)
+            send(user, NetworkCode.NOT_SUPPOERTED_COMMAND, Json.encodeToJsonElement(""))
             return
         }
 
         logger.trace("Executing command: $command , from $user")
-        val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandAndArgument.value)
+        val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandWithArgument.value)
         val result = execute(command, user, database, commandArgument)
         sendResult(user, result!!)
     }
 
     private fun getUserDatabaseFile(authorizationInfo: AuthorizationInfo): Path {
         return databaseStoragePath.resolve("${authorizationInfo.login}.csv")
+    }
+
+    override fun close() {
+        runBlocking {
+            val savingQueue = usersDatabases.map { (authorizationInfo, database) ->
+                database.save(getUserDatabaseFile(authorizationInfo).absolutePathString())
+            }
+
+            savingQueue.awaitAll()
+        }
     }
 }

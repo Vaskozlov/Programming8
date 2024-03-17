@@ -13,26 +13,32 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
 import network.client.DatabaseCommand
+import org.example.exceptions.UnauthorizedException
 import server.AuthorizationInfo
 import java.net.InetSocketAddress
 
 class RemoteDatabase(
-    authorizationInfo: AuthorizationInfo,
-    address: InetSocketAddress,
+    private val address: InetSocketAddress,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : DatabaseInterface {
-    private val commandSender = CommandSender(authorizationInfo, address)
+    private var commandSender: CommandSender? = null
     private val databaseScope = CoroutineScope(dispatcher)
 
-    constructor(authorizationInfo: AuthorizationInfo, address: String, port: Int)
-            : this(authorizationInfo, InetSocketAddress(address, port))
+    constructor(address: String, port: Int)
+            : this(InetSocketAddress(address, port))
+
+    override fun login(authorizationInfo: AuthorizationInfo) {
+        commandSender = CommandSender(authorizationInfo, address)
+    }
 
     private suspend fun sendCommandAndReceiveResult(
         command: DatabaseCommand,
         argument: JsonElement
     ): Result<JsonElement> {
-        commandSender.sendCommand(command, argument)
-        val json = commandSender.network.receiveStringInPackets()
+        checkNotNull(commandSender) { "You must login before using the database" }
+
+        commandSender!!.sendCommand(command, argument)
+        val json = commandSender!!.network.receiveStringInPackets()
         val frame = Json.decodeFromJsonElement<ResultFrame>(json.jsonNodeRoot)
         val code = frame.code
 
@@ -46,12 +52,19 @@ class RemoteDatabase(
             NetworkCode.NOT_FOUND -> Result.failure(OrganizationNotFoundException())
             NetworkCode.ORGANIZATION_KEY_ERROR -> Result.failure(OrganizationKeyException())
             NetworkCode.INVALID_OUTPUT_FORMAT -> Result.failure(InvalidOutputFormatException())
+            NetworkCode.UNAUTHORIZED -> Result.failure(UnauthorizedException())
             NetworkCode.FAILURE -> Result.failure(Exception())
         }
     }
 
     override suspend fun getInfo(): String {
         val result = sendCommandAndReceiveResult(DatabaseCommand.INFO, Json.encodeToJsonElement(null as Int?))
+        result.onFailure { throw it }
+        return Json.decodeFromJsonElement(result.getOrNull()!!)
+    }
+
+    override suspend fun getHistory(): String {
+        val result = sendCommandAndReceiveResult(DatabaseCommand.HISTORY, Json.encodeToJsonElement(null as Int?))
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }

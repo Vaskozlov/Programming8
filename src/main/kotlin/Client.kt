@@ -3,7 +3,6 @@ package org.example
 import application.Application
 import client.RemoteDatabase
 import kotlinx.coroutines.Dispatchers
-import server.AuthorizationInfo
 
 object Client {
     @JvmStatic
@@ -13,8 +12,8 @@ object Client {
         val authFile = System.getenv("AUTH_FILE") ?: null
 
         val application = Application(
+            authFile,
             RemoteDatabase(
-                AuthorizationInfo("vaskozlov", "123"),
                 serverIp,
                 serverPort
             ), Dispatchers.Unconfined

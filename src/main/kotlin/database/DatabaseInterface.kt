@@ -2,9 +2,14 @@ package database
 
 import kotlinx.coroutines.Deferred
 import lib.ExecutionStatus
+import server.AuthorizationInfo
 
 interface DatabaseInterface {
+    fun login(authorizationInfo: AuthorizationInfo)
+
     suspend fun getInfo(): String
+
+    suspend fun getHistory(): String
 
     suspend fun getSumOfAnnualTurnover(): Double
 
@@ -16,7 +21,7 @@ interface DatabaseInterface {
 
     suspend fun modifyOrganization(updatedOrganization: Organization)
 
-    suspend fun removeById(id: Int) : ExecutionStatus
+    suspend fun removeById(id: Int): ExecutionStatus
 
     suspend fun removeAllByPostalAddress(address: Address)
 

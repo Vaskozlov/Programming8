@@ -1,6 +1,7 @@
 package org.example
 
 import kotlinx.coroutines.Dispatchers
+import lib.Localization
 import server.DatabaseCommandsReceiver
 import kotlin.io.path.Path
 
@@ -11,13 +12,13 @@ object Server {
         val clientsPath = System.getenv("CLIENTS_PATH")
         val databasePath = System.getenv("DATABASE_PATH")
 
-        val receiver = DatabaseCommandsReceiver(
+        Localization.loadBundle("localization/localization", "en")
+
+        DatabaseCommandsReceiver(
             port,
             Dispatchers.Unconfined, // Dispatchers.Default can be used in order to enable multithreading
             Path(clientsPath),
             Path(databasePath)
-        )
-
-        receiver.run()
+        ).use { it.run() }
     }
 }

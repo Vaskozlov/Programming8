@@ -2,8 +2,8 @@ package application
 
 import exceptions.*
 import lib.Localization
-import lib.collections.CircledStorage
 import network.client.DatabaseCommand
+import org.example.exceptions.UnauthorizedException
 import java.io.IOException
 
 val commandNameToDatabaseCommand = mapOf(
@@ -55,12 +55,7 @@ fun commandSuccessMessage(command: DatabaseCommand, argument: Any?): String =
         DatabaseCommand.EXIT ->
             Localization.get("message.exit")
 
-        DatabaseCommand.HISTORY -> {
-            val history = argument as CircledStorage<String>
-            val stringBuilder = StringBuilder()
-            history.applyFunctionOnAllElements { s: String? -> stringBuilder.append(s).append("\n") }
-            stringBuilder.toString()
-        }
+        DatabaseCommand.HISTORY -> argument as String
 
         DatabaseCommand.EXECUTE_SCRIPT ->
             Localization.get("message.script_execution.started")
@@ -118,6 +113,10 @@ fun exceptionToMessage(exception: Throwable?): String =
             "message.network.error"
         )
 
+        is UnauthorizedException -> Localization.get(
+            "message.network.unauthorized"
+        )
+
         is InvalidOutputFormatException -> Localization.get(
             "message.show.unrecognizable_format"
         )
@@ -126,7 +125,7 @@ fun exceptionToMessage(exception: Throwable?): String =
             "message.file.recursion"
         )
 
-        else -> Localization.get("message.command.failed")
+        else -> "${Localization.get("message.command.failed")}, ${exception?.message}"
     }
 
 fun splitInputIntoArguments(input: String): Array<String> =
