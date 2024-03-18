@@ -1,6 +1,6 @@
 package org.example.lib.net.udp.slice
 
-import org.example.lib.net.udp.udp.User
+import org.example.lib.net.udp.User
 
 data class SlicedPacketsFrame(
     var packetId: Int? = null,

@@ -1,6 +1,6 @@
 package client
 
-import org.example.lib.net.udp.udp.ResultFrame
+import org.example.lib.net.udp.ResultFrame
 import database.Address
 import database.DatabaseInterface
 import database.NetworkCode

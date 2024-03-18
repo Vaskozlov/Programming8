@@ -10,9 +10,9 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import network.client.DatabaseCommand
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.lib.net.udp.udp.CommandWithArgument
-import org.example.lib.net.udp.udp.ResultFrame
-import org.example.lib.net.udp.udp.User
+import org.example.lib.net.udp.CommandWithArgument
+import org.example.lib.net.udp.ResultFrame
+import org.example.lib.net.udp.User
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.nio.file.Path
@@ -107,7 +107,6 @@ class DatabaseCommandsReceiver(
             authorizationInfo
         ) { LocalDatabase(getUserDatabaseFile(authorizationInfo)) }
 
-    // reified
     private fun serialize(value: Any?): JsonElement =
         when (value) {
             is Organization -> Json.encodeToJsonElement(value)

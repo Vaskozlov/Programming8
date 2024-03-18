@@ -1,6 +1,6 @@
 package org.example.server.commands
 
-import org.example.lib.net.udp.udp.User
+import org.example.lib.net.udp.User
 import database.DatabaseInterface
 
 fun interface ServerSideCommand {

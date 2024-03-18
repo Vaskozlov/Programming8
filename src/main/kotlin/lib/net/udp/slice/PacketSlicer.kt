@@ -1,6 +1,6 @@
 package org.example.lib.net.udp.slice
 
-import org.example.lib.net.udp.udp.User
+import org.example.lib.net.udp.User
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import lib.net.udp.JsonHolder

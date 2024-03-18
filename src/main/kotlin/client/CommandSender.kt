@@ -1,11 +1,11 @@
 package client
 
-import org.example.lib.net.udp.udp.Frame
+import org.example.lib.net.udp.Frame
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import network.client.DatabaseCommand
-import org.example.lib.net.udp.udp.CommandWithArgument
+import org.example.lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.ChannelUDPNetwork
 import org.example.lib.net.udp.slice.PacketSlicer
 import server.AuthorizationInfo

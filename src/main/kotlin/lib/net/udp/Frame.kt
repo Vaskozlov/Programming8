@@ -1,7 +1,6 @@
-package org.example.lib.net.udp.udp
+package org.example.lib.net.udp
 
 import kotlinx.serialization.Serializable
-import org.example.lib.net.udp.udp.CommandWithArgument
 import server.AuthorizationInfo
 
 @Serializable

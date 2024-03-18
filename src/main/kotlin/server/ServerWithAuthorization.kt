@@ -1,11 +1,11 @@
 package server
 
-import org.example.lib.net.udp.udp.Frame
-import org.example.lib.net.udp.udp.User
+import org.example.lib.net.udp.Frame
+import org.example.lib.net.udp.User
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import lib.net.udp.JsonHolder
-import org.example.lib.net.udp.udp.CommandWithArgument
+import org.example.lib.net.udp.CommandWithArgument
 import kotlin.coroutines.CoroutineContext
 
 abstract class ServerWithAuthorization(

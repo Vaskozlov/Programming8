@@ -1,6 +1,6 @@
 package lib.net.udp
 
-import org.example.lib.net.udp.udp.User
+import org.example.lib.net.udp.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
