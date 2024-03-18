@@ -1,7 +1,5 @@
 package server
 
-import org.example.lib.net.udp.udp.ResultFrame
-import org.example.lib.net.udp.udp.User
 import database.*
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -13,6 +11,8 @@ import kotlinx.serialization.json.encodeToJsonElement
 import network.client.DatabaseCommand
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.lib.net.udp.udp.CommandWithArgument
+import org.example.lib.net.udp.udp.ResultFrame
+import org.example.lib.net.udp.udp.User
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.nio.file.Path
@@ -86,9 +86,10 @@ class DatabaseCommandsReceiver(
         database: DatabaseInterface,
         argument: Any?
     ): Result<Any?> {
-        return commandMap[command]!!
+        val result = commandMap[command]!!
             .execute(user, database, argument)
-            .onFailure { Result.failure<Any?>(it) }
+            .getOrNull() as Result<Any?>
+        return result
     }
 
     private fun getArgumentForTheCommand(
@@ -135,7 +136,6 @@ class DatabaseCommandsReceiver(
         logger.trace("Sending result to $user, code: $code")
         send(user, code, serialize(result.getOrNull()))
     }
-
 
     override suspend fun handleUnauthorized(user: User, commandWithArgument: CommandWithArgument) {
         send(user, NetworkCode.UNAUTHORIZED, Json.encodeToJsonElement(""))
