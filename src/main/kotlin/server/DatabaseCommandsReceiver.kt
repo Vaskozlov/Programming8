@@ -1,7 +1,7 @@
 package server
 
-import client.udp.ResultFrame
-import client.udp.User
+import org.example.lib.net.udp.udp.ResultFrame
+import org.example.lib.net.udp.udp.User
 import database.*
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -12,7 +12,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import network.client.DatabaseCommand
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.client.udp.CommandWithArgument
+import org.example.lib.net.udp.udp.CommandWithArgument
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.nio.file.Path
@@ -86,8 +86,9 @@ class DatabaseCommandsReceiver(
         database: DatabaseInterface,
         argument: Any?
     ): Result<Any?> {
-        val result = commandMap[command]!!.execute(user, database, argument)
-        return result.onFailure { Result.failure<Any?>(it) }
+        return commandMap[command]!!
+            .execute(user, database, argument)
+            .onFailure { Result.failure<Any?>(it) }
     }
 
     private fun getArgumentForTheCommand(
@@ -103,6 +104,7 @@ class DatabaseCommandsReceiver(
             authorizationInfo
         ) { LocalDatabase(getUserDatabaseFile(authorizationInfo)) }
 
+    // reified
     private fun serialize(value: Any?): JsonElement =
         when (value) {
             is Organization -> Json.encodeToJsonElement(value)

@@ -1,11 +1,10 @@
 package org.example.lib.net.udp.slice
 
-import client.udp.User
+import org.example.lib.net.udp.udp.User
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import lib.net.udp.JsonHolder
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.client.udp.SlicedPacketHeader
 import org.example.lib.net.udp.UDPNetwork
 import java.net.InetSocketAddress
 import kotlin.random.Random

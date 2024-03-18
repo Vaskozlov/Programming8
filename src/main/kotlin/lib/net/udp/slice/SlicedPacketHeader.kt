@@ -1,4 +1,4 @@
-package org.example.client.udp
+package org.example.lib.net.udp.slice
 
 import kotlinx.serialization.Serializable
 

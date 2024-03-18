@@ -1,6 +1,6 @@
 package lib.net.udp
 
-import client.udp.User
+import org.example.lib.net.udp.udp.User
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
