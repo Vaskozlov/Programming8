@@ -86,10 +86,12 @@ class DatabaseCommandsReceiver(
         database: DatabaseInterface,
         argument: Any?
     ): Result<Any?> {
-        val result = commandMap[command]!!
-            .execute(user, database, argument)
-            .getOrNull() as Result<Any?>
-        return result
+        return commandMap[command]!!
+            .runCatching {
+                execute(user, database, argument)
+                    .onFailure { throw it }
+                    .getOrNull()
+            }.onFailure { Result.failure<Any?>(it) }
     }
 
     private fun getArgumentForTheCommand(
