@@ -10,6 +10,7 @@ import kotlin.io.path.writeText
 
 class AuthorizationManager(private val usersInfoDirectory: Path) : Logging {
     private val authorizedUsers: HashSet<AuthorizationInfo> = HashSet()
+    private val regexForLoginAndPassword = Regex("[\\w\\d]+")
 
     init {
         val userAuthorizationFile = usersInfoDirectory.toFile()
@@ -30,11 +31,17 @@ class AuthorizationManager(private val usersInfoDirectory: Path) : Logging {
     }
 
     fun isAuthorized(authorizationInfo: AuthorizationInfo): Boolean {
+        println(checkForValidAuthInfo(authorizationInfo))
         return authorizedUsers.contains(authorizationInfo)
     }
 
     fun hasLogin(login: String): Boolean {
         return authorizedUsers.any { it.login == login }
+    }
+
+    fun checkForValidAuthInfo(authorizationInfo: AuthorizationInfo): Boolean {
+        return authorizationInfo.login.matches(regexForLoginAndPassword) &&
+                authorizationInfo.password.matches(regexForLoginAndPassword)
     }
 
     fun addUser(authorizationInfo: AuthorizationInfo) {

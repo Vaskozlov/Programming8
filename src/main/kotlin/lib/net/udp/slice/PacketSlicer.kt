@@ -1,17 +1,15 @@
 package org.example.lib.net.udp.slice
 
-import org.example.lib.net.udp.User
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import lib.net.udp.JsonHolder
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.lib.net.udp.UDPNetwork
+import org.example.lib.net.udp.User
 import java.net.InetSocketAddress
 import kotlin.random.Random
 
 class PacketSlicer(val network: UDPNetwork) : Logging {
-    data class UserAndHeader(val user: User, val header: SlicedPacketHeader)
-
     suspend fun sendStringInPackets(
         data: String,
         address: InetSocketAddress,
@@ -48,10 +46,10 @@ class PacketSlicer(val network: UDPNetwork) : Logging {
         )
     }
 
-    private suspend fun receiveJson(): UserAndHeader {
+    private suspend fun receiveJson(): Pair<User, SlicedPacketHeader> {
         val packet = network.receiveJson()
         val json = Json.decodeFromJsonElement<SlicedPacketHeader>(packet.jsonNodeRoot)
-        return UserAndHeader(packet.user, json)
+        return packet.user to json
     }
 
     private fun handlePacket(

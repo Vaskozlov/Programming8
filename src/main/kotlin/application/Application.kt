@@ -36,8 +36,8 @@ class Application(
         DatabaseCommand.HELP to Command
         { _, _ ->
             Result.success(Localization.get("message.help"))
-
         },
+
         DatabaseCommand.INFO to Command
         { oDatabase, _ ->
             Result.success(oDatabase.getInfo())

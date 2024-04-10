@@ -86,12 +86,13 @@ class DatabaseCommandsReceiver(
         database: DatabaseInterface,
         argument: Any?
     ): Result<Any?> {
-        return commandMap[command]!!
-            .runCatching {
-                execute(user, database, argument)
-                    .onFailure { throw it }
-                    .getOrNull()
-            }.onFailure { Result.failure<Any?>(it) }
+        val result = commandMap[command]!!.execute(user, database, argument)
+
+        if (result.isSuccess) {
+            return result.getOrNull() as Result<Any?>
+        }
+
+        return Result.failure(result.exceptionOrNull()!!)
     }
 
     private fun getArgumentForTheCommand(
@@ -160,7 +161,7 @@ class DatabaseCommandsReceiver(
         logger.trace("Executing command: $command , from $user")
         val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandWithArgument.value)
         val result = execute(command, user, database, commandArgument)
-        sendResult(user, result!!)
+        sendResult(user, result)
     }
 
     private fun getUserDatabaseFile(authorizationInfo: AuthorizationInfo): Path {

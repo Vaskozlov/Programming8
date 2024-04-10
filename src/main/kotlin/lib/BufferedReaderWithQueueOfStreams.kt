@@ -1,7 +1,6 @@
 package lib
 
 import exceptions.RecursionReadErrorException
-import lib.collections.ImmutablePair
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
@@ -17,13 +16,13 @@ import kotlin.io.path.isSameFileAs
  * readLine/popStream will throw IOException.
  */
 class BufferedReaderWithQueueOfStreams {
-    private val readers = ArrayDeque<ImmutablePair<BufferedReader, Path?>>()
+    private val readers = ArrayDeque<Pair<BufferedReader, Path?>>()
     private var currentReader: BufferedReader
 
     constructor(filename: String) : this(FileReader(filename))
 
     constructor(input: Reader) {
-        readers.addLast(ImmutablePair(BufferedReader(input), null))
+        readers.addLast(BufferedReader(input) to null)
         currentReader = readers.last.first
     }
 
@@ -51,7 +50,7 @@ class BufferedReaderWithQueueOfStreams {
     fun pushStream(filename: String) {
         val path = Path(filename)
         val streamWithTheSameFile =
-            readers.find { it.second != null && it.second.isSameFileAs(path) }
+            readers.find { it.second != null && it.second!!.isSameFileAs(path) }
 
         streamWithTheSameFile?.let {
             throw RecursionReadErrorException()
@@ -61,7 +60,7 @@ class BufferedReaderWithQueueOfStreams {
     }
 
     private fun pushStream(input: Reader, path: Path? = null) {
-        readers.addLast(ImmutablePair(BufferedReader(input), path))
+        readers.addLast(BufferedReader(input) to path)
         currentReader = readers.last.first
     }
 

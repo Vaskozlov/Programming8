@@ -5,7 +5,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import lib.CSV.CSVStreamWriter
 import lib.WritableToCSVStream
-import lib.collections.ImmutablePair
 
 @Serializable
 data class Organization(
@@ -70,8 +69,8 @@ data class Organization(
         ) { it.writeToStream(stream) }
     }
 
-    fun toPairOfFullNameAndType(): ImmutablePair<String?, OrganizationType?> {
-        return ImmutablePair(fullName, type)
+    fun toPairOfFullNameAndType(): Pair<String?, OrganizationType?> {
+        return fullName to type
     }
 
     class ValidationResult {

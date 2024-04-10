@@ -1,9 +1,9 @@
 package lib.net.udp
 
-import org.example.lib.net.udp.User
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
+import org.example.lib.net.udp.User
 import java.net.DatagramPacket
 
 class JsonHolder(val user: User, val jsonNodeRoot: JsonElement) {

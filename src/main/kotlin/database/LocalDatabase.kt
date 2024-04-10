@@ -13,7 +13,7 @@ import lib.IOHelper
 import lib.IdFactory
 import lib.Localization
 import lib.collections.CircledStorage
-import lib.collections.ImmutablePair
+import org.apache.logging.log4j.kotlin.Logging
 import org.example.lib.getLocalDate
 import server.AuthorizationInfo
 import java.io.FileWriter
@@ -26,14 +26,14 @@ import kotlin.io.path.absolutePathString
 import kotlin.math.max
 
 class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO) :
-    DatabaseInterface {
+    DatabaseInterface, Logging {
     private var idFactory = IdFactory(1)
     private val databaseScope = CoroutineScope(dispatcher)
 
     private val initializationDate: LocalDateTime = LocalDateTime.now()
     private val history = CircledStorage<String>(11)
     private val organizations = mutableListOf<Organization>()
-    private val storedOrganizations = HashSet<ImmutablePair<String?, OrganizationType?>>()
+    private val storedOrganizations = mutableSetOf<Pair<String?, OrganizationType?>>()
 
     companion object {
         @OptIn(ExperimentalSerializationApi::class)
@@ -132,7 +132,6 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
 
     override suspend fun removeAllByPostalAddress(address: Address) {
         addToHistory(Localization.get("command.remove_all_by_postal_address") + " " + address.toString())
-
         organizations
             .filter { it.postalAddress == address }
             .forEach {
@@ -238,7 +237,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
 
             return stream.writer.toString()
         } catch (exception: IOException) {
-            // This should never happen
+            logger.trace("${exception.message} ${exception.stackTrace}")
             return ""
         }
     }
