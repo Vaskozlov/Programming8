@@ -8,9 +8,8 @@ import kotlin.coroutines.CoroutineContext
 
 abstract class ServerWithCommands(
     port: Int,
-    context: CoroutineContext,
     private val commandFieldName: String
-) : Server(port, context) {
+) : Server(port) {
     protected fun getCommandFromJson(jsonHolder: JsonHolder): String =
         jsonHolder.jsonNodeRoot.jsonObject[commandFieldName]!!.jsonPrimitive.toString()
 }

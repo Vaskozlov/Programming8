@@ -1,23 +1,17 @@
 package lib.net.udp
 
-import org.example.lib.net.udp.User
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
-import org.apache.logging.log4j.kotlin.logger
+import org.example.lib.net.udp.User
 import org.example.lib.net.udp.slice.PacketSlicer
-import kotlin.coroutines.CoroutineContext
 
-abstract class Server protected constructor(port: Int, context: CoroutineContext) : Logging {
+abstract class Server protected constructor(port: Int) : Logging {
     private val networkInterface = DatagramBasedUDPNetwork(port)
     val network = PacketSlicer(networkInterface)
-    private val serverScope = CoroutineScope(context)
     private var running = false
 
-    protected abstract suspend fun handlePacket(user: User, jsonHolder: JsonHolder)
+    protected abstract fun handlePacket(user: User, jsonHolder: JsonHolder)
 
-    fun run() = runBlocking {
+    fun run() {
         running = true
         logger.info("Server is running")
 
@@ -26,13 +20,10 @@ abstract class Server protected constructor(port: Int, context: CoroutineContext
         }
     }
 
-    private suspend fun loopCycle() {
+    private fun loopCycle() {
         try {
             val packet = network.receiveStringInPackets()
-
-            serverScope.launch {
-                handlePacket(packet.user, packet)
-            }
+            handlePacket(packet.user, packet)
         } catch (e: Exception) {
             logger.error("Error while receiving packet: $e")
         }

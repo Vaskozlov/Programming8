@@ -10,7 +10,7 @@ import java.net.InetSocketAddress
 import kotlin.random.Random
 
 class PacketSlicer(val network: UDPNetwork) : Logging {
-    suspend fun sendStringInPackets(
+    fun sendStringInPackets(
         data: String,
         address: InetSocketAddress,
         packetSize: Int = 3096
@@ -29,7 +29,7 @@ class PacketSlicer(val network: UDPNetwork) : Logging {
 
     private fun calculatePacketCount(data: String, packetSize: Int): Int = (data.length + packetSize - 1) / packetSize
 
-    suspend fun receiveStringInPackets(): JsonHolder {
+    fun receiveStringInPackets(): JsonHolder {
         val slicedPacketsFrame = SlicedPacketsFrame()
         val packets = mutableListOf<SlicedPacketHeader>()
 
@@ -46,7 +46,7 @@ class PacketSlicer(val network: UDPNetwork) : Logging {
         )
     }
 
-    private suspend fun receiveJson(): Pair<User, SlicedPacketHeader> {
+    private fun receiveJson(): Pair<User, SlicedPacketHeader> {
         val packet = network.receiveJson()
         val json = Json.decodeFromJsonElement<SlicedPacketHeader>(packet.jsonNodeRoot)
         return packet.user to json

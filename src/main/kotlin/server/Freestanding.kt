@@ -57,7 +57,8 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     { _,
       database,
       _ ->
-        database.maxByFullName().takeIf { it != null }
+        database.maxByFullName()
+            .takeIf { it != null }
             ?.let { Result.success(it) }
             ?: throw OrganizationNotFoundException()
     },
@@ -82,7 +83,6 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
       database,
       argument ->
         database.save(argument as String)
-            .await()
             .takeIf { it == ExecutionStatus.SUCCESS }
             ?.let { Result.success(null) }
             ?: throw FileWriteException(argument)

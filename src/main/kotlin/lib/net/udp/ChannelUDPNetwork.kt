@@ -1,6 +1,5 @@
 package org.example.lib.net.udp
 
-import kotlinx.coroutines.delay
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.InetSocketAddress
@@ -24,7 +23,7 @@ open class ChannelUDPNetwork(private val delayMS: Long = 100, private val timeWa
         channel.close()
     }
 
-    override suspend fun receive(byteArray: ByteArray): DatagramPacket {
+    override fun receive(byteArray: ByteArray): DatagramPacket {
         val buffer = ByteBuffer.wrap(byteArray)
         var addr: SocketAddress? = null
 
@@ -35,7 +34,7 @@ open class ChannelUDPNetwork(private val delayMS: Long = 100, private val timeWa
                 break
             }
 
-            delay(delayMS)
+            Thread.sleep(delayMS)
         }
 
         if (addr == null) {
@@ -45,7 +44,7 @@ open class ChannelUDPNetwork(private val delayMS: Long = 100, private val timeWa
         return DatagramPacket(byteArray, byteArray.size - buffer.remaining(), addr)
     }
 
-    override suspend fun send(data: ByteArray, address: InetSocketAddress) {
+    override fun send(data: ByteArray, address: InetSocketAddress) {
         val buffer = ByteBuffer.wrap(data)
         channel.send(buffer, address)
     }

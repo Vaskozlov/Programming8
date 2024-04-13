@@ -12,13 +12,13 @@ open class DatagramBasedUDPNetwork(private val socket: DatagramSocket) :
         DatagramSocket(port)
     )
 
-    override suspend fun receive(byteArray: ByteArray): DatagramPacket {
+    override fun receive(byteArray: ByteArray): DatagramPacket {
         val packet = DatagramPacket(byteArray, byteArray.size)
         socket.receive(packet)
         return packet
     }
 
-    override suspend fun send(byteArray: ByteArray, address: InetSocketAddress) {
+    override fun send(byteArray: ByteArray, address: InetSocketAddress) {
         val packet = DatagramPacket(byteArray, byteArray.size, address.address, address.port)
         socket.send(packet)
     }

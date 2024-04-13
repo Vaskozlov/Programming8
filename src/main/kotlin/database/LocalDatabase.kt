@@ -2,7 +2,6 @@ package database
 
 import exceptions.OrganizationAlreadyPresentedException
 import exceptions.OrganizationNotFoundException
-import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -25,10 +24,9 @@ import java.time.format.DateTimeFormatter
 import kotlin.io.path.absolutePathString
 import kotlin.math.max
 
-class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO) :
+class LocalDatabase(path: Path) :
     DatabaseInterface, Logging {
     private var idFactory = IdFactory(1)
-    private val databaseScope = CoroutineScope(dispatcher)
 
     private val initializationDate: LocalDateTime = LocalDateTime.now()
     private val history = CircledStorage<String>(11)
@@ -44,14 +42,14 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
     }
 
     init {
-        runBlocking { loadFromFile(path.absolutePathString()) }
+        loadFromFile(path.absolutePathString())
     }
 
     override fun login(authorizationInfo: AuthorizationInfo) {
         // Do nothing
     }
 
-    override suspend fun getInfo(): String {
+    override fun getInfo(): String {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
         return String.format(
@@ -61,7 +59,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         )
     }
 
-    override suspend fun getHistory(): String {
+    override fun getHistory(): String {
         return StringBuilder().apply {
             history.applyFunctionOnAllElements {
                 append(it).append('\n')
@@ -73,12 +71,12 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
     private fun addToHistory(message: String) =
         history.add(getLocalDate().toString() + " " + message)
 
-    override suspend fun maxByFullName(): Organization? {
+    override fun maxByFullName(): Organization? {
         addToHistory(Localization.get("command.max_by_full_name"))
         return organizations.maxByOrNull { it.fullName!! }
     }
 
-    override suspend fun getSumOfAnnualTurnover(): Double {
+    override fun getSumOfAnnualTurnover(): Double {
         addToHistory(Localization.get("command.sum_of_annual_turnover"))
         return organizations.sumOf { it.annualTurnover ?: 0.0 }
     }
@@ -94,12 +92,12 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         addNoCheck(organization)
     }
 
-    override suspend fun add(organization: Organization) {
+    override fun add(organization: Organization) {
         addToHistory(Localization.get("command.add") + " " + organization.fullName!!)
         addImplementation(organization)
     }
 
-    override suspend fun addIfMax(newOrganization: Organization): ExecutionStatus {
+    override fun addIfMax(newOrganization: Organization): ExecutionStatus {
         addToHistory(Localization.get("command.add_if_max") + " " + newOrganization.fullName!!)
 
         val maxOrganization = organizations.maxByOrNull { it.fullName!! }
@@ -119,7 +117,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         organizations.sortBy { it.fullName }
     }
 
-    override suspend fun modifyOrganization(updatedOrganization: Organization) {
+    override fun modifyOrganization(updatedOrganization: Organization) {
         addToHistory(Localization.get("command.update") + " " + updatedOrganization.id)
         val organization = organizations.find { it.id == updatedOrganization.id }
 
@@ -130,7 +128,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         completeModification(organization, updatedOrganization)
     }
 
-    override suspend fun removeAllByPostalAddress(address: Address) {
+    override fun removeAllByPostalAddress(address: Address) {
         addToHistory(Localization.get("command.remove_all_by_postal_address") + " " + address.toString())
         organizations
             .filter { it.postalAddress == address }
@@ -140,13 +138,13 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
             }
     }
 
-    override suspend fun removeById(id: Int): ExecutionStatus {
+    override fun removeById(id: Int): ExecutionStatus {
         addToHistory(Localization.get("command.remove_by_id") + " " + id.toString())
         val elementRemoved = organizations.removeIf { it.id == id }
         return ExecutionStatus.getByValue(elementRemoved)
     }
 
-    override suspend fun removeHead(): Organization? {
+    override fun removeHead(): Organization? {
         addToHistory(Localization.get("command.remove_head"))
         val removedOrganization = organizations.removeFirstOrNull()
 
@@ -162,7 +160,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         storedOrganizations.clear()
     }
 
-    override suspend fun clear() {
+    override fun clear() {
         addToHistory(Localization.get("command.clear"))
         clearImplementation()
     }
@@ -190,7 +188,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         return ExecutionStatus.SUCCESS
     }
 
-    override suspend fun loadFromFile(path: String): ExecutionStatus {
+    override fun loadFromFile(path: String): ExecutionStatus {
         return try {
             tryToLoadFromFile(path)
         } catch (ignored: Exception) {
@@ -199,11 +197,10 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         }
     }
 
-    override suspend fun save(path: String): Deferred<ExecutionStatus> {
+    override fun save(path: String): ExecutionStatus {
         addToHistory(Localization.get("command.save"))
-        return databaseScope.async {
-            tryToWriteToFile(path)
-        }
+        return tryToWriteToFile(path)
+
     }
 
     private fun tryToWriteToFile(path: String): ExecutionStatus {
@@ -219,7 +216,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         }
     }
 
-    override suspend fun toCSV(): String {
+    override fun toCSV(): String {
         addToHistory(Localization.get("command.show") + " CSV")
         return formCSV()
     }
@@ -242,7 +239,7 @@ class LocalDatabase(path: Path, dispatcher: CoroutineDispatcher = Dispatchers.IO
         }
     }
 
-    override suspend fun toJson(): String {
+    override fun toJson(): String {
         addToHistory(Localization.get("command.show") + " JSON")
         return prettyJson.encodeToString(organizations)
     }

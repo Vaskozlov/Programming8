@@ -27,7 +27,7 @@ class CommandSender(
         }
     }
 
-    suspend fun sendCommand(command: DatabaseCommand, value: JsonElement) {
+    fun sendCommand(command: DatabaseCommand, value: JsonElement) {
         val frame = Frame(authorizationInfo, CommandWithArgument(command, value))
         network.sendStringInPackets(Json.encodeToString(frame), address)
     }

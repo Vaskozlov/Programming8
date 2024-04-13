@@ -2,7 +2,6 @@ package org.example
 
 import application.Application
 import client.RemoteDatabase
-import kotlinx.coroutines.Dispatchers
 
 object Client {
     @JvmStatic
@@ -16,7 +15,7 @@ object Client {
             RemoteDatabase(
                 serverIp,
                 serverPort
-            ), Dispatchers.Unconfined
+            )
         )
 
         application.start()

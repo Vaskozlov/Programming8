@@ -1,6 +1,5 @@
 package org.example
 
-import kotlinx.coroutines.Dispatchers
 import lib.Localization
 import server.DatabaseCommandsReceiver
 import kotlin.io.path.Path
@@ -16,7 +15,6 @@ object Server {
 
         DatabaseCommandsReceiver(
             port,
-            Dispatchers.Unconfined, // Dispatchers.Default can be used in order to enable multithreading
             Path(clientsPath),
             Path(databasePath)
         ).use { it.run() }

@@ -1,12 +1,10 @@
 package client
 
-import org.example.lib.net.udp.ResultFrame
 import database.Address
 import database.DatabaseInterface
 import database.NetworkCode
 import database.Organization
 import exceptions.*
-import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -14,15 +12,14 @@ import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
 import network.client.DatabaseCommand
 import org.example.exceptions.UnauthorizedException
+import org.example.lib.net.udp.ResultFrame
 import server.AuthorizationInfo
 import java.net.InetSocketAddress
 
 class RemoteDatabase(
     private val address: InetSocketAddress,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : DatabaseInterface {
     private var commandSender: CommandSender? = null
-    private val databaseScope = CoroutineScope(dispatcher)
 
     constructor(address: String, port: Int)
             : this(InetSocketAddress(address, port))
@@ -31,7 +28,7 @@ class RemoteDatabase(
         commandSender = CommandSender(authorizationInfo, address)
     }
 
-    private suspend fun sendCommandAndReceiveResult(
+    private fun sendCommandAndReceiveResult(
         command: DatabaseCommand,
         argument: JsonElement
     ): Result<JsonElement> {
@@ -57,26 +54,26 @@ class RemoteDatabase(
         }
     }
 
-    override suspend fun getInfo(): String {
+    override fun getInfo(): String {
         val result = sendCommandAndReceiveResult(DatabaseCommand.INFO, Json.encodeToJsonElement(null as Int?))
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
-    override suspend fun getHistory(): String {
+    override fun getHistory(): String {
         val result = sendCommandAndReceiveResult(DatabaseCommand.HISTORY, Json.encodeToJsonElement(null as Int?))
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
-    override suspend fun getSumOfAnnualTurnover(): Double {
+    override fun getSumOfAnnualTurnover(): Double {
         val result =
             sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, Json.encodeToJsonElement(null as Int?))
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
-    override suspend fun maxByFullName(): Organization? {
+    override fun maxByFullName(): Organization? {
         val result =
             sendCommandAndReceiveResult(DatabaseCommand.MAX_BY_FULL_NAME, Json.encodeToJsonElement(null as Int?))
 
@@ -87,35 +84,35 @@ class RemoteDatabase(
         return null
     }
 
-    override suspend fun add(organization: Organization) {
+    override fun add(organization: Organization) {
         sendCommandAndReceiveResult(DatabaseCommand.ADD, Json.encodeToJsonElement(organization)).onFailure { throw it }
     }
 
-    override suspend fun addIfMax(newOrganization: Organization): ExecutionStatus {
+    override fun addIfMax(newOrganization: Organization): ExecutionStatus {
         val result = sendCommandAndReceiveResult(DatabaseCommand.ADD_IF_MAX, Json.encodeToJsonElement(newOrganization))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 
-    override suspend fun modifyOrganization(updatedOrganization: Organization) {
+    override fun modifyOrganization(updatedOrganization: Organization) {
         sendCommandAndReceiveResult(
             DatabaseCommand.UPDATE,
             Json.encodeToJsonElement(updatedOrganization)
         ).onFailure { throw it }
     }
 
-    override suspend fun removeById(id: Int): ExecutionStatus {
+    override fun removeById(id: Int): ExecutionStatus {
         val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_BY_ID, Json.encodeToJsonElement(id))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 
-    override suspend fun removeAllByPostalAddress(address: Address) {
+    override fun removeAllByPostalAddress(address: Address) {
         sendCommandAndReceiveResult(
             DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS,
             Json.encodeToJsonElement(address)
         ).onFailure { throw it }
     }
 
-    override suspend fun removeHead(): Organization? {
+    override fun removeHead(): Organization? {
         val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_HEAD, Json.encodeToJsonElement(null as Int?))
 
         if (result.isSuccess) {
@@ -125,32 +122,30 @@ class RemoteDatabase(
         return null
     }
 
-    override suspend fun clear() {
+    override fun clear() {
         sendCommandAndReceiveResult(
             DatabaseCommand.CLEAR,
             Json.encodeToJsonElement(null as Int?)
         ).onFailure { throw it }
     }
 
-    override suspend fun save(path: String): Deferred<ExecutionStatus> {
-        return databaseScope.async {
-            val result = sendCommandAndReceiveResult(DatabaseCommand.SAVE, Json.encodeToJsonElement(path))
-            ExecutionStatus.getByValue(result.isSuccess)
-        }
+    override fun save(path: String): ExecutionStatus {
+        val result = sendCommandAndReceiveResult(DatabaseCommand.SAVE, Json.encodeToJsonElement(path))
+        return ExecutionStatus.getByValue(result.isSuccess)
     }
 
-    override suspend fun loadFromFile(path: String): ExecutionStatus {
+    override fun loadFromFile(path: String): ExecutionStatus {
         val result = sendCommandAndReceiveResult(DatabaseCommand.READ, Json.encodeToJsonElement(path))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 
-    private suspend fun sendShowCommand(format: String): String {
+    private fun sendShowCommand(format: String): String {
         val result = sendCommandAndReceiveResult(DatabaseCommand.SHOW, Json.encodeToJsonElement(format))
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
-    override suspend fun toJson() = sendShowCommand("json")
+    override fun toJson() = sendShowCommand("json")
 
-    override suspend fun toCSV() = sendShowCommand("csv")
+    override fun toCSV() = sendShowCommand("csv")
 }

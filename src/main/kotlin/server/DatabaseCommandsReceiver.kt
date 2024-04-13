@@ -1,8 +1,6 @@
 package server
 
 import database.*
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -16,17 +14,15 @@ import org.example.lib.net.udp.User
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.nio.file.Path
-import kotlin.coroutines.CoroutineContext
 import kotlin.io.path.absolutePathString
 
 class DatabaseCommandsReceiver(
     port: Int,
-    context: CoroutineContext,
     userStoragePath: Path,
     private val databaseStoragePath: Path
 ) : Logging,
     Closeable,
-    ServerWithAuthorization(port, context, "command", AuthorizationManager(userStoragePath)) {
+    ServerWithAuthorization(port, "command", AuthorizationManager(userStoragePath)) {
     private var usersDatabases: MutableMap<AuthorizationInfo, LocalDatabase> = HashMap()
     private val commandArguments: MutableMap<DatabaseCommand, (AuthorizationInfo, JsonElement) -> Any?> = mutableMapOf(
         DatabaseCommand.ADD to { _, jsonElement ->
@@ -80,19 +76,13 @@ class DatabaseCommandsReceiver(
         require(databaseDir.isDirectory)
     }
 
-    private suspend fun execute(
+    private fun execute(
         command: DatabaseCommand,
         user: User,
         database: DatabaseInterface,
         argument: Any?
     ): Result<Any?> {
-        val result = commandMap[command]!!.execute(user, database, argument)
-
-        if (result.isSuccess) {
-            return result.getOrNull() as Result<Any?>
-        }
-
-        return Result.failure(result.exceptionOrNull()!!)
+        return commandMap[command]!!.execute(user, database, argument)
     }
 
     private fun getArgumentForTheCommand(
@@ -117,7 +107,7 @@ class DatabaseCommandsReceiver(
             else -> Json.encodeToJsonElement(null as Int?)
         }
 
-    private suspend fun send(
+    private fun send(
         user: User,
         code: NetworkCode,
         data: JsonElement
@@ -130,7 +120,7 @@ class DatabaseCommandsReceiver(
         )
     }
 
-    private suspend fun sendResult(
+    private fun sendResult(
         user: User,
         result: Result<Any?>
     ) {
@@ -139,11 +129,11 @@ class DatabaseCommandsReceiver(
         send(user, code, serialize(result.getOrNull()))
     }
 
-    override suspend fun handleUnauthorized(user: User, commandWithArgument: CommandWithArgument) {
+    override fun handleUnauthorized(user: User, commandWithArgument: CommandWithArgument) {
         send(user, NetworkCode.UNAUTHORIZED, Json.encodeToJsonElement(""))
     }
 
-    override suspend fun handleAuthorized(
+    override fun handleAuthorized(
         user: User,
         authorizationInfo: AuthorizationInfo,
         commandWithArgument: CommandWithArgument
@@ -169,12 +159,8 @@ class DatabaseCommandsReceiver(
     }
 
     override fun close() {
-        runBlocking {
-            val savingQueue = usersDatabases.map { (authorizationInfo, database) ->
-                database.save(getUserDatabaseFile(authorizationInfo).absolutePathString())
-            }
-
-            savingQueue.awaitAll()
+        usersDatabases.forEach { (authorizationInfo, database) ->
+            database.save(getUserDatabaseFile(authorizationInfo).absolutePathString())
         }
     }
 }

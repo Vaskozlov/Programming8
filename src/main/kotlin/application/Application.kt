@@ -4,10 +4,6 @@ import database.Address
 import database.DatabaseInterface
 import database.Organization
 import exceptions.*
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import lib.BufferedReaderWithQueueOfStreams
 import lib.ExecutionStatus
@@ -21,10 +17,8 @@ import java.io.InputStreamReader
 
 class Application(
     private val authFile: String?,
-    private val database: DatabaseInterface,
-    dispatcher: CoroutineDispatcher
+    private val database: DatabaseInterface
 ) {
-    private val applicationScope = CoroutineScope(dispatcher)
     private val bufferedReaderWithQueueOfStreams: BufferedReaderWithQueueOfStreams = BufferedReaderWithQueueOfStreams(
         InputStreamReader(System.`in`)
     )
@@ -81,7 +75,6 @@ class Application(
         DatabaseCommand.SAVE to Command
         { oDatabase, argument ->
             oDatabase.save(argument as String)
-                .await()
                 .takeIf { it == ExecutionStatus.SUCCESS }
                 ?.let { Result.success(null) }
                 ?: Result.failure(FileWriteException())
@@ -225,7 +218,7 @@ class Application(
         database.login(authorizationInfo)
     }
 
-    fun start() = runBlocking {
+    fun start() {
         localize()
         login()
         println(Localization.get("message.introduction"))
@@ -245,7 +238,7 @@ class Application(
         running = false
     }
 
-    private suspend fun processCommand(input: String) {
+    private fun processCommand(input: String) {
         val allArguments = splitInputIntoArguments(input)
 
         if (allArguments.isEmpty()) {
@@ -267,11 +260,11 @@ class Application(
         if (databaseCommand == DatabaseCommand.EXECUTE_SCRIPT) {
             executeCommand(databaseCommand, executionArgument)
         } else {
-            applicationScope.launch { executeCommand(databaseCommand, executionArgument) }
+            executeCommand(databaseCommand, executionArgument)
         }
     }
 
-    private suspend fun executeCommand(databaseCommand: DatabaseCommand, argument: Any?) {
+    private fun executeCommand(databaseCommand: DatabaseCommand, argument: Any?) {
         val executor = databaseCommandToExecutor[databaseCommand]
         val result = executor!!.execute(database, argument)
 
