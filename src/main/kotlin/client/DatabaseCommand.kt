@@ -10,7 +10,6 @@ enum class DatabaseCommand {
     REMOVE_BY_ID,
     REMOVE_ALL_BY_POSTAL_ADDRESS,
     CLEAR,
-    READ,
     EXIT,
     HISTORY,
     SUM_OF_ANNUAL_TURNOVER,

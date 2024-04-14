@@ -40,12 +40,8 @@ class Application(
         },
 
         DatabaseCommand.SHOW to Command
-        { oDatabase, argument ->
-            when (argument) {
-                null, "json" -> Result.success(oDatabase.toJson())
-                "csv" -> Result.success(oDatabase.toCSV())
-                else -> Result.failure(InvalidOutputFormatException())
-            }
+        { oDatabase, _ ->
+            Result.success(oDatabase.toJson())
         },
 
         DatabaseCommand.ADD to Command
@@ -72,15 +68,6 @@ class Application(
         { oDatabase, _ ->
             oDatabase.clear()
             Result.success(null)
-        },
-
-        DatabaseCommand.READ to Command
-        { oDatabase, argument ->
-            val filename = argument as String
-            oDatabase.loadFromFile(filename)
-                .takeIf { it == ExecutionStatus.SUCCESS }
-                ?.let { Result.success(null) }
-                ?: Result.failure(FileReadException(filename))
         },
 
         DatabaseCommand.EXECUTE_SCRIPT to Command
@@ -149,8 +136,7 @@ class Application(
         DatabaseCommand.HISTORY to { null },
         DatabaseCommand.MAX_BY_FULL_NAME to { null },
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to { null },
-        DatabaseCommand.SHOW to { it },
-        DatabaseCommand.READ to { it },
+        DatabaseCommand.SHOW to { null },
         DatabaseCommand.EXECUTE_SCRIPT to { it },
         DatabaseCommand.REMOVE_BY_ID to { it?.toIntOrNull() },
         DatabaseCommand.ADD to {

@@ -182,51 +182,6 @@ class LocalCollection :
         return ExecutionStatus.SUCCESS
     }
 
-    override fun loadFromFile(path: String): ExecutionStatus {
-        return try {
-            tryToLoadFromFile(path)
-        } catch (ignored: Exception) {
-            println("$ignored.message, $ignored.stackTrace")
-            ExecutionStatus.FAILURE
-        }
-    }
-
-    private fun tryToWriteToFile(path: String): ExecutionStatus {
-        return try {
-            FileWriter(path).use { file ->
-                file.write(formCSV())
-                file.flush()
-            }
-
-            ExecutionStatus.SUCCESS
-        } catch (_: IOException) {
-            ExecutionStatus.FAILURE
-        }
-    }
-
-    override fun toCSV(): String {
-        addToHistory(Localization.get("command.show") + " CSV")
-        return formCSV()
-    }
-
-    private fun formCSV(): String {
-        val stream = CSVStreamWriter(StringWriter())
-        try {
-            stream.append(CSVHeader.headerAsString)
-            stream.newLine()
-
-            organizations.forEach {
-                it.writeToStream(stream)
-                stream.newLine()
-            }
-
-            return stream.writer.toString()
-        } catch (exception: IOException) {
-            logger.trace("${exception.message} ${exception.stackTrace}")
-            return ""
-        }
-    }
-
     override fun toJson(): String {
         addToHistory(Localization.get("command.show") + " JSON")
         return prettyJson.encodeToString(organizations)

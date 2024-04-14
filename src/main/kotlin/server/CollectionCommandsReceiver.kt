@@ -37,11 +37,7 @@ class CollectionCommandsReceiver(
                 jsonElement
             )
         },
-        DatabaseCommand.READ to { _, jsonElement ->
-            Json.decodeFromJsonElement<String>(
-                jsonElement
-            )
-        },
+        DatabaseCommand.SHOW to { _, _ -> null },
         DatabaseCommand.EXIT to { _, _ -> null },
         DatabaseCommand.CLEAR to { _, _ -> null },
         DatabaseCommand.REMOVE_HEAD to { _, _ -> null },
@@ -61,10 +57,6 @@ class CollectionCommandsReceiver(
 
         commandArguments[DatabaseCommand.ADD]?.let {
             commandArguments[DatabaseCommand.UPDATE] = it
-        }
-
-        commandArguments[DatabaseCommand.READ]?.let {
-            commandArguments[DatabaseCommand.SHOW] = it;
         }
     }
 

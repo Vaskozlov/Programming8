@@ -28,9 +28,5 @@ interface DatabaseInterface {
 
     fun clear()
 
-    fun loadFromFile(path: String): ExecutionStatus
-
     fun toJson(): String
-
-    fun toCSV(): String
 }

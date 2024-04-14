@@ -37,11 +37,7 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
             database,
             argument,
         ->
-        when (argument) {
-            null, "json" -> Result.success(database.toJson())
-            "csv" -> Result.success(database.toCSV())
-            else -> Result.failure(InvalidOutputFormatException())
-        }
+        Result.success(database.toJson())
     },
 
     DatabaseCommand.CLEAR to ServerSideCommand

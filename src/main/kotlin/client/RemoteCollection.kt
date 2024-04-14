@@ -16,9 +16,13 @@ import org.example.exceptions.UnauthorizedException
 import org.example.lib.net.udp.ResultFrame
 import java.net.InetSocketAddress
 
-class RemoteDatabase(
+class RemoteCollection(
     private val address: InetSocketAddress,
 ) : DatabaseInterface {
+    companion object {
+        private val nullJsonElement = Json.encodeToJsonElement(null as Int?)
+    }
+
     private var commandSender: CommandSender? = null
 
     constructor(address: String, port: Int)
@@ -30,7 +34,7 @@ class RemoteDatabase(
 
     private fun sendCommandAndReceiveResult(
         command: DatabaseCommand,
-        argument: JsonElement
+        argument: JsonElement,
     ): Result<JsonElement> {
         checkNotNull(commandSender) { "You must login before using the database" }
 
@@ -55,27 +59,27 @@ class RemoteDatabase(
     }
 
     override fun getInfo(): String {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.INFO, Json.encodeToJsonElement(null as Int?))
+        val result = sendCommandAndReceiveResult(DatabaseCommand.INFO, nullJsonElement)
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
     override fun getHistory(): String {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.HISTORY, Json.encodeToJsonElement(null as Int?))
+        val result = sendCommandAndReceiveResult(DatabaseCommand.HISTORY, nullJsonElement)
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
     override fun getSumOfAnnualTurnover(): Double {
         val result =
-            sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, Json.encodeToJsonElement(null as Int?))
+            sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, nullJsonElement)
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
     override fun maxByFullName(): Organization? {
         val result =
-            sendCommandAndReceiveResult(DatabaseCommand.MAX_BY_FULL_NAME, Json.encodeToJsonElement(null as Int?))
+            sendCommandAndReceiveResult(DatabaseCommand.MAX_BY_FULL_NAME, nullJsonElement)
 
         if (result.isSuccess) {
             return Json.decodeFromJsonElement(result.getOrNull()!!)
@@ -113,7 +117,7 @@ class RemoteDatabase(
     }
 
     override fun removeHead(): Organization? {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_HEAD, Json.encodeToJsonElement(null as Int?))
+        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_HEAD, nullJsonElement)
 
         if (result.isSuccess) {
             return Json.decodeFromJsonElement(result.getOrNull()!!)
@@ -129,18 +133,11 @@ class RemoteDatabase(
         ).onFailure { throw it }
     }
 
-    override fun loadFromFile(path: String): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.READ, Json.encodeToJsonElement(path))
-        return ExecutionStatus.getByValue(result.isSuccess)
-    }
-
-    private fun sendShowCommand(format: String): String {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.SHOW, Json.encodeToJsonElement(format))
+    private fun sendShowCommand(): String {
+        val result = sendCommandAndReceiveResult(DatabaseCommand.SHOW, nullJsonElement)
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 
-    override fun toJson() = sendShowCommand("json")
-
-    override fun toCSV() = sendShowCommand("csv")
+    override fun toJson() = sendShowCommand()
 }

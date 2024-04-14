@@ -14,7 +14,6 @@ val commandNameToDatabaseCommand = mapOf(
     "command.update" to DatabaseCommand.UPDATE,
     "command.remove_by_id" to DatabaseCommand.REMOVE_BY_ID,
     "command.clear" to DatabaseCommand.CLEAR,
-    "command.read" to DatabaseCommand.READ,
     "command.execute_script" to DatabaseCommand.EXECUTE_SCRIPT,
     "command.exit" to DatabaseCommand.EXIT,
     "command.remove_head" to DatabaseCommand.REMOVE_HEAD,
@@ -44,9 +43,6 @@ fun commandSuccessMessage(command: DatabaseCommand, argument: Any?): String =
 
         DatabaseCommand.CLEAR ->
             Localization.get("message.collection_cleared")
-
-        DatabaseCommand.READ ->
-            String.format("%s.", Localization.get("message.collection.load.succeed"))
 
         DatabaseCommand.EXIT ->
             Localization.get("message.exit")

@@ -1,7 +1,7 @@
 package org.example
 
 import application.Application
-import client.RemoteDatabase
+import client.RemoteCollection
 
 object Client {
     @JvmStatic
@@ -12,7 +12,7 @@ object Client {
 
         val application = Application(
             authFile,
-            RemoteDatabase(
+            RemoteCollection(
                 serverIp,
                 serverPort
             )
