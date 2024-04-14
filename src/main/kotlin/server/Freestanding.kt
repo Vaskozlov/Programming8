@@ -94,18 +94,6 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
         Result.success(null)
     },
 
-    DatabaseCommand.SAVE to ServerSideCommand
-    {
-            _,
-            database,
-            argument,
-        ->
-        database.save()
-            .takeIf { it == ExecutionStatus.SUCCESS }
-            ?.let { Result.success(null) }
-            ?: throw FileWriteException("Unable to save to file")
-    },
-
     DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to ServerSideCommand
     {
             _,

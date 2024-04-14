@@ -74,11 +74,6 @@ class Application(
             Result.success(null)
         },
 
-        DatabaseCommand.SAVE to Command
-        { oDatabase, argument ->
-            Result.success(null)
-        },
-
         DatabaseCommand.READ to Command
         { oDatabase, argument ->
             val filename = argument as String
@@ -149,7 +144,6 @@ class Application(
         DatabaseCommand.HELP to { null },
         DatabaseCommand.INFO to { null },
         DatabaseCommand.CLEAR to { null },
-        DatabaseCommand.SAVE to { null },
         DatabaseCommand.EXIT to { null },
         DatabaseCommand.REMOVE_HEAD to { null },
         DatabaseCommand.HISTORY to { null },

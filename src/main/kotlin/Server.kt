@@ -8,7 +8,6 @@ object Server {
     @JvmStatic
     fun main(args: Array<String>) {
         val port = System.getenv("SERVER_PORT")?.toIntOrNull() ?: 8080
-
         Localization.loadBundle("localization/localization", "en")
         val database = Database()
         database.connect("jdbc:postgresql://localhost:5432/programming7")
@@ -16,6 +15,6 @@ object Server {
         CollectionCommandsReceiver(
             port,
             database
-        ).use { it.run() }
+        ).run()
     }
 }

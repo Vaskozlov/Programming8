@@ -129,11 +129,6 @@ class RemoteDatabase(
         ).onFailure { throw it }
     }
 
-    override fun save(): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.SAVE, Json.encodeToJsonElement(""))
-        return ExecutionStatus.getByValue(result.isSuccess)
-    }
-
     override fun loadFromFile(path: String): ExecutionStatus {
         val result = sendCommandAndReceiveResult(DatabaseCommand.READ, Json.encodeToJsonElement(path))
         return ExecutionStatus.getByValue(result.isSuccess)

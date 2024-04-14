@@ -18,13 +18,11 @@ import org.example.lib.getLocalDate
 import java.io.FileWriter
 import java.io.IOException
 import java.io.StringWriter
-import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.io.path.absolutePathString
 import kotlin.math.max
 
-class LocalDatabase :
+class LocalCollection :
     DatabaseInterface, Logging {
     private var idFactory = IdFactory(1)
 
@@ -193,10 +191,6 @@ class LocalDatabase :
         }
     }
 
-    override fun save(): ExecutionStatus {
-        return ExecutionStatus.SUCCESS
-    }
-
     private fun tryToWriteToFile(path: String): ExecutionStatus {
         return try {
             FileWriter(path).use { file ->
@@ -205,7 +199,7 @@ class LocalDatabase :
             }
 
             ExecutionStatus.SUCCESS
-        } catch (exception: IOException) {
+        } catch (_: IOException) {
             ExecutionStatus.FAILURE
         }
     }

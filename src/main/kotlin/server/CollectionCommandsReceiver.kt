@@ -14,14 +14,12 @@ import org.example.database.auth.AuthorizationInfo
 import org.example.lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.ResultFrame
 import org.example.lib.net.udp.User
-import java.io.Closeable
 import java.net.InetSocketAddress
 
 class CollectionCommandsReceiver(
     port: Int,
     database: Database,
 ) : Logging,
-    Closeable,
     ServerWithAuthorization(port, "command", AuthorizationManager(database)) {
     private val commandArguments: MutableMap<DatabaseCommand, (AuthorizationInfo, JsonElement) -> Any?> = mutableMapOf(
         DatabaseCommand.ADD to { _, jsonElement ->
@@ -44,9 +42,6 @@ class CollectionCommandsReceiver(
                 jsonElement
             )
         },
-        DatabaseCommand.SAVE to { _, _ ->
-            collectionOfOrganizations.save()
-        },
         DatabaseCommand.EXIT to { _, _ -> null },
         DatabaseCommand.CLEAR to { _, _ -> null },
         DatabaseCommand.REMOVE_HEAD to { _, _ -> null },
@@ -57,7 +52,7 @@ class CollectionCommandsReceiver(
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to { _, _ -> null },
     )
 
-    private val collectionOfOrganizations = LocalDatabase()
+    private val collectionOfOrganizations = LocalCollection()
 
     init {
         commandArguments[DatabaseCommand.ADD]?.let {
@@ -143,9 +138,5 @@ class CollectionCommandsReceiver(
         val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandWithArgument.value)
         val result = execute(command, user, collectionOfOrganizations, commandArgument)
         sendResult(user, result)
-    }
-
-    override fun close() {
-        collectionOfOrganizations.save()
     }
 }

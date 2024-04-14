@@ -28,8 +28,6 @@ interface DatabaseInterface {
 
     fun clear()
 
-    fun save(): ExecutionStatus
-
     fun loadFromFile(path: String): ExecutionStatus
 
     fun toJson(): String
