@@ -6,5 +6,5 @@ import kotlin.enums.enumEntries
 inline fun <reified T : Enum<T>> containsKey(key: String) =
     enumEntries<T>().map { it.name }.contains(key)
 
-inline fun <reified T : Enum<T>> valueOrNull(key: String) =
-    if (containsKey<T>(key)) enumValueOf<T>(key) else null
+inline fun <reified T : Enum<T>> valueOrNull(key: String?) =
+    if (key != null && containsKey<T>(key)) enumValueOf<T>(key) else null

@@ -20,11 +20,11 @@ interface CollectionInterface {
 
     fun modifyOrganization(updatedOrganization: Organization)
 
-    fun removeById(id: Int): ExecutionStatus
+    fun removeById(id: Int, creatorId: Int? = null): ExecutionStatus
 
-    fun removeAllByPostalAddress(address: Address)
+    fun removeAllByPostalAddress(address: Address, creatorId: Int? = null)
 
-    fun removeHead(): Organization?
+    fun removeHead(creatorId: Int? = null): Organization?
 
     fun clear()
 

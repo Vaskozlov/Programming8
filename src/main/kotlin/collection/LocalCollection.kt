@@ -13,6 +13,7 @@ import lib.Localization
 import lib.collections.CircledStorage
 import lib.valueOrNull
 import org.apache.logging.log4j.kotlin.Logging
+import org.example.database.CollectionToDatabase
 import org.example.database.Database
 import org.example.database.auth.AuthorizationInfo
 import org.example.lib.getLocalDate
@@ -23,6 +24,7 @@ import java.time.format.DateTimeFormatter
 class LocalCollection(private val database: Database) : CollectionInterface, Logging {
     private var idFactory = IdFactory(1)
 
+    private val databaseToCollection = CollectionToDatabase(database)
     private val initializationDate: LocalDateTime = LocalDateTime.now()
     private val history = CircledStorage<String>(11)
     private val organizations = mutableListOf<Organization>()
@@ -49,12 +51,13 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
            L.X,
            L.Y,
            L.Z,
-           L.NAME
+           L.NAME,
+           O.CREATOR_ID
         FROM ORGANIZATIONS O
              LEFT JOIN ADDRESS A ON O.POSTAL_ADDRESS_ID = A.ID
              LEFT JOIN COORDINATES C ON O.COORDINATES_ID = C.ID
              LEFT JOIN LOCATION L on A.LOCATION_ID = L.ID
-             INNER JOIN ORGANIZATION_TYPES OT ON OT.ID = O.ORGANIZATION_TYPE_ID;
+             LEFT JOIN ORGANIZATION_TYPES OT ON OT.ID = O.ORGANIZATION_TYPE_ID;
          """
     }
 
@@ -64,7 +67,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         }
     }
 
-    suspend fun loadFromDatabase() {
+    private suspend fun loadFromDatabase() {
         organizations.clear()
         storedOrganizations.clear()
 
@@ -73,7 +76,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         }
     }
 
-    suspend fun loadOrganization(result: ResultSet): Organization {
+    private fun loadOrganization(result: ResultSet): Organization {
         val organization = Organization(
             id = result.getInt("ID"),
             name = result.getString("NAME"),
@@ -94,9 +97,11 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
                     z = result.getLong("Z"),
                     name = result.getString("NAME")
                 )
-            )
+            ),
+            creatorId = result.getInt("CREATOR_ID")
         )
 
+        organization.optimize()
         organizations.add(organization)
         storedOrganizations.add(organization.toPairOfFullNameAndType())
 
@@ -170,6 +175,10 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         organizations.add(organization)
         storedOrganizations.add(organization.toPairOfFullNameAndType())
         organizations.sortBy { it.fullName }
+
+        runBlocking {
+            databaseToCollection.addOrganization(organization)
+        }
     }
 
     override fun modifyOrganization(updatedOrganization: Organization) {
@@ -180,26 +189,51 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             throw OrganizationNotFoundException()
         }
 
+        if (organization.creatorId != updatedOrganization.creatorId) {
+            throw IllegalAccessException()
+        }
+
         completeModification(organization, updatedOrganization)
     }
 
-    override fun removeAllByPostalAddress(address: Address) {
+    override fun removeAllByPostalAddress(address: Address, creatorId: Int?) {
         addToHistory(Localization.get("command.remove_all_by_postal_address") + " " + address.toString())
-        organizations.filter { it.postalAddress == address }.forEach {
-            organizations.remove(it)
-            storedOrganizations.remove(it.toPairOfFullNameAndType())
-        }
+        organizations
+            .filter { it.postalAddress == address && (it.creatorId == creatorId || creatorId == null) }
+            .forEach {
+                organizations.remove(it)
+                storedOrganizations.remove(it.toPairOfFullNameAndType())
+                runBlocking {
+                    databaseToCollection.removeOrganizationByID(it.id!!)
+                }
+            }
     }
 
-    override fun removeById(id: Int): ExecutionStatus {
+    override fun removeById(id: Int, creatorId: Int?): ExecutionStatus {
         addToHistory(Localization.get("command.remove_by_id") + " " + id.toString())
-        val elementRemoved = organizations.removeIf { it.id == id }
+        val elementRemoved = organizations.removeIf {
+            val result = it.id == id && (creatorId == null || creatorId == it.creatorId)
+
+            if (result) {
+                storedOrganizations.remove(it.toPairOfFullNameAndType())
+            }
+
+            result
+        }
+
+        if (elementRemoved) {
+            runBlocking {
+                databaseToCollection.removeOrganizationByID(id)
+            }
+        }
+
         return ExecutionStatus.getByValue(elementRemoved)
     }
 
-    override fun removeHead(): Organization? {
+    override fun removeHead(creatorId: Int?): Organization? {
         addToHistory(Localization.get("command.remove_head"))
-        val removedOrganization = organizations.removeFirstOrNull()
+        val removedOrganization = organizations.firstOrNull { creatorId == null || it.creatorId == creatorId }
+        organizations.remove(removedOrganization)
 
         removedOrganization?.let {
             storedOrganizations.remove(it.toPairOfFullNameAndType())
@@ -235,7 +269,9 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     private fun isModificationLegal(previous: Organization, newVersion: Organization): Boolean {
-        if (previous.fullName != newVersion.fullName || previous.type != newVersion.type) {
+        if (previous.creatorId == newVersion.creatorId &&
+            (previous.fullName != newVersion.fullName || previous.type != newVersion.type)
+        ) {
             return !isOrganizationAlreadyPresented(newVersion)
         }
 

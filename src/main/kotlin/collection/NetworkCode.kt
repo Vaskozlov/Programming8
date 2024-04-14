@@ -11,5 +11,6 @@ enum class NetworkCode(val value: Int) {
     ORGANIZATION_KEY_ERROR(405),
     INVALID_OUTPUT_FORMAT(406),
     UNAUTHORIZED(407),
+    ACCESS_LIMITED(408),
     FAILURE(500),
 }

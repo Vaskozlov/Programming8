@@ -12,7 +12,7 @@ import org.example.lib.net.udp.User
 abstract class ServerWithAuthorization(
     port: Int,
     commandFieldName: String,
-    private val authorizationManager: AuthorizationManager,
+    protected val authorizationManager: AuthorizationManager,
 ) : ServerWithCommands(port, commandFieldName) {
 
     abstract fun handleAuthorized(

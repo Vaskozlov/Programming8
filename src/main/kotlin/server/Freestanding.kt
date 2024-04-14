@@ -28,14 +28,14 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
         database.addIfMax(argument as Organization)
             .takeIf { it == ExecutionStatus.SUCCESS }
             ?.let { Result.success(null) }
-            ?: throw NotMaximumOrganizationException()
+            ?: Result.failure(NotMaximumOrganizationException())
     },
 
     DatabaseCommand.SHOW to ServerSideCommand
     {
             _,
             database,
-            argument,
+            _,
         ->
         Result.success(database.toJson())
     },
@@ -68,16 +68,16 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
         database.maxByFullName()
             .takeIf { it != null }
             ?.let { Result.success(it) }
-            ?: throw OrganizationNotFoundException()
+            ?: Result.failure(OrganizationNotFoundException())
     },
 
     DatabaseCommand.REMOVE_HEAD to ServerSideCommand
     {
             _,
             database,
-            _,
+            argument,
         ->
-        Result.success(database.removeHead())
+        Result.success(database.removeHead(argument as Int))
     },
 
     DatabaseCommand.REMOVE_BY_ID to ServerSideCommand
@@ -86,8 +86,11 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
             database,
             argument,
         ->
-        database.removeById(argument as Int)
-        Result.success(null)
+        val (id, creatorId) = argument as Pair<Int, Int>
+        database.removeById(id, creatorId)
+            .takeIf { it == ExecutionStatus.SUCCESS }
+            ?.let { Result.success(null) }
+            ?: Result.failure(OrganizationNotFoundException())
     },
 
     DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to ServerSideCommand
@@ -96,7 +99,8 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
             database,
             argument,
         ->
-        database.removeAllByPostalAddress(argument as Address)
+        val (address, creatorId) = argument as Pair<Address, Int>
+        database.removeAllByPostalAddress(address, creatorId)
         Result.success(null)
     },
 
@@ -153,6 +157,8 @@ fun errorToNetworkCode(error: Throwable?): NetworkCode {
         is OrganizationKeyException -> NetworkCode.ORGANIZATION_KEY_ERROR
 
         is InvalidOutputFormatException -> NetworkCode.INVALID_OUTPUT_FORMAT
+
+        is IllegalAccessException -> NetworkCode.ACCESS_LIMITED
 
         else -> NetworkCode.FAILURE
     }

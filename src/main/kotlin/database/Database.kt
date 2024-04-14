@@ -13,7 +13,7 @@ class Database {
         registerDriver(org.postgresql.Driver())
     }
 
-    fun registerDriver(driver: Driver) {
+    private fun registerDriver(driver: Driver) {
         DriverManager.registerDriver(driver)
     }
 
@@ -23,7 +23,7 @@ class Database {
 
     private fun prepareStatement(
         @Language("SQL") query: String,
-        arguments: List<Any> = emptyList<Any>()
+        arguments: List<Any?> = emptyList()
     ): PreparedStatement {
         val statement = connection!!.prepareStatement(query)
 
@@ -31,10 +31,11 @@ class Database {
             statement.setObject(i + 1, arguments[i])
         }
 
+        println(statement.toString())
         return statement
     }
 
-    suspend fun executeQuery(@Language("SQL") query: String, arguments: List<Any> = emptyList<Any>()) = sequence {
+    suspend fun executeQuery(@Language("SQL") query: String, arguments: List<Any?> = emptyList()) = sequence {
         connection?.let {
             prepareStatement(query, arguments).use {
                 val result = it.executeQuery()
@@ -45,7 +46,7 @@ class Database {
         }
     }
 
-    fun executeUpdate(@Language("SQL") query: String, arguments: List<Any> = emptyList<Any>()) {
+    fun executeUpdate(@Language("SQL") query: String, arguments: List<Any?> = emptyList<Any>()) {
         connection?.let {
             prepareStatement(query, arguments).use {
                 it.executeUpdate()

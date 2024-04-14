@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * @param town    can not be null
  */
 @Serializable
-class Address(val zipCode: String?, val town: Location?) {
+data class Address(val zipCode: String?, val town: Location?) {
     fun validate() {
         require(!(zipCode != null && zipCode.length < 3)) { "Invalid zip code" }
         requireNotNull(town) { "OrganizationDatabase.Address town must not be null" }

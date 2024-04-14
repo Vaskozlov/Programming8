@@ -1,6 +1,7 @@
 package server
 
 import collection.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -21,26 +22,38 @@ class CollectionCommandsReceiver(
     database: Database,
 ) : Logging,
     ServerWithAuthorization(port, "command", AuthorizationManager(database)) {
+
+    private fun getCreatorId(authorizationInfo: AuthorizationInfo): Int {
+        val creatorId: Int
+
+        runBlocking {
+            creatorId = authorizationManager.getUserId(authorizationInfo.login)!!
+        }
+
+        return creatorId
+    }
+
     private val commandArguments: MutableMap<DatabaseCommand, (AuthorizationInfo, JsonElement) -> Any?> = mutableMapOf(
-        DatabaseCommand.ADD to { _, jsonElement ->
-            Json.decodeFromJsonElement<Organization>(
+        DatabaseCommand.ADD to { authorizationInfo, jsonElement ->
+            val organization = Json.decodeFromJsonElement<Organization>(
                 jsonElement
             )
+
+            organization.creatorId = getCreatorId(authorizationInfo)
+            organization
         },
-        DatabaseCommand.REMOVE_BY_ID to { _, jsonElement ->
-            Json.decodeFromJsonElement<Int>(
-                jsonElement
-            )
+        DatabaseCommand.REMOVE_BY_ID to { authorizationInfo, jsonElement ->
+            Json.decodeFromJsonElement<Int>(jsonElement) to getCreatorId(authorizationInfo)
         },
-        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to { _, jsonElement ->
-            Json.decodeFromJsonElement<Address>(
-                jsonElement
-            )
+        DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to { authorizationInfo, jsonElement ->
+            Json.decodeFromJsonElement<Address>(jsonElement) to getCreatorId(authorizationInfo)
         },
         DatabaseCommand.SHOW to { _, _ -> null },
         DatabaseCommand.EXIT to { _, _ -> null },
         DatabaseCommand.CLEAR to { _, _ -> null },
-        DatabaseCommand.REMOVE_HEAD to { _, _ -> null },
+        DatabaseCommand.REMOVE_HEAD to { authorizationInfo, _ ->
+            getCreatorId(authorizationInfo)
+        },
         DatabaseCommand.MAX_BY_FULL_NAME to { _, _ -> null },
         DatabaseCommand.CLEAR to { _, _ -> null },
         DatabaseCommand.INFO to { _, _ -> null },

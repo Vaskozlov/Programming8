@@ -101,6 +101,10 @@ fun exceptionToMessage(exception: Throwable?): String =
             "message.organization.error.not_found"
         )
 
+        is IllegalAccessException -> Localization.get(
+            "message.illegal_access"
+        )
+
         is IOException -> Localization.get(
             "message.network.error"
         )

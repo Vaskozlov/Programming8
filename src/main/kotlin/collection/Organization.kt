@@ -15,6 +15,7 @@ data class Organization(
     var employeesCount: Int?,
     var type: OrganizationType?,
     var postalAddress: Address?,
+    var creatorId: Int? = null,
 ) : Comparable<Organization> {
     fun validate() {
         val validationResult = checkCorrectness()

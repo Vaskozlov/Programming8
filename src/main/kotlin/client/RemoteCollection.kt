@@ -54,6 +54,7 @@ class RemoteCollection(
             NetworkCode.ORGANIZATION_KEY_ERROR -> Result.failure(OrganizationKeyException())
             NetworkCode.INVALID_OUTPUT_FORMAT -> Result.failure(InvalidOutputFormatException())
             NetworkCode.UNAUTHORIZED -> Result.failure(UnauthorizedException())
+            NetworkCode.ACCESS_LIMITED -> Result.failure(IllegalAccessException())
             NetworkCode.FAILURE -> Result.failure(Exception())
         }
     }
@@ -104,19 +105,19 @@ class RemoteCollection(
         ).onFailure { throw it }
     }
 
-    override fun removeById(id: Int): ExecutionStatus {
+    override fun removeById(id: Int, creatorId: Int?): ExecutionStatus {
         val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_BY_ID, Json.encodeToJsonElement(id))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 
-    override fun removeAllByPostalAddress(address: Address) {
+    override fun removeAllByPostalAddress(address: Address, creatorId: Int?) {
         sendCommandAndReceiveResult(
             DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS,
             Json.encodeToJsonElement(address)
         ).onFailure { throw it }
     }
 
-    override fun removeHead(): Organization? {
+    override fun removeHead(creatorId: Int?): Organization? {
         val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_HEAD, nullJsonElement)
 
         if (result.isSuccess) {
