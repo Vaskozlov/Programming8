@@ -5,10 +5,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import network.client.DatabaseCommand
+import org.example.database.auth.AuthorizationInfo
 import org.example.lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.ChannelUDPNetwork
 import org.example.lib.net.udp.slice.PacketSlicer
-import server.AuthorizationInfo
 import java.net.InetSocketAddress
 
 class CommandSender(

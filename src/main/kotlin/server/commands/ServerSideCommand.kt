@@ -1,7 +1,7 @@
 package org.example.server.commands
 
 import org.example.lib.net.udp.User
-import database.DatabaseInterface
+import collection.DatabaseInterface
 
 fun interface ServerSideCommand {
     fun execute(

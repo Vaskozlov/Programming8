@@ -1,4 +1,4 @@
-package database
+package collection
 
 enum class OrganizationType {
     COMMERCIAL,

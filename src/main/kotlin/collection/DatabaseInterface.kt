@@ -1,7 +1,7 @@
-package database
+package collection
 
 import lib.ExecutionStatus
-import server.AuthorizationInfo
+import org.example.database.auth.AuthorizationInfo
 
 interface DatabaseInterface {
     fun login(authorizationInfo: AuthorizationInfo)
@@ -28,7 +28,7 @@ interface DatabaseInterface {
 
     fun clear()
 
-    fun save(path: String): ExecutionStatus
+    fun save(): ExecutionStatus
 
     fun loadFromFile(path: String): ExecutionStatus
 

@@ -1,8 +1,8 @@
 package application
 
-import database.Address
-import database.DatabaseInterface
-import database.Organization
+import collection.Address
+import collection.DatabaseInterface
+import collection.Organization
 import exceptions.*
 import kotlinx.serialization.json.Json
 import lib.BufferedReaderWithQueueOfStreams
@@ -11,13 +11,15 @@ import lib.IOHelper
 import lib.Localization
 import network.client.DatabaseCommand
 import org.example.client.commands.Command
-import server.AuthorizationInfo
+import org.example.database.auth.AuthorizationInfo
+import org.example.database.auth.Login
+import org.example.database.auth.Password
 import java.io.IOException
 import java.io.InputStreamReader
 
 class Application(
     private val authFile: String?,
-    private val database: DatabaseInterface
+    private val database: DatabaseInterface,
 ) {
     private val bufferedReaderWithQueueOfStreams: BufferedReaderWithQueueOfStreams = BufferedReaderWithQueueOfStreams(
         InputStreamReader(System.`in`)
@@ -74,10 +76,7 @@ class Application(
 
         DatabaseCommand.SAVE to Command
         { oDatabase, argument ->
-            oDatabase.save(argument as String)
-                .takeIf { it == ExecutionStatus.SUCCESS }
-                ?.let { Result.success(null) }
-                ?: Result.failure(FileWriteException())
+            Result.success(null)
         },
 
         DatabaseCommand.READ to Command
@@ -212,7 +211,9 @@ class Application(
             val login = bufferedReaderWithQueueOfStreams.readLine()
             print(Localization.get("message.ask.password"))
             val password = bufferedReaderWithQueueOfStreams.readLine()
-            authorizationInfo = AuthorizationInfo(login, password)
+
+            authorizationInfo =
+                AuthorizationInfo(Login.construct(login).getOrThrow(), Password.construct(password).getOrThrow())
         }
 
         database.login(authorizationInfo)

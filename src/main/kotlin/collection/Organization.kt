@@ -1,4 +1,4 @@
-package database
+package collection
 
 import exceptions.IllegalArgumentsForOrganizationException
 import kotlinx.datetime.LocalDate

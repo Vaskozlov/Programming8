@@ -1,9 +1,9 @@
 package client
 
-import database.Address
-import database.DatabaseInterface
-import database.NetworkCode
-import database.Organization
+import collection.Address
+import collection.DatabaseInterface
+import collection.NetworkCode
+import collection.Organization
 import exceptions.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -11,9 +11,9 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
 import network.client.DatabaseCommand
+import org.example.database.auth.AuthorizationInfo
 import org.example.exceptions.UnauthorizedException
 import org.example.lib.net.udp.ResultFrame
-import server.AuthorizationInfo
 import java.net.InetSocketAddress
 
 class RemoteDatabase(
@@ -129,8 +129,8 @@ class RemoteDatabase(
         ).onFailure { throw it }
     }
 
-    override fun save(path: String): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.SAVE, Json.encodeToJsonElement(path))
+    override fun save(): ExecutionStatus {
+        val result = sendCommandAndReceiveResult(DatabaseCommand.SAVE, Json.encodeToJsonElement(""))
         return ExecutionStatus.getByValue(result.isSuccess)
     }
 

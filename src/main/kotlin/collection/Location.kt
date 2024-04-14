@@ -1,4 +1,4 @@
-package database
+package collection
 
 import kotlinx.serialization.Serializable
 import lib.CSV.CSVStreamWriter

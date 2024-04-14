@@ -1,8 +1,8 @@
 package server
 
-import database.Address
-import database.NetworkCode
-import database.Organization
+import collection.Address
+import collection.NetworkCode
+import collection.Organization
 import exceptions.*
 import lib.ExecutionStatus
 import network.client.DatabaseCommand
@@ -10,17 +10,21 @@ import org.example.server.commands.ServerSideCommand
 
 var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     DatabaseCommand.ADD to ServerSideCommand
-    { _,
-      database,
-      argument ->
+    {
+            _,
+            database,
+            argument,
+        ->
         database.add(argument as Organization)
         Result.success(null)
     },
 
     DatabaseCommand.ADD_IF_MAX to ServerSideCommand
-    { _,
-      database,
-      argument ->
+    {
+            _,
+            database,
+            argument,
+        ->
         database.addIfMax(argument as Organization)
             .takeIf { it == ExecutionStatus.SUCCESS }
             ?.let { Result.success(null) }
@@ -28,9 +32,11 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     },
 
     DatabaseCommand.SHOW to ServerSideCommand
-    { _,
-      database,
-      argument ->
+    {
+            _,
+            database,
+            argument,
+        ->
         when (argument) {
             null, "json" -> Result.success(database.toJson())
             "csv" -> Result.success(database.toCSV())
@@ -39,24 +45,30 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     },
 
     DatabaseCommand.CLEAR to ServerSideCommand
-    { _,
-      database,
-      _ ->
+    {
+            _,
+            database,
+            _,
+        ->
         database.clear()
         Result.success(null)
     },
 
     DatabaseCommand.INFO to ServerSideCommand
-    { _,
-      database,
-      _ ->
+    {
+            _,
+            database,
+            _,
+        ->
         Result.success(database.getInfo())
     },
 
     DatabaseCommand.MAX_BY_FULL_NAME to ServerSideCommand
-    { _,
-      database,
-      _ ->
+    {
+            _,
+            database,
+            _,
+        ->
         database.maxByFullName()
             .takeIf { it != null }
             ?.let { Result.success(it) }
@@ -64,64 +76,80 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     },
 
     DatabaseCommand.REMOVE_HEAD to ServerSideCommand
-    { _,
-      database,
-      _ ->
+    {
+            _,
+            database,
+            _,
+        ->
         Result.success(database.removeHead())
     },
 
     DatabaseCommand.REMOVE_BY_ID to ServerSideCommand
-    { _,
-      database,
-      argument ->
+    {
+            _,
+            database,
+            argument,
+        ->
         database.removeById(argument as Int)
         Result.success(null)
     },
 
     DatabaseCommand.SAVE to ServerSideCommand
-    { _,
-      database,
-      argument ->
-        database.save(argument as String)
+    {
+            _,
+            database,
+            argument,
+        ->
+        database.save()
             .takeIf { it == ExecutionStatus.SUCCESS }
             ?.let { Result.success(null) }
-            ?: throw FileWriteException(argument)
+            ?: throw FileWriteException("Unable to save to file")
     },
 
     DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to ServerSideCommand
-    { _,
-      database,
-      argument ->
+    {
+            _,
+            database,
+            argument,
+        ->
         database.removeAllByPostalAddress(argument as Address)
         Result.success(null)
     },
 
     DatabaseCommand.UPDATE to ServerSideCommand
-    { _,
-      database,
-      argument ->
+    {
+            _,
+            database,
+            argument,
+        ->
         database.modifyOrganization(argument as Organization)
         Result.success(null)
     },
 
     DatabaseCommand.EXIT to ServerSideCommand
-    { _,
-      _,
-      _ ->
+    {
+            _,
+            _,
+            _,
+        ->
         Result.success(null)
     },
 
     DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to ServerSideCommand
-    { _,
-      database,
-      _ ->
+    {
+            _,
+            database,
+            _,
+        ->
         Result.success(database.getSumOfAnnualTurnover())
     },
 
     DatabaseCommand.HISTORY to ServerSideCommand
-    { _,
-      database,
-      _ ->
+    {
+            _,
+            database,
+            _,
+        ->
         Result.success(database.getHistory())
     },
 )

@@ -1,9 +1,9 @@
 package application
 
-import database.Address
-import database.Coordinates
-import database.Location
-import database.OrganizationType
+import collection.Address
+import collection.Coordinates
+import collection.Location
+import collection.OrganizationType
 import exceptions.KeyboardInterruptException
 import lib.BufferedReaderWithQueueOfStreams
 import lib.Localization

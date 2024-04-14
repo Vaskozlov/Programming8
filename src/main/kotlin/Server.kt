@@ -1,22 +1,21 @@
 package org.example
 
 import lib.Localization
-import server.DatabaseCommandsReceiver
-import kotlin.io.path.Path
+import org.example.database.Database
+import server.CollectionCommandsReceiver
 
 object Server {
     @JvmStatic
     fun main(args: Array<String>) {
         val port = System.getenv("SERVER_PORT")?.toIntOrNull() ?: 8080
-        val clientsPath = System.getenv("CLIENTS_PATH")
-        val databasePath = System.getenv("DATABASE_PATH")
 
         Localization.loadBundle("localization/localization", "en")
+        val database = Database()
+        database.connect("jdbc:postgresql://localhost:5432/programming7")
 
-        DatabaseCommandsReceiver(
+        CollectionCommandsReceiver(
             port,
-            Path(clientsPath),
-            Path(databasePath)
+            database
         ).use { it.run() }
     }
 }

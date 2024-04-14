@@ -1,6 +1,6 @@
 package server
 
-import database.*
+import collection.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -8,22 +8,21 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import network.client.DatabaseCommand
 import org.apache.logging.log4j.kotlin.Logging
+import org.example.database.AuthorizationManager
+import org.example.database.Database
+import org.example.database.auth.AuthorizationInfo
 import org.example.lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.ResultFrame
 import org.example.lib.net.udp.User
 import java.io.Closeable
 import java.net.InetSocketAddress
-import java.nio.file.Path
-import kotlin.io.path.absolutePathString
 
-class DatabaseCommandsReceiver(
+class CollectionCommandsReceiver(
     port: Int,
-    userStoragePath: Path,
-    private val databaseStoragePath: Path
+    database: Database,
 ) : Logging,
     Closeable,
-    ServerWithAuthorization(port, "command", AuthorizationManager(userStoragePath)) {
-    private var usersDatabases: MutableMap<AuthorizationInfo, LocalDatabase> = HashMap()
+    ServerWithAuthorization(port, "command", AuthorizationManager(database)) {
     private val commandArguments: MutableMap<DatabaseCommand, (AuthorizationInfo, JsonElement) -> Any?> = mutableMapOf(
         DatabaseCommand.ADD to { _, jsonElement ->
             Json.decodeFromJsonElement<Organization>(
@@ -45,8 +44,8 @@ class DatabaseCommandsReceiver(
                 jsonElement
             )
         },
-        DatabaseCommand.SAVE to { authorizationInfo, _ ->
-            getUserDatabaseFile(authorizationInfo).absolutePathString()
+        DatabaseCommand.SAVE to { _, _ ->
+            collectionOfOrganizations.save()
         },
         DatabaseCommand.EXIT to { _, _ -> null },
         DatabaseCommand.CLEAR to { _, _ -> null },
@@ -57,6 +56,8 @@ class DatabaseCommandsReceiver(
         DatabaseCommand.HISTORY to { _, _ -> null },
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to { _, _ -> null },
     )
+
+    private val collectionOfOrganizations = LocalDatabase()
 
     init {
         commandArguments[DatabaseCommand.ADD]?.let {
@@ -70,17 +71,13 @@ class DatabaseCommandsReceiver(
         commandArguments[DatabaseCommand.READ]?.let {
             commandArguments[DatabaseCommand.SHOW] = it;
         }
-
-        val databaseDir = databaseStoragePath.toFile()
-        databaseDir.mkdirs()
-        require(databaseDir.isDirectory)
     }
 
     private fun execute(
         command: DatabaseCommand,
         user: User,
         database: DatabaseInterface,
-        argument: Any?
+        argument: Any?,
     ): Result<Any?> {
         return commandMap[command]!!.execute(user, database, argument)
     }
@@ -88,15 +85,10 @@ class DatabaseCommandsReceiver(
     private fun getArgumentForTheCommand(
         command: DatabaseCommand,
         authorizationInfo: AuthorizationInfo,
-        jsonHolder: JsonElement
+        jsonHolder: JsonElement,
     ): Any? {
         return commandArguments[command]?.invoke(authorizationInfo, jsonHolder)
     }
-
-    private fun getUserDatabase(authorizationInfo: AuthorizationInfo): DatabaseInterface =
-        usersDatabases.getOrPut(
-            authorizationInfo
-        ) { LocalDatabase(getUserDatabaseFile(authorizationInfo)) }
 
     private fun serialize(value: Any?): JsonElement =
         when (value) {
@@ -110,7 +102,7 @@ class DatabaseCommandsReceiver(
     private fun send(
         user: User,
         code: NetworkCode,
-        data: JsonElement
+        data: JsonElement,
     ) {
         val frame = ResultFrame(code, data)
         val encodedFrame = Json.encodeToString(frame)
@@ -122,7 +114,7 @@ class DatabaseCommandsReceiver(
 
     private fun sendResult(
         user: User,
-        result: Result<Any?>
+        result: Result<Any?>,
     ) {
         val code = if (result.isSuccess) NetworkCode.SUCCESS else errorToNetworkCode(result.exceptionOrNull())
         logger.trace("Sending result to $user, code: $code")
@@ -136,10 +128,9 @@ class DatabaseCommandsReceiver(
     override fun handleAuthorized(
         user: User,
         authorizationInfo: AuthorizationInfo,
-        commandWithArgument: CommandWithArgument
+        commandWithArgument: CommandWithArgument,
     ) {
         val command = commandWithArgument.command
-        val database = getUserDatabase(authorizationInfo)
         logger.trace("Received command $command, from $user")
 
         if (!commandArguments.containsKey(command)) {
@@ -150,17 +141,11 @@ class DatabaseCommandsReceiver(
 
         logger.trace("Executing command: $command , from $user")
         val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandWithArgument.value)
-        val result = execute(command, user, database, commandArgument)
+        val result = execute(command, user, collectionOfOrganizations, commandArgument)
         sendResult(user, result)
     }
 
-    private fun getUserDatabaseFile(authorizationInfo: AuthorizationInfo): Path {
-        return databaseStoragePath.resolve("${authorizationInfo.login}.csv")
-    }
-
     override fun close() {
-        usersDatabases.forEach { (authorizationInfo, database) ->
-            database.save(getUserDatabaseFile(authorizationInfo).absolutePathString())
-        }
+        collectionOfOrganizations.save()
     }
 }

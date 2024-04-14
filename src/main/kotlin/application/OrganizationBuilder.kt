@@ -1,7 +1,7 @@
 package application
 
-import database.Address
-import database.Organization
+import collection.Address
+import collection.Organization
 import lib.BufferedReaderWithQueueOfStreams
 import org.example.lib.getLocalDate
 

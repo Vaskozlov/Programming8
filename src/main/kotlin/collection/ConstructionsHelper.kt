@@ -1,4 +1,4 @@
-package database
+package collection
 
 import kotlinx.datetime.LocalDate
 import lib.CSV.CSVStreamLikeReader

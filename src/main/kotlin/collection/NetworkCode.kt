@@ -1,4 +1,4 @@
-package database
+package collection
 
 enum class NetworkCode(val value: Int) {
     SUCCESS(200),

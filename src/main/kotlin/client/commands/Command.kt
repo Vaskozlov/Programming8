@@ -1,6 +1,6 @@
 package org.example.client.commands
 
-import database.DatabaseInterface
+import collection.DatabaseInterface
 
 fun interface Command {
     fun executeImplementation(database: DatabaseInterface, argument: Any?): Result<Any?>

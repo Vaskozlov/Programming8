@@ -1,6 +1,6 @@
 package org.example.lib.net.udp
 
-import database.NetworkCode
+import collection.NetworkCode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 

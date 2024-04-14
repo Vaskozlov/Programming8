@@ -1,5 +1,6 @@
 package lib.net.udp
 
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.lib.net.udp.User
 import org.example.lib.net.udp.slice.PacketSlicer
@@ -9,7 +10,7 @@ abstract class Server protected constructor(port: Int) : Logging {
     val network = PacketSlicer(networkInterface)
     private var running = false
 
-    protected abstract fun handlePacket(user: User, jsonHolder: JsonHolder)
+    protected abstract suspend fun handlePacket(user: User, jsonHolder: JsonHolder)
 
     fun run() {
         running = true
@@ -23,7 +24,11 @@ abstract class Server protected constructor(port: Int) : Logging {
     private fun loopCycle() {
         try {
             val packet = network.receiveStringInPackets()
-            handlePacket(packet.user, packet)
+
+            // TODO: add thread
+            runBlocking {
+                handlePacket(packet.user, packet)
+            }
         } catch (e: Exception) {
             logger.error("Error while receiving packet: $e")
         }

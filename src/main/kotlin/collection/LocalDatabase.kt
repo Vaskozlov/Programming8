@@ -1,4 +1,4 @@
-package database
+package collection
 
 import exceptions.OrganizationAlreadyPresentedException
 import exceptions.OrganizationNotFoundException
@@ -13,8 +13,8 @@ import lib.IdFactory
 import lib.Localization
 import lib.collections.CircledStorage
 import org.apache.logging.log4j.kotlin.Logging
+import org.example.database.auth.AuthorizationInfo
 import org.example.lib.getLocalDate
-import server.AuthorizationInfo
 import java.io.FileWriter
 import java.io.IOException
 import java.io.StringWriter
@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.io.path.absolutePathString
 import kotlin.math.max
 
-class LocalDatabase(path: Path) :
+class LocalDatabase :
     DatabaseInterface, Logging {
     private var idFactory = IdFactory(1)
 
@@ -39,10 +39,6 @@ class LocalDatabase(path: Path) :
             prettyPrint = true
             prettyPrintIndent = "  "
         }
-    }
-
-    init {
-        loadFromFile(path.absolutePathString())
     }
 
     override fun login(authorizationInfo: AuthorizationInfo) {
@@ -197,10 +193,8 @@ class LocalDatabase(path: Path) :
         }
     }
 
-    override fun save(path: String): ExecutionStatus {
-        addToHistory(Localization.get("command.save"))
-        return tryToWriteToFile(path)
-
+    override fun save(): ExecutionStatus {
+        return ExecutionStatus.SUCCESS
     }
 
     private fun tryToWriteToFile(path: String): ExecutionStatus {
