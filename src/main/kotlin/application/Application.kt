@@ -1,7 +1,7 @@
 package application
 
 import collection.Address
-import collection.DatabaseInterface
+import collection.CollectionInterface
 import collection.Organization
 import exceptions.*
 import kotlinx.serialization.json.Json
@@ -19,7 +19,7 @@ import java.io.InputStreamReader
 
 class Application(
     private val authFile: String?,
-    private val database: DatabaseInterface,
+    private val database: CollectionInterface,
 ) {
     private val bufferedReaderWithQueueOfStreams: BufferedReaderWithQueueOfStreams = BufferedReaderWithQueueOfStreams(
         InputStreamReader(System.`in`)

@@ -63,7 +63,7 @@ class CollectionCommandsReceiver(
     private fun execute(
         command: DatabaseCommand,
         user: User,
-        database: DatabaseInterface,
+        database: CollectionInterface,
         argument: Any?,
     ): Result<Any?> {
         return commandMap[command]!!.execute(user, database, argument)

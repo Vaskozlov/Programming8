@@ -1,12 +1,12 @@
 package org.example.server.commands
 
 import org.example.lib.net.udp.User
-import collection.DatabaseInterface
+import collection.CollectionInterface
 
 fun interface ServerSideCommand {
     fun execute(
         user: User?,
-        database: DatabaseInterface,
+        database: CollectionInterface,
         argument: Any?
     ): Result<Any?>
 }

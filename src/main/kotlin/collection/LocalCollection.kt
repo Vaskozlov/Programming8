@@ -5,25 +5,18 @@ import exceptions.OrganizationNotFoundException
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import lib.CSV.CSVStreamLikeReader
-import lib.CSV.CSVStreamWriter
 import lib.ExecutionStatus
-import lib.IOHelper
 import lib.IdFactory
 import lib.Localization
 import lib.collections.CircledStorage
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.database.auth.AuthorizationInfo
 import org.example.lib.getLocalDate
-import java.io.FileWriter
-import java.io.IOException
-import java.io.StringWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.max
 
 class LocalCollection :
-    DatabaseInterface, Logging {
+    CollectionInterface, Logging {
     private var idFactory = IdFactory(1)
 
     private val initializationDate: LocalDateTime = LocalDateTime.now()

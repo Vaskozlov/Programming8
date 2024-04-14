@@ -3,7 +3,7 @@ package collection
 import lib.ExecutionStatus
 import org.example.database.auth.AuthorizationInfo
 
-interface DatabaseInterface {
+interface CollectionInterface {
     fun login(authorizationInfo: AuthorizationInfo)
 
     fun getInfo(): String

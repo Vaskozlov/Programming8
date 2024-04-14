@@ -1,7 +1,7 @@
 package client
 
 import collection.Address
-import collection.DatabaseInterface
+import collection.CollectionInterface
 import collection.NetworkCode
 import collection.Organization
 import exceptions.*
@@ -18,7 +18,7 @@ import java.net.InetSocketAddress
 
 class RemoteCollection(
     private val address: InetSocketAddress,
-) : DatabaseInterface {
+) : CollectionInterface {
     companion object {
         private val nullJsonElement = Json.encodeToJsonElement(null as Int?)
     }
