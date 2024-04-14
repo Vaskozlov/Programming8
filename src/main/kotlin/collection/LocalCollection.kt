@@ -20,6 +20,7 @@ import org.example.lib.getLocalDate
 import java.sql.ResultSet
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.ConcurrentSkipListSet
 
 class LocalCollection(private val database: Database) : CollectionInterface, Logging {
     private var idFactory = IdFactory(1)
@@ -27,8 +28,8 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     private val databaseToCollection = CollectionToDatabase(database)
     private val initializationDate: LocalDateTime = LocalDateTime.now()
     private val history = CircledStorage<String>(11)
-    private val organizations = mutableListOf<Organization>()
-    private val storedOrganizations = mutableSetOf<Pair<String?, OrganizationType?>>()
+    private val organizations = ConcurrentSkipListSet<Organization>()
+    private val storedOrganizations = ConcurrentSkipListSet<Pair<String?, OrganizationType?>>()
 
     companion object {
         @OptIn(ExperimentalSerializationApi::class)
@@ -174,7 +175,6 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         organization.validate()
         organizations.add(organization)
         storedOrganizations.add(organization.toPairOfFullNameAndType())
-        organizations.sortBy { it.fullName }
 
         runBlocking {
             databaseToCollection.addOrganization(organization)
@@ -254,7 +254,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
 
     override fun toJson(): String {
         addToHistory(Localization.get("command.show") + " JSON")
-        return prettyJson.encodeToString(organizations)
+        return prettyJson.encodeToString(organizations.toList())
     }
 
     private fun completeModification(organization: Organization, updatedOrganization: Organization) {
