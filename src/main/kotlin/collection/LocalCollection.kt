@@ -159,29 +159,6 @@ class LocalCollection :
         clearImplementation()
     }
 
-    private fun tryToLoadFromFile(filename: String): ExecutionStatus {
-        clearImplementation()
-
-        val fileContent = IOHelper.readFile(filename) ?: return ExecutionStatus.FAILURE
-
-        var maxId = 0
-        val reader = CSVStreamLikeReader(fileContent.substring(fileContent.indexOf('\n') + 1))
-
-        while (!reader.isEndOfStream) {
-            if (reader.elementLeftInLine < 10) {
-                reader.nextLine()
-                continue
-            }
-
-            val newOrganization: Organization = organizationFromStream(reader)
-            maxId = max(maxId, newOrganization.id!!)
-            addImplementation(newOrganization)
-        }
-
-        idFactory.setValue(maxId + 1)
-        return ExecutionStatus.SUCCESS
-    }
-
     override fun toJson(): String {
         addToHistory(Localization.get("command.show") + " JSON")
         return prettyJson.encodeToString(organizations)
