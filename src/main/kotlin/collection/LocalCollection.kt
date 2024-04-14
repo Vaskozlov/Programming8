@@ -10,12 +10,13 @@ import lib.IdFactory
 import lib.Localization
 import lib.collections.CircledStorage
 import org.apache.logging.log4j.kotlin.Logging
+import org.example.database.Database
 import org.example.database.auth.AuthorizationInfo
 import org.example.lib.getLocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class LocalCollection :
+class LocalCollection(private val database: Database) :
     CollectionInterface, Logging {
     private var idFactory = IdFactory(1)
 

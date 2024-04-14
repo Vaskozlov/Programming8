@@ -48,7 +48,7 @@ class CollectionCommandsReceiver(
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to { _, _ -> null },
     )
 
-    private val collectionOfOrganizations = LocalCollection()
+    private val collectionOfOrganizations = LocalCollection(database)
 
     init {
         commandArguments[DatabaseCommand.ADD]?.let {
