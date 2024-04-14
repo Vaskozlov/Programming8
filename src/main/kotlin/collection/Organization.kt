@@ -3,8 +3,6 @@ package collection
 import exceptions.IllegalArgumentsForOrganizationException
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import lib.CSV.CSVStreamWriter
-import lib.WritableToCSVStream
 
 @Serializable
 data class Organization(
@@ -16,8 +14,8 @@ data class Organization(
     var fullName: String?,
     var employeesCount: Int?,
     var type: OrganizationType?,
-    var postalAddress: Address?
-) : Comparable<Organization>, WritableToCSVStream {
+    var postalAddress: Address?,
+) : Comparable<Organization> {
     fun validate() {
         val validationResult = checkCorrectness()
 
@@ -26,6 +24,10 @@ data class Organization(
         }
 
         postalAddress?.validate()
+    }
+
+    fun optimize() {
+        postalAddress = postalAddress?.simplify()
     }
 
     fun fillNullFromAnotherOrganization(organization: Organization) {
@@ -38,35 +40,6 @@ data class Organization(
         employeesCount = employeesCount ?: organization.employeesCount
         type = type ?: organization.type
         postalAddress = fillAddressWithMissedInformation(postalAddress, organization.postalAddress)
-    }
-
-    override fun writeToStream(stream: CSVStreamWriter) {
-        stream.append(id)
-        stream.append(name)
-        coordinates!!.writeToStream(stream)
-        stream.append(creationDate.toString())
-        stream.append(annualTurnover)
-        stream.append(fullName)
-
-        lib.writeNullableToStream(
-            stream,
-            employeesCount,
-            2,
-            stream::append
-        )
-
-        lib.writeNullableToStream(
-            stream,
-            type.toString(),
-            1,
-            stream::append
-        )
-
-        lib.writeNullableToStream(
-            stream,
-            postalAddress,
-            5,
-        ) { it.writeToStream(stream) }
     }
 
     fun toPairOfFullNameAndType(): Pair<String?, OrganizationType?> {

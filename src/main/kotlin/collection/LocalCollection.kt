@@ -2,6 +2,8 @@ package collection
 
 import exceptions.OrganizationAlreadyPresentedException
 import exceptions.OrganizationNotFoundException
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -9,15 +11,16 @@ import lib.ExecutionStatus
 import lib.IdFactory
 import lib.Localization
 import lib.collections.CircledStorage
+import lib.valueOrNull
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.database.Database
 import org.example.database.auth.AuthorizationInfo
 import org.example.lib.getLocalDate
+import java.sql.ResultSet
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class LocalCollection(private val database: Database) :
-    CollectionInterface, Logging {
+class LocalCollection(private val database: Database) : CollectionInterface, Logging {
     private var idFactory = IdFactory(1)
 
     private val initializationDate: LocalDateTime = LocalDateTime.now()
@@ -31,6 +34,73 @@ class LocalCollection(private val database: Database) :
             prettyPrint = true
             prettyPrintIndent = "  "
         }
+
+        const val queryToGetOrganizations = """
+        SELECT O.ID,
+           O.NAME,
+           C.X,
+           C.Y,
+           O.CREATION_TIME,
+           O.ANNUAL_TURNOVER,
+           O.FULL_NAME,
+           O.EMPLOYEES_COUNT,
+           OT.NAME AS ORGANIZATION_TYPE_NAME,
+           A.ZIP_CODE,
+           L.X,
+           L.Y,
+           L.Z,
+           L.NAME
+        FROM ORGANIZATIONS O
+             LEFT JOIN ADDRESS A ON O.POSTAL_ADDRESS_ID = A.ID
+             LEFT JOIN COORDINATES C ON O.COORDINATES_ID = C.ID
+             LEFT JOIN LOCATION L on A.LOCATION_ID = L.ID
+             INNER JOIN ORGANIZATION_TYPES OT ON OT.ID = O.ORGANIZATION_TYPE_ID;
+         """
+    }
+
+    init {
+        runBlocking {
+            loadFromDatabase()
+        }
+    }
+
+    suspend fun loadFromDatabase() {
+        organizations.clear()
+        storedOrganizations.clear()
+
+        for (rawOrganization in this.database.executeQuery(queryToGetOrganizations)) {
+            loadOrganization(rawOrganization)
+        }
+    }
+
+    suspend fun loadOrganization(result: ResultSet): Organization {
+        val organization = Organization(
+            id = result.getInt("ID"),
+            name = result.getString("NAME"),
+            coordinates = Coordinates(
+                x = result.getLong("X"),
+                y = result.getLong("Y")
+            ),
+            creationDate = result.getDate("CREATION_TIME").toLocalDate().toKotlinLocalDate(),
+            annualTurnover = result.getDouble("ANNUAL_TURNOVER"),
+            fullName = result.getString("FULL_NAME"),
+            employeesCount = result.getInt("EMPLOYEES_COUNT"),
+            type = valueOrNull<OrganizationType>(result.getString("ORGANIZATION_TYPE_NAME")),
+            postalAddress = Address(
+                zipCode = result.getString("ZIP_CODE"),
+                town = Location(
+                    x = result.getDouble("X"),
+                    y = result.getFloat("Y"),
+                    z = result.getLong("Z"),
+                    name = result.getString("NAME")
+                )
+            )
+        )
+
+        organizations.add(organization)
+        storedOrganizations.add(organization.toPairOfFullNameAndType())
+
+        return organization
     }
 
     override fun login(authorizationInfo: AuthorizationInfo) {
@@ -41,9 +111,7 @@ class LocalCollection(private val database: Database) :
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
         return String.format(
-            Localization.get("organization.info_message"),
-            formatter.format(initializationDate),
-            organizations.size
+            Localization.get("organization.info_message"), formatter.format(initializationDate), organizations.size
         )
     }
 
@@ -56,8 +124,7 @@ class LocalCollection(private val database: Database) :
         }.toString()
     }
 
-    private fun addToHistory(message: String) =
-        history.add(getLocalDate().toString() + " " + message)
+    private fun addToHistory(message: String) = history.add(getLocalDate().toString() + " " + message)
 
     override fun maxByFullName(): Organization? {
         addToHistory(Localization.get("command.max_by_full_name"))
@@ -118,12 +185,10 @@ class LocalCollection(private val database: Database) :
 
     override fun removeAllByPostalAddress(address: Address) {
         addToHistory(Localization.get("command.remove_all_by_postal_address") + " " + address.toString())
-        organizations
-            .filter { it.postalAddress == address }
-            .forEach {
-                organizations.remove(it)
-                storedOrganizations.remove(it.toPairOfFullNameAndType())
-            }
+        organizations.filter { it.postalAddress == address }.forEach {
+            organizations.remove(it)
+            storedOrganizations.remove(it.toPairOfFullNameAndType())
+        }
     }
 
     override fun removeById(id: Int): ExecutionStatus {
