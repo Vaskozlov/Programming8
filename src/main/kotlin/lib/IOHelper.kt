@@ -16,7 +16,7 @@ object IOHelper {
                     return String(stream.readAllBytes(), StandardCharsets.UTF_8)
                 }
             }
-        } catch (exception: IOException) {
+        } catch (_: IOException) {
             return null
         }
     }
