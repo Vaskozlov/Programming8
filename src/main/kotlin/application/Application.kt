@@ -69,7 +69,6 @@ class Application(
         DatabaseCommand.CLEAR to Command
         { oDatabase, _ ->
             oDatabase.clear()
-            Result.success(null)
         },
 
         DatabaseCommand.EXECUTE_SCRIPT to Command

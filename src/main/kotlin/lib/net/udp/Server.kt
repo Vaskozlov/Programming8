@@ -1,23 +1,35 @@
 package lib.net.udp
 
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.lib.net.udp.User
 import org.example.lib.net.udp.slice.PacketSlicer
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class Server protected constructor(port: Int) : Logging {
     private val networkInterface = DatagramBasedUDPNetwork(port)
     val network = PacketSlicer(networkInterface)
-    private var running = false
+    private var running = AtomicBoolean(false)
+    private val cachedPool = ThreadPoolExecutor(
+        0,
+        2,
+        60L,
+        TimeUnit.SECONDS,
+        SynchronousQueue()
+    )
 
-    protected abstract suspend fun handlePacket(user: User, jsonHolder: JsonHolder)
+    protected abstract fun handlePacket(user: User, jsonHolder: JsonHolder)
 
     fun run() {
-        running = true
+        running.set(true)
         logger.info("Server is running")
 
-        while (running) {
-            loopCycle()
+        cachedPool.submit {
+            while (running.get()) {
+                loopCycle()
+            }
         }
     }
 
@@ -25,10 +37,10 @@ abstract class Server protected constructor(port: Int) : Logging {
         try {
             val packet = network.receiveStringInPackets()
 
-            // TODO: add thread
-            runBlocking {
+            Thread {
                 handlePacket(packet.user, packet)
-            }
+            }.start()
+
         } catch (e: Exception) {
             logger.error("Error while receiving packet: $e")
         }

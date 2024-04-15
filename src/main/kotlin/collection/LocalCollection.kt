@@ -29,7 +29,14 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     private val initializationDate: LocalDateTime = LocalDateTime.now()
     private val history = CircledStorage<String>(11)
     private val organizations = ConcurrentSkipListSet<Organization>()
-    private val storedOrganizations = ConcurrentSkipListSet<Pair<String?, OrganizationType?>>()
+    private val storedOrganizations =
+        ConcurrentSkipListSet<Pair<String?, OrganizationType?>>(
+            (java.util.Comparator { o1, o2 ->
+                val result = o1.first!!.compareTo(o2.first!!)
+                result.takeIf { it != 0 || o1.second == null || o2.second == null }
+                    ?: o1.second!!.compareTo(o2.second!!)
+            })
+        )
 
     companion object {
         @OptIn(ExperimentalSerializationApi::class)
@@ -68,11 +75,11 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         }
     }
 
-    private suspend fun loadFromDatabase() {
+    private fun loadFromDatabase() = runBlocking {
         organizations.clear()
         storedOrganizations.clear()
 
-        for (rawOrganization in this.database.executeQuery(queryToGetOrganizations)) {
+        for (rawOrganization in database.executeQuery(queryToGetOrganizations)) {
             loadOrganization(rawOrganization)
         }
     }
@@ -171,14 +178,11 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         return ExecutionStatus.FAILURE
     }
 
-    private fun addNoCheck(organization: Organization) {
+    private fun addNoCheck(organization: Organization): Int {
         organization.validate()
         organizations.add(organization)
         storedOrganizations.add(organization.toPairOfFullNameAndType())
-
-        runBlocking {
-            databaseToCollection.addOrganization(organization)
-        }
+        return databaseToCollection.addOrganization(organization)
     }
 
     override fun modifyOrganization(updatedOrganization: Organization) {
@@ -211,23 +215,21 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
 
     override fun removeById(id: Int, creatorId: Int?): ExecutionStatus {
         addToHistory(Localization.get("command.remove_by_id") + " " + id.toString())
-        val elementRemoved = organizations.removeIf {
-            val result = it.id == id && (creatorId == null || creatorId == it.creatorId)
+        val organizationWithGivenId = organizations.firstOrNull { it.id == id }
 
-            if (result) {
-                storedOrganizations.remove(it.toPairOfFullNameAndType())
-            }
-
-            result
+        if (organizationWithGivenId == null) {
+            return ExecutionStatus.FAILURE
         }
 
-        if (elementRemoved) {
-            runBlocking {
-                databaseToCollection.removeOrganizationByID(id)
-            }
+        if (creatorId != null && organizationWithGivenId.creatorId != creatorId) {
+            return ExecutionStatus.FAILURE
         }
 
-        return ExecutionStatus.getByValue(elementRemoved)
+        organizations.remove(organizationWithGivenId)
+        storedOrganizations.remove(organizationWithGivenId.toPairOfFullNameAndType())
+        databaseToCollection.removeOrganizationByID(organizationWithGivenId.id!!)
+
+        return ExecutionStatus.SUCCESS
     }
 
     override fun removeHead(creatorId: Int?): Organization? {
@@ -242,14 +244,22 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         return removedOrganization
     }
 
-    private fun clearImplementation() {
-        organizations.clear()
-        storedOrganizations.clear()
+    private fun clearImplementation(creatorId: Int? = null): Result<Unit> {
+        val organizationToRemove = organizations.filter { creatorId == null || it.creatorId == creatorId }
+
+        organizationToRemove.forEach {
+            organizations.remove(it)
+            storedOrganizations.remove(it.toPairOfFullNameAndType())
+            databaseToCollection.removeOrganizationByID(it.id!!)
+        }
+
+        return organizationToRemove.takeIf { it.isNotEmpty() }?.let { Result.success(Unit) }
+            ?: Result.failure(OrganizationNotFoundException())
     }
 
-    override fun clear() {
+    override fun clear(creatorId: Int?): Result<Unit> {
         addToHistory(Localization.get("command.clear"))
-        clearImplementation()
+        return clearImplementation(creatorId)
     }
 
     override fun toJson(): String {
@@ -264,8 +274,11 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             throw OrganizationAlreadyPresentedException()
         }
 
-        addNoCheck(updatedOrganization)
+        val newId = addNoCheck(updatedOrganization)
         organizations.remove(organization)
+        organizations.add(updatedOrganization)
+        databaseToCollection.removeOrganizationByID(organization.id!!)
+        databaseToCollection.modifyOrganizationId(organization.id!!, newId)
     }
 
     private fun isModificationLegal(previous: Organization, newVersion: Organization): Boolean {

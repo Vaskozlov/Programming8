@@ -25,7 +25,7 @@ abstract class ServerWithAuthorization(
         // do nothing
     }
 
-    private suspend fun registerNewUser(authorizationInfo: AuthorizationInfo, user: User, frame: Frame): Boolean {
+    private fun registerNewUser(authorizationInfo: AuthorizationInfo, user: User, frame: Frame): Boolean {
         logger.warn("User ${authorizationInfo.login} is not authorized, it will be created")
         val creationResult = authorizationManager.addUser(authorizationInfo)
 
@@ -38,27 +38,24 @@ abstract class ServerWithAuthorization(
         return true
     }
 
-    override suspend fun handlePacket(user: User, jsonHolder: JsonHolder) {
+    override fun handlePacket(user: User, jsonHolder: JsonHolder) {
         val frame = Json.decodeFromJsonElement<Frame>(jsonHolder.jsonNodeRoot)
         val authorizationInfo = frame.authorization
 
         when {
             authorizationManager.isValidUser(authorizationInfo) -> {
                 logger.info("Received packet from authorized user: ${authorizationInfo.login}")
+                handleAuthorized(user, authorizationInfo, frame.value)
             }
 
             authorizationManager.loginExists(authorizationInfo.login) -> {
                 logger.warn("User ${authorizationInfo.login} is not authorized, but it exists")
                 handleUnauthorized(user, frame.value)
-                return
             }
 
-            else ->
-                if (!registerNewUser(authorizationInfo, user, frame)) {
-                    return
-                }
+            else -> if (registerNewUser(authorizationInfo, user, frame)) {
+                handleAuthorized(user, authorizationInfo, frame.value)
+            }
         }
-
-        handleAuthorized(user, authorizationInfo, frame.value)
     }
 }

@@ -2,6 +2,7 @@ package org.example.database
 
 import collection.Organization
 import collection.OrganizationType
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toJavaLocalDate
 
 class CollectionToDatabase(private val database: Database) {
@@ -28,19 +29,13 @@ VALUES (?, (SELECT ID FROM COORDS),
 
         const val REMOVE_BY_ID_QUERY = "DELETE FROM ORGANIZATIONS WHERE ID = ?;"
 
-//        const val REMOVE_ALL_BY_POSTAL_ADDRESS_QUERY = """
-//DELETE
-//FROM ORGANIZATIONS
-//WHERE POSTAL_ADDRESS_ID IN
-//      (SELECT A.ID
-//       FROM ADDRESS A
-//                INNER JOIN LOCATION L
-//                           ON A.LOCATION_ID = L.ID AND A.ZIP_CODE = ? AND L.X = ? AND
-//                              L.Y = ? AND L.Z = ? AND L.NAME = ?);
-//        """
+        const val MODIFY_ORGANIZATION_ID_QUERY =
+            """
+UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
+        """
     }
 
-    suspend fun addOrganization(organization: Organization) {
+    fun addOrganization(organization: Organization) = runBlocking {
         val organizationType = organizationTypeToId(organization.type)
         val location = organization.postalAddress?.town
         val coordinates = organization.coordinates
@@ -65,27 +60,29 @@ VALUES (?, (SELECT ID FROM COORDS),
                 organization.creatorId
             )
         )
+
+        database.executeQuery(
+            "SELECT ID FROM ORGANIZATIONS WHERE FULL_NAME = ? ORDER BY ID DESC LIMIT 1", listOf(
+                organization.fullName
+            )
+        ).first().getInt("ID")
     }
 
-    suspend fun modifyOrganization(organization: Organization) {
-
+    fun modifyOrganizationId(oldId: Int, newId: Int) {
+        database.executeUpdate(
+            MODIFY_ORGANIZATION_ID_QUERY,
+            listOf(oldId, newId)
+        )
     }
 
     fun removeOrganizationByID(id: Int) {
         database.executeUpdate(REMOVE_BY_ID_QUERY, listOf(id))
     }
 
-//    fun removeAllByPostalAddress(address: Address) {
-//        val location = address.town
-//        database.executeUpdate(
-//            REMOVE_ALL_BY_POSTAL_ADDRESS_QUERY,
-//            listOf(address.zipCode, location?.x, location?.y, location?.z, location?.name)
-//        )
-//    }
-
-    private suspend fun organizationTypeToId(type: OrganizationType?): Int? =
+    private fun organizationTypeToId(type: OrganizationType?): Int? = runBlocking {
         database.executeQuery(
             "SELECT ID FROM ORGANIZATION_TYPES WHERE NAME = ?",
             listOf(type.toString())
         ).firstOrNull()?.getInt("ID")
+    }
 }

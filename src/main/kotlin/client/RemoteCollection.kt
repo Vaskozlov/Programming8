@@ -127,16 +127,20 @@ class RemoteCollection(
         return null
     }
 
-    override fun clear() {
+    override fun clear(creatorId: Int?): Result<Unit> {
         sendCommandAndReceiveResult(
             DatabaseCommand.CLEAR,
             Json.encodeToJsonElement(null as Int?)
         ).onFailure { throw it }
+        return Result.success(Unit)
     }
 
     private fun sendShowCommand(): String {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.SHOW, nullJsonElement)
-        result.onFailure { throw it }
+        val result = sendCommandAndReceiveResult(
+            DatabaseCommand.SHOW,
+            nullJsonElement
+        ).onFailure { throw it }
+
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
 

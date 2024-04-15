@@ -44,10 +44,9 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     {
             _,
             database,
-            _,
+            argument,
         ->
-        database.clear()
-        Result.success(null)
+        database.clear(argument as Int)
     },
 
     DatabaseCommand.INFO to ServerSideCommand

@@ -26,7 +26,7 @@ interface CollectionInterface {
 
     fun removeHead(creatorId: Int? = null): Organization?
 
-    fun clear()
+    fun clear(creatorId: Int? = null) : Result<Unit>
 
     fun toJson(): String
 }

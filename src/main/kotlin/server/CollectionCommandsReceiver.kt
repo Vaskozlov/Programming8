@@ -16,12 +16,15 @@ import org.example.lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.ResultFrame
 import org.example.lib.net.udp.User
 import java.net.InetSocketAddress
+import java.util.concurrent.ForkJoinPool
 
 class CollectionCommandsReceiver(
     port: Int,
     database: Database,
 ) : Logging,
     ServerWithAuthorization(port, "command", AuthorizationManager(database)) {
+
+    private val forkedPool = ForkJoinPool()
 
     private fun getCreatorId(authorizationInfo: AuthorizationInfo): Int {
         val creatorId: Int
@@ -50,12 +53,11 @@ class CollectionCommandsReceiver(
         },
         DatabaseCommand.SHOW to { _, _ -> null },
         DatabaseCommand.EXIT to { _, _ -> null },
-        DatabaseCommand.CLEAR to { _, _ -> null },
+        DatabaseCommand.CLEAR to { authorizationInfo, _ -> getCreatorId(authorizationInfo) },
         DatabaseCommand.REMOVE_HEAD to { authorizationInfo, _ ->
             getCreatorId(authorizationInfo)
         },
         DatabaseCommand.MAX_BY_FULL_NAME to { _, _ -> null },
-        DatabaseCommand.CLEAR to { _, _ -> null },
         DatabaseCommand.INFO to { _, _ -> null },
         DatabaseCommand.HISTORY to { _, _ -> null },
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to { _, _ -> null },
@@ -142,6 +144,9 @@ class CollectionCommandsReceiver(
         logger.trace("Executing command: $command , from $user")
         val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandWithArgument.value)
         val result = execute(command, user, collectionOfOrganizations, commandArgument)
-        sendResult(user, result)
+
+        forkedPool.execute {
+            sendResult(user, result)
+        }
     }
 }

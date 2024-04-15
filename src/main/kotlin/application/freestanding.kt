@@ -98,7 +98,7 @@ fun exceptionToMessage(exception: Throwable?): String =
         )
 
         is OrganizationNotFoundException -> Localization.get(
-            "message.organization.error.not_found"
+            "message.organization.error.key_error"
         )
 
         is IllegalAccessException -> Localization.get(

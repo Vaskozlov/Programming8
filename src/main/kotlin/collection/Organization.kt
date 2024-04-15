@@ -71,7 +71,7 @@ data class Organization(
 
     override fun compareTo(other: Organization): Int {
         val result = fullName!!.compareTo(other.fullName!!)
-        return if (result == 0) type!!.compareTo(other.type!!) else result
+        return if (result == 0 && type != null) type!!.compareTo(other.type!!) else result
     }
 
     private fun checkCorrectness(): ValidationResult {

@@ -1,5 +1,6 @@
 package org.example.database
 
+import kotlinx.coroutines.runBlocking
 import org.example.database.auth.AuthorizationInfo
 import org.example.database.auth.Login
 
@@ -7,12 +8,14 @@ class AuthorizationManager(private val database: Database) {
     suspend fun getLogins() =
         database.executeQuery("SELECT LOGIN FROM USERS").map { it.getString("LOGIN") }
 
-    suspend fun loginExists(login: Login) = database.executeQuery(
-        "SELECT 1 FROM USERS WHERE EXISTS (SELECT 1 FROM USERS WHERE LOGIN = ?)",
-        listOf(login.toString())
-    ).iterator().hasNext()
+    fun loginExists(login: Login) = runBlocking {
+        database.executeQuery(
+            "SELECT 1 FROM USERS WHERE EXISTS (SELECT 1 FROM USERS WHERE LOGIN = ?)",
+            listOf(login.toString())
+        ).iterator().hasNext()
+    }
 
-    suspend fun isValidUser(authorizationInfo: AuthorizationInfo) =
+    fun isValidUser(authorizationInfo: AuthorizationInfo) = runBlocking {
         database.executeQuery(
             "SELECT * FROM USERS WHERE LOGIN = ? AND PASSWORD = ?",
             listOf(
@@ -20,13 +23,16 @@ class AuthorizationManager(private val database: Database) {
                 authorizationInfo.password.hashedPassword()
             )
         ).iterator().hasNext()
+    }
 
-    suspend fun getUserId(login: Login) = database.executeQuery(
-        "SELECT ID FROM USERS WHERE LOGIN = ?",
-        listOf(login.toString())
-    ).firstOrNull()?.getInt("ID")
+    fun getUserId(login: Login) = runBlocking {
+        database.executeQuery(
+            "SELECT ID FROM USERS WHERE LOGIN = ?",
+            listOf(login.toString())
+        ).firstOrNull()?.getInt("ID")
+    }
 
-    suspend fun addUser(authorizationInfo: AuthorizationInfo): Result<Unit> {
+    fun addUser(authorizationInfo: AuthorizationInfo): Result<Unit> {
         if (loginExists(authorizationInfo.login)) {
             return Result.failure(Exception("User already exists"))
         }
