@@ -23,9 +23,6 @@ class CollectionCommandsReceiver(
     database: Database,
 ) : Logging,
     ServerWithAuthorization(port, "command", AuthorizationManager(database)) {
-
-    private val forkedPool = ForkJoinPool()
-
     private fun getCreatorId(authorizationInfo: AuthorizationInfo): Int {
         val creatorId: Int
 
@@ -119,7 +116,11 @@ class CollectionCommandsReceiver(
         result: Result<Any?>,
     ) {
         val code = if (result.isSuccess) NetworkCode.SUCCESS else errorToNetworkCode(result.exceptionOrNull())
-        logger.trace("Sending result to $user, code: $code")
+
+        ForkJoinPool.commonPool().execute {
+            logger.trace("Sending result to $user, code: $code")
+        }
+
         send(user, code, serialize(result.getOrNull()))
     }
 
@@ -145,7 +146,7 @@ class CollectionCommandsReceiver(
         val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandWithArgument.value)
         val result = execute(command, user, collectionOfOrganizations, commandArgument)
 
-        forkedPool.execute {
+        ForkJoinPool.commonPool().execute {
             sendResult(user, result)
         }
     }
