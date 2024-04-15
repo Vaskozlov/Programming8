@@ -17,8 +17,8 @@ class Database {
         DriverManager.registerDriver(driver)
     }
 
-    fun connect(url: String) {
-        connection = DriverManager.getConnection(url)
+    fun connect(url: String, login: String?, password: String?) {
+        connection = DriverManager.getConnection(url, login, password)
     }
 
     private fun prepareStatement(
