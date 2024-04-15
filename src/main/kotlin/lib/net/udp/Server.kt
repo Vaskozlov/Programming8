@@ -36,11 +36,7 @@ abstract class Server protected constructor(port: Int) : Logging {
     private fun loopCycle() {
         try {
             val packet = network.receiveStringInPackets()
-
-            Thread {
-                handlePacket(packet.user, packet)
-            }.start()
-
+            Thread { handlePacket(packet.user, packet) }.start()
         } catch (e: Exception) {
             logger.error("Error while receiving packet: $e")
         }

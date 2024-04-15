@@ -216,7 +216,7 @@ class Application(
         }
     }
 
-    fun stop() {
+    private fun stop() {
         running = false
     }
 
@@ -238,12 +238,7 @@ class Application(
         }
 
         val executionArgument = argumentExecutor.invoke(commandArgument)
-
-        if (databaseCommand == DatabaseCommand.EXECUTE_SCRIPT) {
-            executeCommand(databaseCommand, executionArgument)
-        } else {
-            executeCommand(databaseCommand, executionArgument)
-        }
+        executeCommand(databaseCommand, executionArgument)
     }
 
     private fun executeCommand(databaseCommand: DatabaseCommand, argument: Any?) {
