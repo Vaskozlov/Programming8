@@ -10,7 +10,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
-import network.client.DatabaseCommand
 import org.example.database.auth.AuthorizationInfo
 import org.example.exceptions.UnauthorizedException
 import org.example.lib.net.udp.ResultFrame

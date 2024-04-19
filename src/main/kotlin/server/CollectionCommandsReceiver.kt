@@ -7,7 +7,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import network.client.DatabaseCommand
+import client.DatabaseCommand
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.database.AuthorizationManager
 import org.example.database.Database

@@ -1,4 +1,4 @@
-package org.example.client.commands
+package org.example.client
 
 import collection.CollectionInterface
 

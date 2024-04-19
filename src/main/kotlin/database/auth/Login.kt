@@ -24,6 +24,7 @@ class Login {
 
     private constructor(login: String) {
         this.login = login
+        Thread()
     }
 
     override fun toString() = login

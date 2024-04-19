@@ -2,7 +2,7 @@ package application
 
 import exceptions.*
 import lib.Localization
-import network.client.DatabaseCommand
+import client.DatabaseCommand
 import org.example.exceptions.UnauthorizedException
 import java.io.IOException
 

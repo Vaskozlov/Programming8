@@ -1,4 +1,4 @@
-package network.client
+package client
 
 enum class DatabaseCommand {
     INFO,

@@ -18,8 +18,8 @@ open class DatagramBasedUDPNetwork(private val socket: DatagramSocket) :
         return packet
     }
 
-    override fun send(byteArray: ByteArray, address: InetSocketAddress) {
-        val packet = DatagramPacket(byteArray, byteArray.size, address.address, address.port)
+    override fun send(data: ByteArray, address: InetSocketAddress) {
+        val packet = DatagramPacket(data, data.size, address.address, address.port)
         socket.send(packet)
     }
 

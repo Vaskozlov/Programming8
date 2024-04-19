@@ -10,7 +10,7 @@ class AuthorizationManager(private val database: Database) {
 
     fun loginExists(login: Login) = runBlocking {
         database.executeQuery(
-            "SELECT 1 FROM USERS WHERE EXISTS (SELECT 1 FROM USERS WHERE LOGIN = ?)",
+            "SELECT COUNT(ID) > 0 FROM USERS WHERE LOGIN = ?",
             listOf(login.toString())
         ).iterator().hasNext()
     }

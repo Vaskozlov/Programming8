@@ -22,14 +22,19 @@ abstract class Server protected constructor(port: Int) : Logging {
 
     protected abstract fun handlePacket(user: User, jsonHolder: JsonHolder)
 
+    private fun loop()
+    {
+        while (running.get()) {
+            loopCycle()
+        }
+    }
+
     fun run() {
         running.set(true)
         logger.info("Server is running")
 
         cachedPool.submit {
-            while (running.get()) {
-                loopCycle()
-            }
+            loop()
         }
     }
 

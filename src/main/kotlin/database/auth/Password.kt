@@ -29,5 +29,6 @@ class Password {
 
     override fun toString() = password
 
+    // Salt can be added to the end and the beginning of the password in order to increase security
     fun hashedPassword() = Hashing.sha1().hashString(password, Charsets.UTF_8).toString()
 }

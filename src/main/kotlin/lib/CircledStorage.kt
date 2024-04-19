@@ -1,4 +1,4 @@
-package lib.collections
+package org.example.lib
 
 /**
  * Stores limited number of elements, when user attempts to add more overrides the oldest-added element

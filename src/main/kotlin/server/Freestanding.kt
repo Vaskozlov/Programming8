@@ -5,7 +5,7 @@ import collection.NetworkCode
 import collection.Organization
 import exceptions.*
 import lib.ExecutionStatus
-import network.client.DatabaseCommand
+import client.DatabaseCommand
 import org.example.server.commands.ServerSideCommand
 
 var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(

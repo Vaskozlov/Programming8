@@ -11,8 +11,8 @@ import lib.BufferedReaderWithQueueOfStreams
 import lib.ExecutionStatus
 import lib.IOHelper
 import lib.Localization
-import network.client.DatabaseCommand
-import org.example.client.commands.Command
+import client.DatabaseCommand
+import org.example.client.Command
 import org.example.database.auth.AuthorizationInfo
 import org.example.database.auth.Login
 import org.example.database.auth.Password
