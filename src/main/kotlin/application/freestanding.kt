@@ -1,8 +1,9 @@
 package application
 
-import exceptions.*
-import lib.Localization
 import client.DatabaseCommand
+import exceptions.*
+import kotlinx.datetime.LocalDateTime
+import lib.Localization
 import org.example.exceptions.UnauthorizedException
 import java.io.IOException
 
@@ -12,6 +13,7 @@ val commandNameToDatabaseCommand = mapOf(
     "command.show" to DatabaseCommand.SHOW,
     "command.add" to DatabaseCommand.ADD,
     "command.update" to DatabaseCommand.UPDATE,
+    "command.update_time" to DatabaseCommand.UPDATE_TIME,
     "command.remove_by_id" to DatabaseCommand.REMOVE_BY_ID,
     "command.clear" to DatabaseCommand.CLEAR,
     "command.execute_script" to DatabaseCommand.EXECUTE_SCRIPT,
@@ -40,6 +42,9 @@ fun commandSuccessMessage(command: DatabaseCommand, argument: Any?): String =
 
         DatabaseCommand.UPDATE ->
             Localization.get("message.organization_modified")
+
+        DatabaseCommand.UPDATE_TIME ->
+            (argument as LocalDateTime).toString()
 
         DatabaseCommand.CLEAR ->
             Localization.get("message.collection_cleared")
@@ -94,10 +99,6 @@ fun exceptionToMessage(exception: Throwable?): String =
         )
 
         is OrganizationKeyException -> Localization.get(
-            "message.organization.error.key_error"
-        )
-
-        is OrganizationNotFoundException -> Localization.get(
             "message.organization.error.key_error"
         )
 

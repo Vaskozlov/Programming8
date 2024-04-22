@@ -5,6 +5,7 @@ import collection.CollectionInterface
 import collection.NetworkCode
 import collection.Organization
 import exceptions.*
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -12,7 +13,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
 import org.example.database.auth.AuthorizationInfo
 import org.example.exceptions.UnauthorizedException
-import org.example.lib.net.udp.ResultFrame
+import lib.net.udp.ResultFrame
 import java.net.InetSocketAddress
 
 class RemoteCollection(
@@ -144,4 +145,18 @@ class RemoteCollection(
     }
 
     override fun toJson() = sendShowCommand()
+
+    override fun getCollection(): List<Organization> {
+        val json = sendShowCommand()
+        return Json.decodeFromString(json)
+    }
+
+    override fun getLastModificationTime(): LocalDateTime {
+        val result = sendCommandAndReceiveResult(
+            DatabaseCommand.UPDATE_TIME,
+            nullJsonElement
+        ).onFailure { throw it }
+
+        return Json.decodeFromJsonElement(result.getOrNull()!!)
+    }
 }

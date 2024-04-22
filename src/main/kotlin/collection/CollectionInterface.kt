@@ -1,5 +1,6 @@
 package collection
 
+import kotlinx.datetime.LocalDateTime
 import lib.ExecutionStatus
 import org.example.database.auth.AuthorizationInfo
 
@@ -26,7 +27,11 @@ interface CollectionInterface {
 
     fun removeHead(creatorId: Int? = null): Organization?
 
-    fun clear(creatorId: Int? = null) : Result<Unit>
+    fun clear(creatorId: Int? = null): Result<Unit>
 
     fun toJson(): String
+
+    fun getCollection(): List<Organization>
+
+    fun getLastModificationTime(): LocalDateTime
 }

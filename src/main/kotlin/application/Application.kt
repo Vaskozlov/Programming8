@@ -1,5 +1,6 @@
 package application
 
+import client.DatabaseCommand
 import collection.Address
 import collection.CollectionInterface
 import collection.Organization
@@ -11,7 +12,6 @@ import lib.BufferedReaderWithQueueOfStreams
 import lib.ExecutionStatus
 import lib.IOHelper
 import lib.Localization
-import client.DatabaseCommand
 import org.example.client.Command
 import org.example.database.auth.AuthorizationInfo
 import org.example.database.auth.Login
@@ -56,6 +56,11 @@ class Application(
         { oDatabase, argument ->
             oDatabase.modifyOrganization(argument as Organization)
             Result.success(null)
+        },
+
+        DatabaseCommand.UPDATE_TIME to Command
+        { oDatabase, _ ->
+            Result.success(oDatabase.getLastModificationTime())
         },
 
         DatabaseCommand.REMOVE_BY_ID to Command
@@ -135,6 +140,7 @@ class Application(
         DatabaseCommand.EXIT to { null },
         DatabaseCommand.REMOVE_HEAD to { null },
         DatabaseCommand.HISTORY to { null },
+        DatabaseCommand.UPDATE_TIME to { null },
         DatabaseCommand.MAX_BY_FULL_NAME to { null },
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to { null },
         DatabaseCommand.SHOW to { null },

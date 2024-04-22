@@ -1,4 +1,4 @@
-package org.example.lib.net.udp
+package lib.net.udp
 
 import collection.NetworkCode
 import kotlinx.serialization.Serializable

@@ -1,19 +1,20 @@
 package server
 
+import client.DatabaseCommand
 import collection.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import client.DatabaseCommand
+import lib.net.udp.ResultFrame
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.database.AuthorizationManager
 import org.example.database.Database
 import org.example.database.auth.AuthorizationInfo
 import org.example.lib.net.udp.CommandWithArgument
-import org.example.lib.net.udp.ResultFrame
 import org.example.lib.net.udp.User
 import java.net.InetSocketAddress
 import java.util.concurrent.ForkJoinPool
@@ -42,6 +43,7 @@ class CollectionCommandsReceiver(
             organization.creatorId = getCreatorId(authorizationInfo)
             organization
         },
+
         DatabaseCommand.REMOVE_BY_ID to { authorizationInfo, jsonElement ->
             Json.decodeFromJsonElement<Int>(jsonElement) to getCreatorId(authorizationInfo)
         },
@@ -50,6 +52,7 @@ class CollectionCommandsReceiver(
         },
         DatabaseCommand.SHOW to { _, _ -> null },
         DatabaseCommand.EXIT to { _, _ -> null },
+        DatabaseCommand.UPDATE_TIME to { _, _ -> null },
         DatabaseCommand.CLEAR to { authorizationInfo, _ -> getCreatorId(authorizationInfo) },
         DatabaseCommand.REMOVE_HEAD to { authorizationInfo, _ ->
             getCreatorId(authorizationInfo)
@@ -95,7 +98,8 @@ class CollectionCommandsReceiver(
             is Int -> Json.encodeToJsonElement(value)
             is Address -> Json.encodeToJsonElement(value)
             is String -> Json.encodeToJsonElement(value)
-            else -> Json.encodeToJsonElement(null as Int?)
+            is LocalDateTime -> Json.encodeToJsonElement(value)
+            else -> throw IllegalArgumentException("Unknown type")
         }
 
     private fun send(

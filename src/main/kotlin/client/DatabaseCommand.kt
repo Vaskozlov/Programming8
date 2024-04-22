@@ -15,5 +15,6 @@ enum class DatabaseCommand {
     SUM_OF_ANNUAL_TURNOVER,
     MAX_BY_FULL_NAME,
     EXECUTE_SCRIPT,
-    HELP;
+    HELP,
+    UPDATE_TIME
 }

@@ -139,6 +139,15 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
         ->
         Result.success(database.getHistory())
     },
+
+    DatabaseCommand.UPDATE_TIME to ServerSideCommand
+    {
+            _,
+            database,
+            _,
+        ->
+        Result.success(database.getLastModificationTime())
+    },
 )
 
 fun errorToNetworkCode(error: Throwable?): NetworkCode {
