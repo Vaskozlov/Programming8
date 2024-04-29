@@ -39,8 +39,6 @@ class Visualization : Canvas() {
             f.add(m)
             f.setSize(400, 400)
 
-
-            //f.setLayout(null);
             f.isVisible = true
         }
     }
