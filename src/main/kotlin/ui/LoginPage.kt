@@ -1,14 +1,14 @@
 package ui
 
 import client.RemoteCollection
+import lib.Localization
 import localization.LocalizedResources
+import net.miginfocom.swing.MigLayout
 import org.example.database.auth.AuthorizationInfo
 import org.example.database.auth.Login
 import org.example.database.auth.Password
-import java.awt.Component
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import java.awt.event.ActionEvent
+import java.util.concurrent.TimeoutException
 import javax.swing.*
 
 class LoginPage : JFrame() {
@@ -34,8 +34,9 @@ class LoginPage : JFrame() {
 
     private val loginButton = JButton(buttonAction)
 
-    private val gridBag = GridBagLayout()
-    private val gridBagConstraint = GridBagConstraints()
+    private val layout = MigLayout("",
+        "[fill,40%][fill,50%]",
+        "[fill,grow]")
 
     fun localize() {
         addressLabel.text = LocalizedResources.address
@@ -43,7 +44,7 @@ class LoginPage : JFrame() {
         loginLabel.text = LocalizedResources.login
         passwordLabel.text = LocalizedResources.password
         welcomeLabel.text = LocalizedResources.welcome
-        loginButton.text = LocalizedResources.login
+        loginButton.text = LocalizedResources.loginButton
     }
 
     private fun loginPressed() {
@@ -80,12 +81,21 @@ class LoginPage : JFrame() {
         collection.runCatching {
             collection.getLastModificationTime()
         }.onFailure {
-            JOptionPane.showMessageDialog(this, "Unable to login.")
-            return
-        }
+            when (it) {
+                is TimeoutException ->
+                    JOptionPane.showMessageDialog(this, Localization.get("ui.unable_to_connect"))
 
-        TablePage(collection).apply {
-            isVisible = true
+                else ->
+                    JOptionPane.showMessageDialog(this, Localization.get("ui.unable_to_login"))
+            }
+
+            return
+        }.onSuccess {
+            isVisible = false
+
+            TablePage(collection).apply {
+                isVisible = true
+            }
         }
     }
 
@@ -95,62 +105,30 @@ class LoginPage : JFrame() {
     private fun checkLogin() = Login.construct(loginEditor.text).isSuccess
     private fun checkPassword() = Password.construct(passwordEditor.text).isSuccess
 
-    private fun makeComponent(
-        component: Component,
-        c: GridBagConstraints,
-    ) {
-        gridBag.setConstraints(component, c)
-        add(component)
-    }
-
     init {
         addressEditor.text = "localhost"
         portEditor.text = "8080"
         loginEditor.text = "vaskozlov"
         passwordEditor.text = "1234"
+        setSize(600, 400)
 
         defaultCloseOperation = EXIT_ON_CLOSE
-        contentPane.layout = gridBag
+        contentPane.layout = layout
 
-        gridBagConstraint.fill = GridBagConstraints.RELATIVE
-        gridBagConstraint.weightx = 1.0
-        gridBagConstraint.gridwidth = GridBagConstraints.REMAINDER
+        add(welcomeLabel, "wrap,dock center")
 
-        makeComponent(welcomeLabel, gridBagConstraint)
+        add(addressLabel, "")
+        add(addressEditor, "wrap")
 
-        gridBagConstraint.weightx = 1.0
-        gridBagConstraint.gridwidth = GridBagConstraints.RELATIVE
+        add(portLabel)
+        add(portEditor, "wrap")
 
-        makeComponent(addressLabel, gridBagConstraint)
-        gridBagConstraint.gridwidth = GridBagConstraints.REMAINDER
-        makeComponent(addressEditor, gridBagConstraint)
+        add(loginLabel)
+        add(loginEditor, "wrap")
 
-        gridBagConstraint.weightx = 1.0
-        gridBagConstraint.gridwidth = GridBagConstraints.RELATIVE
+        add(passwordLabel)
+        add(passwordEditor, "wrap")
 
-        makeComponent(portLabel, gridBagConstraint)
-        gridBagConstraint.gridwidth = GridBagConstraints.REMAINDER
-        makeComponent(portEditor, gridBagConstraint)
-
-        gridBagConstraint.weightx = 1.0
-        gridBagConstraint.gridwidth = GridBagConstraints.RELATIVE
-
-        makeComponent(loginLabel, gridBagConstraint)
-        gridBagConstraint.gridwidth = GridBagConstraints.REMAINDER
-        makeComponent(loginEditor, gridBagConstraint)
-
-        gridBagConstraint.weightx = 0.0
-        gridBagConstraint.gridwidth = GridBagConstraints.RELATIVE
-
-        makeComponent(passwordLabel, gridBagConstraint)
-        gridBagConstraint.gridwidth = GridBagConstraints.REMAINDER
-        makeComponent(passwordEditor, gridBagConstraint)
-
-        gridBagConstraint.gridwidth = GridBagConstraints.RELATIVE
-        gridBagConstraint.anchor = GridBagConstraints.CENTER
-        gridBagConstraint.gridx = 0
-        makeComponent(loginButton, gridBagConstraint)
-
-        pack()
+        add(loginButton, "dock center")
     }
 }

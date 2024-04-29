@@ -94,6 +94,7 @@ class CollectionCommandsReceiver(
 
     private fun serialize(value: Any?): JsonElement =
         when (value) {
+            null -> Json.encodeToJsonElement(null as Int?)
             is Organization -> Json.encodeToJsonElement(value)
             is Int -> Json.encodeToJsonElement(value)
             is Address -> Json.encodeToJsonElement(value)
@@ -107,7 +108,7 @@ class CollectionCommandsReceiver(
         code: NetworkCode,
         data: JsonElement,
     ) {
-        val frame = ResultFrame(code, data)
+        val frame = ResultFrame(user.userId, code, data)
         val encodedFrame = Json.encodeToString(frame)
         network.sendStringInPackets(
             encodedFrame,

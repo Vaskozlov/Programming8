@@ -5,11 +5,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Login {
     companion object {
-        private val regexForLogin = Regex("[\\w\\d]+")
+        private val regexForLogin = Regex("\\w{0,128}")
 
         fun construct(login: String): Result<Login> {
             if (login.length < 4) {
                 return Result.failure(Exception("Login is too short"))
+            }
+
+            if (login.length > 120) {
+                return Result.failure(Exception("Login is too long"))
             }
 
             if (!login.matches(regexForLogin)) {

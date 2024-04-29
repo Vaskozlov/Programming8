@@ -42,12 +42,11 @@ abstract class ServerWithAuthorization(
         val frame = Json.decodeFromJsonElement<Frame>(jsonHolder.jsonNodeRoot)
         val authorizationInfo = frame.authorization
 
-        when {
-            authorizationManager.isValidUser(authorizationInfo) -> {
-                logger.info("Received packet from authorized user: ${authorizationInfo.login}")
-                handleAuthorized(user, authorizationInfo, frame.value)
-            }
-
+        authorizationManager.getUserId(authorizationInfo)?.let {
+            logger.info("Received packet from authorized user: ${authorizationInfo.login}")
+            user.userId = it
+            handleAuthorized(user, authorizationInfo, frame.value)
+        } ?: when {
             authorizationManager.loginExists(authorizationInfo.login) -> {
                 logger.warn("User ${authorizationInfo.login} is not authorized, but it exists")
                 handleUnauthorized(user, frame.value)

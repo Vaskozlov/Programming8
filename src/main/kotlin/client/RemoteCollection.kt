@@ -11,10 +11,12 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
+import lib.net.udp.ResultFrame
 import org.example.database.auth.AuthorizationInfo
 import org.example.exceptions.UnauthorizedException
-import lib.net.udp.ResultFrame
 import java.net.InetSocketAddress
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 class RemoteCollection(
     private val address: InetSocketAddress,
@@ -23,6 +25,8 @@ class RemoteCollection(
         private val nullJsonElement = Json.encodeToJsonElement(null as Int?)
     }
 
+    private val lock = ReentrantLock()
+    private var userId: Int? = null
     private var commandSender: CommandSender? = null
 
     constructor(address: String, port: Int)
@@ -35,13 +39,14 @@ class RemoteCollection(
     private fun sendCommandAndReceiveResult(
         command: DatabaseCommand,
         argument: JsonElement,
-    ): Result<JsonElement> {
+    ): Result<JsonElement> = lock.withLock {
         checkNotNull(commandSender) { "You must login before using the database" }
 
         commandSender!!.sendCommand(command, argument)
         val json = commandSender!!.network.receiveStringInPackets()
         val frame = Json.decodeFromJsonElement<ResultFrame>(json.jsonNodeRoot)
         val code = frame.code
+        userId = frame.userId
 
         return when (code) {
             NetworkCode.SUCCESS -> Result.success(frame.value)
@@ -159,4 +164,6 @@ class RemoteCollection(
 
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
+
+    override fun getCreatorId(): Int? = userId
 }

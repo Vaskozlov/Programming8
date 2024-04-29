@@ -1,4 +1,5 @@
 plugins {
+    `java-library`
     kotlin("jvm") version "1.9.22"
     kotlin("plugin.serialization") version "1.9.23"
 }
@@ -19,6 +20,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api-kotlin:1.4.0")
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("com.google.guava:guava:33.1.0-jre")
+    implementation("com.miglayout:miglayout-swing:11.3")
 }
 
 tasks.test {

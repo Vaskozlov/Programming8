@@ -34,4 +34,6 @@ interface CollectionInterface {
     fun getCollection(): List<Organization>
 
     fun getLastModificationTime(): LocalDateTime
+
+    fun getCreatorId(): Int?
 }

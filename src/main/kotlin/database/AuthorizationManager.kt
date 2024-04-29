@@ -15,14 +15,14 @@ class AuthorizationManager(private val database: Database) {
         ).iterator().hasNext()
     }
 
-    fun isValidUser(authorizationInfo: AuthorizationInfo) = runBlocking {
+    fun getUserId(authorizationInfo: AuthorizationInfo): Int? = runBlocking {
         database.executeQuery(
-            "SELECT * FROM USERS WHERE LOGIN = ? AND PASSWORD = ?",
+            "SELECT ID FROM USERS WHERE LOGIN = ? AND PASSWORD = ?",
             listOf(
                 authorizationInfo.login.toString(),
                 authorizationInfo.password.hashedPassword()
             )
-        ).iterator().hasNext()
+        ).firstOrNull()?.getInt("ID")
     }
 
     fun getUserId(login: Login) = runBlocking {

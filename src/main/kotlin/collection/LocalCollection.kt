@@ -97,7 +97,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             creationDate = result.getDate("CREATION_TIME").toLocalDate().toKotlinLocalDate(),
             annualTurnover = result.getDouble("ANNUAL_TURNOVER"),
             fullName = result.getString("FULL_NAME"),
-            employeesCount = result.getInt("EMPLOYEES_COUNT"),
+            employeesCount = result.getObject("EMPLOYEES_COUNT") as Int?,
             type = valueOrNull<OrganizationType>(result.getString("ORGANIZATION_TYPE_NAME")),
             postalAddress = Address(
                 zipCode = result.getString("ZIP_CODE"),
@@ -105,7 +105,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
                     x = result.getDouble("X"),
                     y = result.getFloat("Y"),
                     z = result.getLong("Z"),
-                    name = result.getString("NAME")
+                    name = result.getObject("NAME") as String?
                 )
             ),
             creatorId = result.getInt("CREATOR_ID")
@@ -285,6 +285,10 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     private fun completeModification(organization: Organization, updatedOrganization: Organization) = lock.withLock {
         updatedOrganization.fillNullFromAnotherOrganization(organization)
 
+        if (updatedOrganization.type == OrganizationType.NULL_TYPE) {
+            updatedOrganization.type = null
+        }
+
         if (!isModificationLegal(organization, updatedOrganization)) {
             throw OrganizationAlreadyPresentedException()
         }
@@ -309,4 +313,6 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     private fun isOrganizationAlreadyPresented(organization: Organization): Boolean = lock.withLock {
         return storedOrganizations.contains(organization.toPairOfFullNameAndType())
     }
+
+    override fun getCreatorId(): Int? = null
 }

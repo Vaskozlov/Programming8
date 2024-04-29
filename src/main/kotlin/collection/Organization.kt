@@ -7,14 +7,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Organization(
     var id: Int?,
-    var name: String?,
-    var coordinates: Coordinates?,
-    var creationDate: LocalDate?,
-    var annualTurnover: Double?,
-    var fullName: String?,
-    var employeesCount: Int?,
-    var type: OrganizationType?,
-    var postalAddress: Address?,
+    var name: String? = null,
+    var coordinates: Coordinates? = null,
+    var creationDate: LocalDate? = null,
+    var annualTurnover: Double? = null,
+    var fullName: String? = null,
+    var employeesCount: Int? = null,
+    var type: OrganizationType? = null,
+    var postalAddress: Address? = null,
     var creatorId: Int? = null,
 ) : Comparable<Organization> {
     fun validate() {

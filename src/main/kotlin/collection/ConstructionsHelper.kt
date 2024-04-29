@@ -7,7 +7,21 @@ fun fillAddressWithMissedInformation(first: Address?, second: Address?): Address
 
     return Address(
         first?.zipCode ?: second?.zipCode,
-        first?.town ?: second?.town
+        fillLocationWithMissedInformation(first?.town, second?.town)
+    )
+}
+
+fun fillLocationWithMissedInformation(first: Location?, second: Location?): Location? {
+
+    if (first == null && second == null) {
+        return null
+    }
+
+    return Location(
+        first?.x ?: second?.x,
+        first?.y ?: second?.y,
+        first?.z ?: second?.z,
+        first?.name ?: second?.name
     )
 }
 
