@@ -77,31 +77,36 @@ class RemoteCollection(
     }
 
     override fun getSumOfAnnualTurnover(): Double {
-        val result =
-            sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, nullJsonElement)
-        result.onFailure { throw it }
-        return Json.decodeFromJsonElement(result.getOrNull()!!)
+        return sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, nullJsonElement)
+            .onFailure { throw it }
+            .let {
+                Json.decodeFromJsonElement<Double>(it.getOrNull()!!)
+            }
     }
 
     override fun maxByFullName(): Organization? {
-        val result =
-            sendCommandAndReceiveResult(DatabaseCommand.MAX_BY_FULL_NAME, nullJsonElement)
-
-        if (result.isSuccess) {
-            return Json.decodeFromJsonElement(result.getOrNull()!!)
-        }
-
-        return null
+        return sendCommandAndReceiveResult(
+            DatabaseCommand.MAX_BY_FULL_NAME,
+            nullJsonElement
+        ).takeIf { it.isSuccess }
+            ?.let {
+                Json.decodeFromJsonElement<Organization>(it.getOrNull()!!)
+            }
     }
 
     override fun add(organization: Organization) {
-        sendCommandAndReceiveResult(DatabaseCommand.ADD, Json.encodeToJsonElement(organization)).onFailure { throw it }
+        sendCommandAndReceiveResult(
+            DatabaseCommand.ADD,
+            Json.encodeToJsonElement(organization)
+        ).onFailure { throw it }
     }
 
-    override fun addIfMax(newOrganization: Organization): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.ADD_IF_MAX, Json.encodeToJsonElement(newOrganization))
-        return ExecutionStatus.getByValue(result.isSuccess)
-    }
+    override fun addIfMax(newOrganization: Organization): ExecutionStatus =
+        sendCommandAndReceiveResult(
+            DatabaseCommand.ADD_IF_MAX,
+            Json.encodeToJsonElement(newOrganization)
+        ).let { ExecutionStatus.getByValue(it.isSuccess) }
+
 
     override fun modifyOrganization(updatedOrganization: Organization) {
         sendCommandAndReceiveResult(
@@ -110,10 +115,11 @@ class RemoteCollection(
         ).onFailure { throw it }
     }
 
-    override fun removeById(id: Int, creatorId: Int?): ExecutionStatus {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_BY_ID, Json.encodeToJsonElement(id))
-        return ExecutionStatus.getByValue(result.isSuccess)
-    }
+    override fun removeById(id: Int, creatorId: Int?): ExecutionStatus =
+        sendCommandAndReceiveResult(
+            DatabaseCommand.REMOVE_BY_ID,
+            Json.encodeToJsonElement(id)
+        ).let { ExecutionStatus.getByValue(it.isSuccess) }
 
     override fun removeAllByPostalAddress(address: Address, creatorId: Int?) {
         sendCommandAndReceiveResult(
@@ -122,15 +128,14 @@ class RemoteCollection(
         ).onFailure { throw it }
     }
 
-    override fun removeHead(creatorId: Int?): Organization? {
-        val result = sendCommandAndReceiveResult(DatabaseCommand.REMOVE_HEAD, nullJsonElement)
-
-        if (result.isSuccess) {
-            return Json.decodeFromJsonElement(result.getOrNull()!!)
-        }
-
-        return null
-    }
+    override fun removeHead(creatorId: Int?): Organization? =
+        sendCommandAndReceiveResult(
+            DatabaseCommand.REMOVE_HEAD,
+            nullJsonElement
+        ).takeIf { it.isSuccess }
+            ?.let {
+                Json.decodeFromJsonElement<Organization>(it.getOrNull()!!)
+            }
 
     override fun clear(creatorId: Int?): Result<Unit> {
         sendCommandAndReceiveResult(
@@ -140,21 +145,21 @@ class RemoteCollection(
         return Result.success(Unit)
     }
 
-    private fun sendShowCommand(): String {
-        val result = sendCommandAndReceiveResult(
+    private fun sendShowCommand(): String =
+        sendCommandAndReceiveResult(
             DatabaseCommand.SHOW,
             nullJsonElement
         ).onFailure { throw it }
-
-        return Json.decodeFromJsonElement(result.getOrNull()!!)
-    }
+            .let {
+                Json.decodeFromJsonElement<String>(it.getOrNull()!!)
+            }
 
     override fun toJson() = sendShowCommand()
 
-    override fun getCollection(): List<Organization> {
-        val json = sendShowCommand()
-        return Json.decodeFromString(json)
-    }
+    override fun getCollection(): List<Organization> =
+        sendShowCommand().let {
+            Json.decodeFromString(it)
+        }
 
     override fun getLastModificationTime(): LocalDateTime {
         val result = sendCommandAndReceiveResult(
