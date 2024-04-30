@@ -1,9 +1,10 @@
-package org.example.database
+package database
 
 import collection.Organization
 import collection.OrganizationType
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toJavaLocalDate
+import org.example.database.Database
 
 class CollectionToDatabase(private val database: Database) {
     companion object {

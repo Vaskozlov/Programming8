@@ -13,7 +13,7 @@ import lib.IdFactory
 import lib.Localization
 import lib.valueOrNull
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.database.CollectionToDatabase
+import database.CollectionToDatabase
 import org.example.database.Database
 import org.example.database.auth.AuthorizationInfo
 import org.example.lib.CircledStorage
