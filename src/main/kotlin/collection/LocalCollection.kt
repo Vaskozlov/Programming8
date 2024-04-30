@@ -52,10 +52,10 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
            O.EMPLOYEES_COUNT,
            OT.NAME AS ORGANIZATION_TYPE_NAME,
            A.ZIP_CODE,
-           L.X,
-           L.Y,
-           L.Z,
-           L.NAME,
+           L.X AS LX,
+           L.Y AS LY,
+           L.Z AS LZ,
+           L.NAME AS LNAME,
            O.CREATOR_ID
         FROM ORGANIZATIONS O
              LEFT JOIN ADDRESS A ON O.POSTAL_ADDRESS_ID = A.ID
@@ -102,10 +102,10 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             postalAddress = Address(
                 zipCode = result.getString("ZIP_CODE"),
                 town = Location(
-                    x = result.getDouble("X"),
-                    y = result.getFloat("Y"),
-                    z = result.getLong("Z"),
-                    name = result.getObject("NAME") as String?
+                    x = result.getDouble("LX"),
+                    y = result.getFloat("LY"),
+                    z = result.getLong("LZ"),
+                    name = result.getObject("LNAME") as String?
                 )
             ),
             creatorId = result.getInt("CREATOR_ID")
