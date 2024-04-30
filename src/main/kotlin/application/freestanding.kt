@@ -1,8 +1,11 @@
 package application
 
 import client.DatabaseCommand
+import collection.LocalCollection
+import collection.Organization
 import exceptions.*
 import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.encodeToString
 import lib.Localization
 import org.example.exceptions.UnauthorizedException
 import java.io.IOException
@@ -35,7 +38,7 @@ fun commandSuccessMessage(command: DatabaseCommand, argument: Any?): String =
             Localization.get("message.organization_removed")
 
         DatabaseCommand.REMOVE_HEAD, DatabaseCommand.MAX_BY_FULL_NAME ->
-            argument as String
+            LocalCollection.prettyJson.encodeToString(argument as Organization?)
 
         DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS ->
             Localization.get("message.organizations_by_postal_address_removed")
