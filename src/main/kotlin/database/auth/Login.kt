@@ -1,5 +1,6 @@
 package org.example.database.auth
 
+import exceptions.InvalidLoginException
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,15 +10,15 @@ class Login {
 
         fun construct(login: String): Result<Login> {
             if (login.length < 4) {
-                return Result.failure(Exception("Login is too short"))
+                return Result.failure(InvalidLoginException("Login is too short"))
             }
 
             if (login.length > 120) {
-                return Result.failure(Exception("Login is too long"))
+                return Result.failure(InvalidLoginException("Login is too long"))
             }
 
             if (!login.matches(regexForLogin)) {
-                return Result.failure(Exception("Login contains invalid characters"))
+                return Result.failure(InvalidLoginException("Login contains invalid characters"))
             }
 
             return Result.success(Login(login))

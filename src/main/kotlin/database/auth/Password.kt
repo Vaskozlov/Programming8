@@ -1,6 +1,7 @@
 package org.example.database.auth
 
 import com.google.common.hash.Hashing
+import exceptions.InvalidPasswordException
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,15 +11,15 @@ class Password {
 
         fun construct(password: String): Result<Password> {
             if (password.length < 4) {
-                return Result.failure(Exception("Password is too short"))
+                return Result.failure(InvalidPasswordException("Password is too short"))
             }
 
             if (password.length > 120) {
-                return Result.failure(Exception("Password is too long"))
+                return Result.failure(InvalidPasswordException("Password is too long"))
             }
 
             if (!password.matches(regexForPassword)) {
-                return Result.failure(Exception("Login contains invalid characters"))
+                return Result.failure(InvalidPasswordException("Login contains invalid characters"))
             }
 
             return Result.success(Password(password))
