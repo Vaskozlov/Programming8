@@ -1,6 +1,7 @@
 package ui
 
 import collection.*
+import kotlinx.coroutines.launch
 import lib.Localization
 import lib.valueOrNull
 import net.miginfocom.swing.MigLayout
@@ -56,7 +57,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
 
         val updatedOrganization = Organization(organization.id, name)
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
 
         return true
     }
@@ -74,7 +75,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             coordinates = Coordinates(newX, null)
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
 
         return true
     }
@@ -92,10 +93,10 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             coordinates = Coordinates(null, newY)
         )
 
-        Thread {
+        tablePage.tableViewScope.launch {
             tablePage.collection.modifyOrganization(updatedOrganization)
-            tablePage.reload()
-        }.start()
+            tablePage.requestReload()
+        }
 
         return true
     }
@@ -113,7 +114,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             annualTurnover = newAnnualTurnover
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 
@@ -128,7 +129,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             fullName = fullName
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 
@@ -145,11 +146,11 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             employeesCount = newEmployeesCount
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 
-    fun setType(organization: Organization, type: String) : Boolean{
+    fun setType(organization: Organization, type: String): Boolean {
         val newType = valueOrNull<OrganizationType>(type)
 
         if (newType == null && type != "null") {
@@ -163,7 +164,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
         )
 
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
 
         return true
     }
@@ -180,7 +181,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
         )
 
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 
@@ -200,7 +201,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             )
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 
@@ -220,7 +221,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             )
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 
@@ -240,7 +241,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             )
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 
@@ -258,7 +259,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             )
         )
         tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.reload()
+        tablePage.requestReload()
         return true
     }
 

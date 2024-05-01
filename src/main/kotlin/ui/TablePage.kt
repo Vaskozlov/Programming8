@@ -6,15 +6,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.miginfocom.swing.MigLayout
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 import javax.swing.DefaultCellEditor
 import javax.swing.JFrame
 import javax.swing.JScrollPane
 import javax.swing.JTable
-import javax.swing.event.ListSelectionEvent
 import javax.swing.plaf.FontUIResource
 import javax.swing.table.DefaultTableModel
+import kotlin.concurrent.withLock
 
 
 class TablePage(val collection: CollectionInterface) : JFrame() {
@@ -38,7 +38,9 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         )
     }
 
-    private val tableViewScope = CoroutineScope(Dispatchers.IO)
+    private val databaseCommunicationLock = ReentrantLock()
+    private val databaseCommunicationLockCondition = databaseCommunicationLock.newCondition()
+    val tableViewScope = CoroutineScope(Dispatchers.Default)
     private var tableFilter: Pair<String, Int>? = null
     private var stringFilter: Pair<String, String>? = null
     private val layout = MigLayout(
@@ -46,8 +48,8 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         "[fill,70%][fill,30%]",
         "[fill,grow]"
     )
-    private val tablePanel = TablePanel(this)
-    private var organizationTypedArrayCache: Array<Array<String?>>? = null
+    internal val tablePanel = TablePanel(this)
+    internal var organizationTypedArrayCache: Array<Array<String?>>? = null
     private var organizationListCache: List<Organization>? = null
 
     var tableModel: DefaultTableModel = object : DefaultTableModel(organizationListToArrays(), columnNames) {
@@ -56,16 +58,19 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         }
     }
 
-    private val modificationObserver = Thread {
+    private val modificationObserver = tableViewScope.launch {
         var lastModificationTime = collection.getLastModificationTime()
 
         while (true) {
-            Thread.sleep(5000)
-            val currentModificationTime = collection.getLastModificationTime()
+            databaseCommunicationLock.withLock {
+                databaseCommunicationLockCondition.await(5, TimeUnit.SECONDS)
 
-            if (lastModificationTime != currentModificationTime) {
-                lastModificationTime = currentModificationTime
-                reload()
+                val currentModificationTime = collection.getLastModificationTime()
+
+                if (lastModificationTime != currentModificationTime) {
+                    lastModificationTime = currentModificationTime
+                    reload()
+                }
             }
         }
     }
@@ -85,38 +90,7 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         13 to tablePanel::setPostalAddressTownName
     )
 
-    private val table = object : JTable(tableModel) {
-        override fun isCellEditable(row: Int, column: Int): Boolean {
-            return column != 0 &&
-                    column != 4 &&
-                    column != 14 &&
-                    organizationTypedArrayCache?.get(row)?.get(14)?.toIntOrNull() == collection.getCreatorId()
-        }
-
-        override fun setValueAt(aValue: Any?, row: Int, column: Int) {
-            if ((getValueAt(row, column) as String) == (aValue as String)) {
-                return
-            }
-
-            val id = (getValueAt(row, 0) as String).toInt()
-
-            val result =
-                columnValuesSetters[column]?.invoke(
-                    getOrganizationsList().find { it.id == id }!!,
-                    aValue.toString()
-                ) as Boolean
-
-            if (result) {
-                super.setValueAt(aValue, row, column)
-                println("Setting value at $row, $column to $aValue")
-            }
-        }
-
-        override fun valueChanged(e: ListSelectionEvent) {
-            super.valueChanged(e)
-            selectOrganization(selectedRow)
-        }
-    }
+    private val table = ui.widgets.Table(tableModel, this)
 
     private fun getColumnIndex(table: JTable, header: String): Int {
         for (i in 0 until table.columnCount) {
@@ -125,7 +99,7 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         return -1
     }
 
-    private fun getOrganizationsList(): List<Organization> {
+    internal fun getOrganizationsList(): List<Organization> {
         if (organizationListCache != null) {
             return organizationListCache!!
         }
@@ -134,11 +108,17 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         return organizationListCache!!
     }
 
-    fun reload() {
+    fun requestReload() {
+        databaseCommunicationLock.withLock {
+            databaseCommunicationLockCondition.signal()
+        }
+    }
+
+    private fun reload() {
         organizationListCache = null
         organizationTypedArrayCache = null
         tableViewScope.launch {
-            kotlin.runCatching {
+            runCatching {
                 tableModel.setDataVector(organizationListToArrays(), columnNames)
                 tableModel.fireTableDataChanged()
                 val sportColumn = table.columnModel.getColumn(8)
@@ -192,7 +172,7 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         return organizationTypedArrayCache!!
     }
 
-    private fun addFilter(columnName: String) {
+    internal fun addFilter(columnName: String) {
         tableFilter?.let {
             val (prevColumnName, prevFilterId) = it
             tableFilter = columnName to (if (prevColumnName == columnName) prevFilterId + 1 else 1)
@@ -234,38 +214,6 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         table.tableHeader.reorderingAllowed = false
         add(JScrollPane(table))
         add(tablePanel)
-
-        table.addMouseListener(
-            object : MouseAdapter() {
-                override fun mouseClicked(e: MouseEvent) {
-                    runCatching {
-                        if (e.clickCount == 2) {
-                            val row = table.rowAtPoint(e.point)
-                            selectOrganization(row)
-                        }
-                    }.onFailure {
-                        println(it.stackTraceToString())
-                    }
-                }
-            }
-        )
-
-        table.tableHeader.addMouseListener(
-            object : MouseAdapter() {
-                override fun mouseClicked(e: MouseEvent) {
-                    runCatching {
-                        if (e.clickCount == 2) {
-                            val column = table.columnAtPoint(e.point)
-                            val columnName = table.columnModel.getColumn(column).headerValue as String
-                            addFilter(columnName)
-                        }
-                    }
-                }
-            }
-        )
-
-        val sportColumn = table.columnModel.getColumn(8)
-        sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
 
         tablePanel.localize()
         modificationObserver.start()
