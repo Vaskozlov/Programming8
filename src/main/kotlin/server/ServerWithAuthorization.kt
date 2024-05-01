@@ -4,7 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import lib.net.udp.JsonHolder
 import org.example.database.AuthorizationManager
-import org.example.database.auth.AuthorizationInfo
+import database.auth.AuthorizationInfo
 import org.example.lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.Frame
 import org.example.lib.net.udp.User

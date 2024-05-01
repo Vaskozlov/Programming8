@@ -1,4 +1,4 @@
-package org.example.database.auth
+package database.auth
 
 import exceptions.InvalidLoginException
 import kotlinx.serialization.Serializable
@@ -29,7 +29,6 @@ class Login {
 
     private constructor(login: String) {
         this.login = login
-        Thread()
     }
 
     override fun toString() = login

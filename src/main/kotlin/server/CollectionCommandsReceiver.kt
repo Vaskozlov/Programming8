@@ -12,8 +12,8 @@ import kotlinx.serialization.json.encodeToJsonElement
 import lib.net.udp.ResultFrame
 import org.apache.logging.log4j.kotlin.Logging
 import org.example.database.AuthorizationManager
-import org.example.database.Database
-import org.example.database.auth.AuthorizationInfo
+import database.Database
+import database.auth.AuthorizationInfo
 import org.example.lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.User
 import java.net.InetSocketAddress

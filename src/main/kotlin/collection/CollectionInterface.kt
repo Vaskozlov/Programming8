@@ -2,7 +2,7 @@ package collection
 
 import kotlinx.datetime.LocalDateTime
 import lib.ExecutionStatus
-import org.example.database.auth.AuthorizationInfo
+import database.auth.AuthorizationInfo
 
 interface CollectionInterface {
     fun login(authorizationInfo: AuthorizationInfo)

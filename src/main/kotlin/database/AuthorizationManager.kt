@@ -1,13 +1,11 @@
 package org.example.database
 
+import database.Database
 import kotlinx.coroutines.runBlocking
-import org.example.database.auth.AuthorizationInfo
-import org.example.database.auth.Login
+import database.auth.AuthorizationInfo
+import database.auth.Login
 
 class AuthorizationManager(private val database: Database) {
-    suspend fun getLogins() =
-        database.executeQuery("SELECT LOGIN FROM USERS").map { it.getString("LOGIN") }
-
     fun loginExists(login: Login) = runBlocking {
         database.executeQuery(
             "SELECT COUNT(ID) > 0 FROM USERS WHERE LOGIN = ?",

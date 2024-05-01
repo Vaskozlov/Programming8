@@ -14,8 +14,8 @@ import lib.Localization
 import lib.valueOrNull
 import org.apache.logging.log4j.kotlin.Logging
 import database.CollectionToDatabase
-import org.example.database.Database
-import org.example.database.auth.AuthorizationInfo
+import database.Database
+import database.auth.AuthorizationInfo
 import org.example.lib.CircledStorage
 import org.example.lib.getLocalDate
 import org.example.lib.getLocalDateTime

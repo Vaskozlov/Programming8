@@ -12,7 +12,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
 import lib.net.udp.ResultFrame
-import org.example.database.auth.AuthorizationInfo
+import database.auth.AuthorizationInfo
 import org.example.exceptions.UnauthorizedException
 import java.net.InetSocketAddress
 import java.util.concurrent.locks.ReentrantLock

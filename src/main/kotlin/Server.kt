@@ -1,7 +1,7 @@
 package org.example
 
 import lib.Localization
-import org.example.database.Database
+import database.Database
 import server.CollectionCommandsReceiver
 
 object Server {

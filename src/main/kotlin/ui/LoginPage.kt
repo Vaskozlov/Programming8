@@ -4,8 +4,8 @@ import client.RemoteCollection
 import lib.Localization
 import localization.LocalizedResources
 import net.miginfocom.swing.MigLayout
-import org.example.database.auth.AuthorizationInfo
-import org.example.database.auth.Login
+import database.auth.AuthorizationInfo
+import database.auth.Login
 import org.example.database.auth.Password
 import java.awt.event.ActionEvent
 import java.util.concurrent.TimeoutException

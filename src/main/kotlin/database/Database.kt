@@ -1,4 +1,4 @@
-package org.example.database
+package database
 
 import org.intellij.lang.annotations.Language
 import java.sql.Connection

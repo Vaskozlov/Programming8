@@ -13,8 +13,8 @@ import lib.ExecutionStatus
 import lib.IOHelper
 import lib.Localization
 import org.example.client.Command
-import org.example.database.auth.AuthorizationInfo
-import org.example.database.auth.Login
+import database.auth.AuthorizationInfo
+import database.auth.Login
 import org.example.database.auth.Password
 import java.io.IOException
 import java.io.InputStreamReader
