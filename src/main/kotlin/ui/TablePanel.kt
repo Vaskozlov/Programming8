@@ -5,19 +5,18 @@ import kotlinx.coroutines.launch
 import lib.Localization
 import lib.valueOrNull
 import net.miginfocom.swing.MigLayout
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
+import ui.widgets.keyboardKeyReleasedAdapter
 import javax.swing.*
 
 
 class TablePanel(private val tablePage: TablePage) : JPanel() {
     private val textFilter = object : JTextField(30) {
         init {
-            addKeyListener(object : KeyAdapter() {
-                override fun keyReleased(e: KeyEvent) {
+            addKeyListener(
+                keyboardKeyReleasedAdapter {
                     tablePage.filterChanged()
                 }
-            })
+            )
         }
     }
 
