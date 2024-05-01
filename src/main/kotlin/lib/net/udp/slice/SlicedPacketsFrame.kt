@@ -1,4 +1,4 @@
-package org.example.lib.net.udp.slice
+package lib.net.udp.slice
 
 import org.example.lib.net.udp.User
 

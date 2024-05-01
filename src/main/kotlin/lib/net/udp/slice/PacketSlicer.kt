@@ -1,4 +1,4 @@
-package org.example.lib.net.udp.slice
+package lib.net.udp.slice
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement

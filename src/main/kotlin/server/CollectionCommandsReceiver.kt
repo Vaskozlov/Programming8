@@ -11,10 +11,10 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import lib.net.udp.ResultFrame
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.database.AuthorizationManager
+import database.AuthorizationManager
 import database.Database
 import database.auth.AuthorizationInfo
-import org.example.lib.net.udp.CommandWithArgument
+import lib.net.udp.CommandWithArgument
 import org.example.lib.net.udp.User
 import java.net.InetSocketAddress
 import java.util.concurrent.ForkJoinPool

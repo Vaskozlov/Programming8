@@ -1,4 +1,4 @@
-package org.example.lib.net.udp
+package lib.net.udp
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement

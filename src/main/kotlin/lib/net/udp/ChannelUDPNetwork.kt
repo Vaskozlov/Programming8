@@ -1,5 +1,6 @@
-package org.example.lib.net.udp
+package lib.net.udp
 
+import org.example.lib.net.udp.UDPNetwork
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.InetSocketAddress

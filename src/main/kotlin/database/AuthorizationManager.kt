@@ -1,6 +1,5 @@
-package org.example.database
+package database
 
-import database.Database
 import kotlinx.coroutines.runBlocking
 import database.auth.AuthorizationInfo
 import database.auth.Login
