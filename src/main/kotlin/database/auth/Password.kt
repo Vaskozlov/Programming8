@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Password {
     companion object {
-        private val regexForPassword = Regex("\\w{0,128}")
+        private val regexForPassword = Regex("^\\w{0,128}\$")
 
         fun construct(password: String): Result<Password> {
             if (password.length < 4) {

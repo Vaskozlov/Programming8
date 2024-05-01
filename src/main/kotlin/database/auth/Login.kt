@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Login {
     companion object {
-        private val regexForLogin = Regex("\\w{0,128}")
+        private val regexForLogin = Regex("^\\w{0,128}\$")
 
         fun construct(login: String): Result<Login> {
             if (login.length < 4) {
