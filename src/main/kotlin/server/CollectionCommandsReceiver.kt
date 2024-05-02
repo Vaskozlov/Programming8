@@ -94,13 +94,13 @@ class CollectionCommandsReceiver(
 
     private fun serialize(value: Any?): JsonElement =
         when (value) {
-            null -> Json.encodeToJsonElement(null as Int?)
+            null, Unit -> Json.encodeToJsonElement(null as Int?)
             is Organization -> Json.encodeToJsonElement(value)
             is Int -> Json.encodeToJsonElement(value)
             is Address -> Json.encodeToJsonElement(value)
             is String -> Json.encodeToJsonElement(value)
             is LocalDateTime -> Json.encodeToJsonElement(value)
-            else -> throw IllegalArgumentException("Unknown type")
+            else -> throw IllegalArgumentException("Unknown type $value")
         }
 
     private fun send(
