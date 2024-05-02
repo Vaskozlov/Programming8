@@ -257,9 +257,11 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
                 Location(null, null, null, if (name == "null") null else name)
             )
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
+
+        return runCatching {
+            tablePage.collection.modifyOrganization(updatedOrganization)
+            tablePage.requestReload()
+        }.isSuccess
     }
 
     init {
