@@ -1,5 +1,3 @@
-package org.example
-
 import lib.Localization
 import database.Database
 import server.CollectionCommandsReceiver
