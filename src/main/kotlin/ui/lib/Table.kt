@@ -1,4 +1,4 @@
-package ui.widgets
+package ui.lib
 
 import ui.TablePage
 import javax.swing.DefaultCellEditor

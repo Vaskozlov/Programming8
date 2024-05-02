@@ -90,7 +90,7 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         13 to tablePanel::setPostalAddressTownName
     )
 
-    private val table = ui.widgets.Table(tableModel, this)
+    private val table = ui.lib.Table(tableModel, this)
 
     private fun getColumnIndex(table: JTable, header: String): Int {
         for (i in 0 until table.columnCount) {
