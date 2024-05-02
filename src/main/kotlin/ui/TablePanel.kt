@@ -4,8 +4,8 @@ import collection.*
 import kotlinx.coroutines.launch
 import lib.Localization
 import lib.valueOrNull
-import net.miginfocom.swing.MigLayout
-import ui.widgets.keyboardKeyReleasedAdapter
+import ui.lib.MigFontLayout
+import ui.lib.keyboardKeyReleasedAdapter
 import javax.swing.*
 
 
@@ -25,7 +25,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
         JLabel() to "ui.filter_column",
     )
 
-    private val layout = MigLayout()
+    private val layout = MigFontLayout()
     private val columnComboBox = object : JComboBox<String>() {
         init {
             for (column in TablePage.columnNames) {

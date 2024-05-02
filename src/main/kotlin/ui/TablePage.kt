@@ -5,7 +5,7 @@ import collection.Organization
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.miginfocom.swing.MigLayout
+import ui.lib.MigFontLayout
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.DefaultCellEditor
@@ -43,7 +43,7 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
     val tableViewScope = CoroutineScope(Dispatchers.Default)
     private var tableFilter: Pair<String, Int>? = null
     private var stringFilter: Pair<String, String>? = null
-    private val layout = MigLayout(
+    private val layout = MigFontLayout(
         "",
         "[fill,70%][fill,30%]",
         "[fill,grow]"
@@ -212,6 +212,8 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
 
         table.tableHeader.table.rowHeight = 30
         table.tableHeader.reorderingAllowed = false
+        layout.addAsFontOnlyComponent(table)
+        layout.addAsFontOnlyComponent(table.tableHeader)
         add(JScrollPane(table))
         add(tablePanel)
 

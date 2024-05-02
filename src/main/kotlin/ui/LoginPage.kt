@@ -1,12 +1,12 @@
 package ui
 
 import client.RemoteCollection
-import lib.Localization
-import localization.LocalizedResources
-import net.miginfocom.swing.MigLayout
 import database.auth.AuthorizationInfo
 import database.auth.Login
+import lib.Localization
+import localization.LocalizedResources
 import org.example.database.auth.Password
+import ui.lib.MigFontLayout
 import java.awt.event.ActionEvent
 import java.util.concurrent.TimeoutException
 import javax.swing.*
@@ -34,9 +34,11 @@ class LoginPage : JFrame() {
 
     private val loginButton = JButton(buttonAction)
 
-    private val layout = MigLayout("",
+    private val layout = MigFontLayout(
+        "",
         "[fill,40%][fill,50%]",
-        "[fill,grow]")
+        "[fill,grow]"
+    )
 
     fun localize() {
         addressLabel.text = LocalizedResources.address
