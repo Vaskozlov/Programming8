@@ -16,7 +16,7 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
     }
 
     override fun setValueAt(aValue: Any?, row: Int, column: Int) {
-        if ((getValueAt(row, column) as String) == (aValue as String)) {
+        if ((getValueAt(row, column) as String?) == (aValue as String)) {
             return
         }
 
