@@ -151,6 +151,7 @@ class TablePage(collection: CollectionInterface) : JFrame() {
                 val sportColumn = table.columnModel.getColumn(8)
                 sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
                 tableModel.fireTableDataChanged()
+                visualPanel.repaint()
             }.onFailure { reload(fullReload) }
         }
     }
