@@ -12,8 +12,8 @@ import javax.swing.JOptionPane
 import javax.swing.JPanel
 
 
-class TablePanel(private val tablePage: TablePage) : JPanel() {
-    private val textFilter = getTextFieldWithKeyListener(30) {
+class TablePanel(internal val tablePage: TablePage) : JPanel() {
+    private val textFilter = getTextFieldWithKeyListener(30, null) {
         tablePage.filterChanged()
     }
 

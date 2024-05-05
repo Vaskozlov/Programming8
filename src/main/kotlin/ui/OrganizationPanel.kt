@@ -28,21 +28,55 @@ class OrganizationPanel(private val parent: TablePanel) {
                 isEditable = false
             }
         }),
-        "ui.name" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH) {
-
+        "ui.name" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE) {
+            parent.setOrgName(getOrganizationByIdInUI()!!, it.text)
         }),
-        "ui.coordinate_x" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.coordinate_y" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.creation_date" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.annual_turnover" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.full_name" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.employees_count" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.coordinate_x" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setCoordinateX(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.coordinate_y" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setCoordinateY(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.creation_date" to (JLabel() to object : JTextField(FIELD_LENGTH) {
+            init {
+                isEditable = false
+            }
+        }),
+        "ui.annual_turnover" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setAnnualTurnover(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.full_name" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setFullName(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.employees_count" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setEmployeesCount(getOrganizationByIdInUI()!!, it.text)
+        }),
         "ui.type" to (JLabel() to typeEditor),
-        "ui.zip_code" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.location_x" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.location_y" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.location_z" to (JLabel() to JTextField(FIELD_LENGTH)),
-        "ui.location_name" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.zip_code" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setPostalAddressZipCode(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.location_x" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setPostalAddressTownX(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.location_y" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setPostalAddressTownY(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.location_z" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setPostalAddressTownZ(getOrganizationByIdInUI()!!, it.text)
+        }),
+        "ui.location_name" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH, ENTER_KEYCODE)
+        {
+            parent.setPostalAddressTownName(getOrganizationByIdInUI()!!, it.text)
+        }),
     )
 
     private fun getTextOfElement(key: String): String =
