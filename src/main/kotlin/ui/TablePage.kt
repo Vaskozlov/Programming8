@@ -1,23 +1,20 @@
 package ui
 
 import collection.CollectionInterface
-import collection.Organization
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import net.miginfocom.swing.MigLayout
 import ui.lib.MigFontLayout
+import ui.lib.OrganizationStorage
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.DefaultCellEditor
-import javax.swing.JFrame
-import javax.swing.JScrollPane
-import javax.swing.JTable
-import javax.swing.plaf.FontUIResource
+import javax.swing.*
 import javax.swing.table.DefaultTableModel
 import kotlin.concurrent.withLock
 
 
-class TablePage(val collection: CollectionInterface) : JFrame() {
+class TablePage(collection: CollectionInterface) : JFrame() {
     companion object {
         val columnNames = arrayOf(
             "ID",
@@ -38,38 +35,76 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         )
     }
 
+    val tableViewScope = CoroutineScope(Dispatchers.Default)
     private val databaseCommunicationLock = ReentrantLock()
     private val databaseCommunicationLockCondition = databaseCommunicationLock.newCondition()
-    val tableViewScope = CoroutineScope(Dispatchers.Default)
+
     private var tableFilter: Pair<String, Int>? = null
+        set(value) {
+            field = value
+            organizationStorage.filterChanged = true
+        }
+
     private var stringFilter: Pair<String, String>? = null
+        set(value) {
+            field = value
+            organizationStorage.filterChanged = true
+        }
+
     private val layout = MigFontLayout(
         "",
         "[fill,70%][fill,30%]",
         "[fill,grow]"
     )
     internal val tablePanel = TablePanel(this)
-    internal var organizationTypedArrayCache: Array<Array<String?>>? = null
-    private var organizationListCache: List<Organization>? = null
+    private val visualPanel = Visualization(this)
 
-    var tableModel: DefaultTableModel = object : DefaultTableModel(organizationListToArrays(), columnNames) {
-        override fun isCellEditable(row: Int, column: Int): Boolean {
-            return table.isCellEditable(row, column)
+    internal val organizationStorage = OrganizationStorage(collection)
+    {
+        var result = it
+
+        tableFilter?.let { tFilter ->
+            val (columnName, filterId) = tFilter
+            val column = getColumnIndex(table, columnName)
+
+            result = when (filterId % 3) {
+                1 -> result.sortedBy { it[column] }
+                2 -> result.sortedByDescending { it[column] }
+                else -> result
+            }
         }
+
+        stringFilter?.let {
+            val (columnName, filter) = stringFilter!!
+            val column = getColumnIndex(table, columnName)
+            result = result.filter { result[column].contains(filter) }.toMutableList()
+        }
+
+        result
     }
+
+    private var tableModel: DefaultTableModel =
+        object : DefaultTableModel(organizationStorage.getFilteredOrganizationAsArrayOfStrings(), columnNames) {
+            override fun isCellEditable(row: Int, column: Int): Boolean {
+                return table.isCellEditable(row, column)
+            }
+        }
 
     private val modificationObserver = tableViewScope.launch {
         var lastModificationTime = collection.getLastModificationTime()
 
         while (true) {
             databaseCommunicationLock.withLock {
-                databaseCommunicationLockCondition.await(5, TimeUnit.SECONDS)
+                databaseCommunicationLockCondition.await(
+                    5,
+                    TimeUnit.SECONDS
+                )
 
                 val currentModificationTime = collection.getLastModificationTime()
 
                 if (lastModificationTime != currentModificationTime) {
                     lastModificationTime = currentModificationTime
-                    reload()
+                    reload(true)
                 }
             }
         }
@@ -99,77 +134,25 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         return -1
     }
 
-    internal fun getOrganizationsList(): List<Organization> {
-        if (organizationListCache != null) {
-            return organizationListCache!!
-        }
-
-        organizationListCache = collection.getCollection()
-        return organizationListCache!!
-    }
-
     fun requestReload() {
         databaseCommunicationLock.withLock {
             databaseCommunicationLockCondition.signal()
         }
     }
 
-    private fun reload() {
-        organizationListCache = null
-        organizationTypedArrayCache = null
+    private fun reload(fullReload: Boolean) {
         tableViewScope.launch {
             runCatching {
-                tableModel.setDataVector(organizationListToArrays(), columnNames)
-                tableModel.fireTableDataChanged()
+                if (fullReload) {
+                    organizationStorage.clearCache()
+                }
+
+                tableModel.setDataVector(organizationStorage.getFilteredOrganizationAsArrayOfStrings(), columnNames)
                 val sportColumn = table.columnModel.getColumn(8)
                 sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
-            }.onFailure { reload() }
+                tableModel.fireTableDataChanged()
+            }.onFailure { reload(fullReload) }
         }
-    }
-
-    private fun organizationListToArrays(): Array<Array<String?>> {
-        if (organizationTypedArrayCache != null) {
-            return organizationTypedArrayCache!!
-        }
-
-        var data = getOrganizationsList().map {
-            arrayOf(
-                it.id.toString(),
-                it.name,
-                it.coordinates?.x.toString(),
-                it.coordinates?.y.toString(),
-                it.creationDate.toString(),
-                it.annualTurnover.toString(),
-                it.fullName,
-                it.employeesCount.toString(),
-                it.type.toString(),
-                it.postalAddress?.zipCode ?: "null",
-                it.postalAddress?.town?.x.toString(),
-                it.postalAddress?.town?.y.toString(),
-                it.postalAddress?.town?.z.toString(),
-                it.postalAddress?.town?.name,
-                it.creatorId.toString()
-            )
-        }.toMutableList()
-
-        tableFilter?.let {
-            val (columnName, filterId) = it
-            val column = getColumnIndex(table, columnName)
-
-            when (filterId % 3) {
-                1 -> data.sortBy { it[column] }
-                2 -> data.sortByDescending { it[column] }
-            }
-        }
-
-        stringFilter?.let {
-            val (columnName, filter) = stringFilter!!
-            val column = getColumnIndex(table, columnName)
-            data = data.filter { it[column]?.contains(filter) == true }.toMutableList()
-        }
-
-        organizationTypedArrayCache = data.toTypedArray()
-        return organizationTypedArrayCache!!
     }
 
     internal fun addFilter(columnName: String) {
@@ -180,25 +163,19 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
             tableFilter = columnName to 1
         }
 
-        tableViewScope.launch {
-            organizationTypedArrayCache = null
-            tableModel.setDataVector(organizationListToArrays(), columnNames)
-            tableModel.fireTableDataChanged()
-        }
+        reload(false)
     }
 
     fun filterChanged() {
         stringFilter = tablePanel.filter
-        tableViewScope.launch {
-            organizationTypedArrayCache = null
-            tableModel.setDataVector(organizationListToArrays(), columnNames)
-            tableModel.fireTableDataChanged()
-        }
+        reload(false)
     }
 
     fun selectOrganization(row: Int) {
         runCatching {
-            tablePanel.organizationPanel.loadOrganization(organizationTypedArrayCache!![row])
+            tablePanel.organizationPanel.loadOrganization(
+                organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row]
+            )
         }
     }
 
@@ -208,17 +185,27 @@ class TablePage(val collection: CollectionInterface) : JFrame() {
         setSize(1200, 600)
         setLayout(layout)
 
-        setUIFont(FontUIResource("Arial", 0, 16))
-
         table.tableHeader.table.rowHeight = 30
         table.tableHeader.reorderingAllowed = false
         layout.addAsFontOnlyComponent(table)
         layout.addAsFontOnlyComponent(table.tableHeader)
+        layout.addAsFontOnlyComponent(
+            (table.getDefaultEditor(Any::class.java) as DefaultCellEditor).component
+        )
         add(JScrollPane(table))
-        add(tablePanel)
+
+        val panel = JPanel()
+        panel.layout = MigLayout(
+            "",
+            "[fill,grow]",
+            "[fill,grow]"
+        )
+        panel.add(tablePanel, "wrap")
+        panel.add(visualPanel)
+        add(panel)
 
         tablePanel.localize()
         modificationObserver.start()
-        setSize(1200, 600)
+        setSize(1600, 900)
     }
 }

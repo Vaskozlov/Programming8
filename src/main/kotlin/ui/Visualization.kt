@@ -1,34 +1,28 @@
 package ui
 
-import java.awt.Canvas
+import ui.lib.PointWithInfo
 import java.awt.Color
-import java.awt.Graphics
-import java.awt.event.ActionEvent
-import javax.swing.AbstractAction
-import javax.swing.JFrame
 
 
-class Visualization : Canvas() {
-    override fun paint(g: Graphics) {
-        g.color = Color.RED
-        g.fillOval(50, 50, 100, 100)
+class Visualization(private val tablePage: TablePage) : BasicPointsVisualizer() {
+    override fun getPoints(): List<PointWithInfo> =
+        tablePage.organizationStorage.getFilteredOrganizationAsArrayOfStrings()
+            .map {
+                PointWithInfo(it[2]?.toIntOrNull() ?: 0, it[3]?.toIntOrNull() ?: 0, it[0] as String, it)
+            }.toList()
+
+
+    override fun onClick(closedPoint: PointWithInfo) {
+        @Suppress("UNCHECKED_CAST")
+        tablePage.tablePanel.organizationPanel.loadOrganization(closedPoint.additionalInfo as Array<String?>)
     }
 
-    companion object {
-        private val buttonAction = object : AbstractAction() {
-            override fun actionPerformed(e: ActionEvent) {
-                println("Launching rockets")
-            }
-        }
+    override fun setSize(width: Int, height: Int) {
+        super.setSize(width, height)
+        println("resizeing $width $height")
+    }
 
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val m: Visualization = Visualization()
-            val f = JFrame()
-            f.add(m)
-            f.setSize(400, 400)
-
-            f.isVisible = true
-        }
+    init {
+        background = Color.GRAY
     }
 }

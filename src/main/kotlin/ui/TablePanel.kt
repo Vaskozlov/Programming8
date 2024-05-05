@@ -5,19 +5,16 @@ import kotlinx.coroutines.launch
 import lib.Localization
 import lib.valueOrNull
 import ui.lib.MigFontLayout
-import ui.lib.keyboardKeyReleasedAdapter
-import javax.swing.*
+import ui.lib.getTextFieldWithKeyListener
+import javax.swing.JComboBox
+import javax.swing.JLabel
+import javax.swing.JOptionPane
+import javax.swing.JPanel
 
 
 class TablePanel(private val tablePage: TablePage) : JPanel() {
-    private val textFilter = object : JTextField(30) {
-        init {
-            addKeyListener(
-                keyboardKeyReleasedAdapter {
-                    tablePage.filterChanged()
-                }
-            )
-        }
+    private val textFilter = getTextFieldWithKeyListener(30) {
+        tablePage.filterChanged()
     }
 
     private val labels = listOf(
@@ -55,7 +52,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
         }
 
         val updatedOrganization = Organization(organization.id, name)
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
 
         return true
@@ -73,7 +70,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             organization.id,
             coordinates = Coordinates(newX, null)
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
 
         return true
@@ -93,7 +90,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
         )
 
         tablePage.tableViewScope.launch {
-            tablePage.collection.modifyOrganization(updatedOrganization)
+            tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
             tablePage.requestReload()
         }
 
@@ -112,7 +109,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             organization.id,
             annualTurnover = newAnnualTurnover
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
         return true
     }
@@ -127,7 +124,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             organization.id,
             fullName = fullName
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
         return true
     }
@@ -144,7 +141,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             organization.id,
             employeesCount = newEmployeesCount
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
         return true
     }
@@ -162,7 +159,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             type = if (type == "null") OrganizationType.NULL_TYPE else newType
         )
 
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
 
         return true
@@ -179,7 +176,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
             postalAddress = Address(zipCode, null)
         )
 
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
         return true
     }
@@ -199,7 +196,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
                 Location(newX, null, null, null)
             )
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
         return true
     }
@@ -219,7 +216,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
                 Location(null, newY, null, null)
             )
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
         return true
     }
@@ -239,7 +236,7 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
                 Location(null, null, newZ, null)
             )
         )
-        tablePage.collection.modifyOrganization(updatedOrganization)
+        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
         tablePage.requestReload()
         return true
     }
@@ -259,10 +256,11 @@ class TablePanel(private val tablePage: TablePage) : JPanel() {
         )
 
         return runCatching {
-            tablePage.collection.modifyOrganization(updatedOrganization)
+            tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
             tablePage.requestReload()
         }.isSuccess
     }
+
 
     init {
         setLayout(layout)

@@ -11,8 +11,8 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
         return column != 0 &&
                 column != 4 &&
                 column != 14 &&
-                tablePage.organizationTypedArrayCache?.get(row)?.get(14)
-                    ?.toIntOrNull() == tablePage.collection.getCreatorId()
+                tablePage.organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row][14]
+                    ?.toIntOrNull() == tablePage.organizationStorage.collection.getCreatorId()
     }
 
     override fun setValueAt(aValue: Any?, row: Int, column: Int) {
@@ -24,7 +24,7 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
 
         val result =
             tablePage.columnValuesSetters[column]?.invoke(
-                tablePage.getOrganizationsList().find { it.id == id }!!,
+                tablePage.organizationStorage.getOrganizationsList().find { it.id == id }!!,
                 aValue.toString()
             ) as Boolean
 

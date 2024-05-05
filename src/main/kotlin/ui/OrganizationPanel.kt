@@ -6,7 +6,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTextField
 
-class OrganizationPanel(private val parent: JPanel) {
+class OrganizationPanel(private val parent: TablePanel) {
     val typeEditor = object : JComboBox<String>() {
         init {
             addItem("COMMERCIAL")
