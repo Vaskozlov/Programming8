@@ -9,6 +9,7 @@ import lib.sortedByUpOrDown
 import net.miginfocom.swing.MigLayout
 import ui.lib.MigFontLayout
 import ui.lib.OrganizationStorage
+import ui.lib.PointWithInfo
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.*
@@ -162,6 +163,12 @@ class TablePage(collection: CollectionInterface) : JFrame() {
         return -1
     }
 
+    private fun getCurrentPoints() =
+        organizationStorage.getFilteredOrganizationAsArrayOfStrings()
+            .map {
+                PointWithInfo(it[2]?.toIntOrNull() ?: 0, it[3]?.toIntOrNull() ?: 0, it[0] as String, it)
+            }.toList()
+
     private fun repaintVisualPanel() {
         tableViewScope.launch {
             needToStopUpdateFlag = true
@@ -170,21 +177,30 @@ class TablePage(collection: CollectionInterface) : JFrame() {
                 delay(10)
             }
 
-            // TODO: add lock
             visualPageUpdateRunning = true
             needToStopUpdateFlag = false
-            val points = visualPanel.getPoints()
 
-            for (i in 0 until points.size + 1) {
-                if (needToStopUpdateFlag) {
-                    break
-                }
+            val oldPoints = visualPanel.getPoints()
+            val currentPoints = getCurrentPoints()
+            val addedPoints = currentPoints.filterNot { oldPoints.contains(it) }
+            val removedPoints = oldPoints.filterNot { currentPoints.contains(it) }
 
-                delay(200)
-                visualPanel.stage = i
+            for (point in removedPoints)
+            {
+                visualPanel.pointsV.remove(point)
                 visualPanel.repaint()
+                delay(400)
             }
 
+            for (point in addedPoints)
+            {
+                visualPanel.pointsV.add(point)
+                visualPanel.repaint()
+                delay(400)
+            }
+
+            visualPanel.pointsV = currentPoints.toMutableList()
+            visualPanel.repaint()
             needToStopUpdateFlag = false
             visualPageUpdateRunning = false
         }

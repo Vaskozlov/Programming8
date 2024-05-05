@@ -152,7 +152,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         return organizations.sumOf { it.annualTurnover ?: 0.0 }
     }
 
-    private fun addImplementation(organization: Organization) = lock.withLock {
+    private fun addImplementation(organization: Organization): Int = lock.withLock {
         organization.id = organization.id ?: idFactory.nextId
         organization.creationDate = getLocalDate()
 
@@ -160,7 +160,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             throw OrganizationAlreadyPresentedException()
         }
 
-        addNoCheck(organization)
+         addNoCheck(organization)
     }
 
     override fun add(organization: Organization): Unit = lock.withLock {
@@ -183,10 +183,12 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
 
     private fun addNoCheck(organization: Organization): Int = lock.withLock {
         organization.validate()
+        updateModificationTime()
+        val realId = databaseToCollection.addOrganization(organization)
+        organization.id = realId
         organizations.add(organization)
         storedOrganizations.add(organization.toPairOfFullNameAndType())
-        updateModificationTime()
-        databaseToCollection.addOrganization(organization)
+        realId
     }
 
     override fun modifyOrganization(updatedOrganization: Organization) = lock.withLock {
@@ -235,6 +237,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         organizations.remove(organizationWithGivenId)
         storedOrganizations.remove(organizationWithGivenId.toPairOfFullNameAndType())
         databaseToCollection.removeOrganizationByID(organizationWithGivenId.id!!)
+        updateModificationTime()
 
         ExecutionStatus.SUCCESS
     }

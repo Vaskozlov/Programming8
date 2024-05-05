@@ -5,11 +5,13 @@ import java.awt.Color
 
 
 class Visualization(private val tablePage: TablePage) : BasicPointsVisualizer() {
-    override fun getPoints(): List<PointWithInfo> =
-        tablePage.organizationStorage.getFilteredOrganizationAsArrayOfStrings()
-            .map {
-                PointWithInfo(it[2]?.toIntOrNull() ?: 0, it[3]?.toIntOrNull() ?: 0, it[0] as String, it)
-            }.toList()
+    var pointsV : MutableList<PointWithInfo> = mutableListOf()
+
+    override fun getPoints(): List<PointWithInfo> = pointsV
+//        tablePage.organizationStorage.getFilteredOrganizationAsArrayOfStrings()
+//            .map {
+//                PointWithInfo(it[2]?.toIntOrNull() ?: 0, it[3]?.toIntOrNull() ?: 0, it[0] as String, it)
+//            }.toList()
 
 
     override fun onClick(closedPoint: PointWithInfo) {

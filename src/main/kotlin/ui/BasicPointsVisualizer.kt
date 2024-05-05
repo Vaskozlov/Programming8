@@ -9,7 +9,6 @@ abstract class BasicPointsVisualizer : Canvas() {
     var radius: Int = 50
     private val x = Point()
     private val y = Point()
-    var stage = 0
     private var xScale = 1.0
     private var yScale = 1.0
     private val pointsCenters = mutableListOf<PointWithInfo>()
@@ -33,9 +32,7 @@ abstract class BasicPointsVisualizer : Canvas() {
         xScale = width.toDouble() / (x.y - x.x).toDouble()
         yScale = height.toDouble() / (y.y - y.x).toDouble()
 
-        for (i in 0 until stage) {
-            drawPoint(g, points[i])
-        }
+        points.forEach { drawPoint(g, it) }
     }
 
     private fun drawPoint(g: Graphics, point: PointWithInfo) {
