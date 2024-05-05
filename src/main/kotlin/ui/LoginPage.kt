@@ -7,13 +7,17 @@ import lib.Localization
 import localization.LocalizedResources
 import org.example.database.auth.Password
 import ui.lib.MigFontLayout
-import java.awt.event.ActionEvent
+import ui.lib.buttonClickAdapter
 import java.util.concurrent.TimeoutException
-import javax.swing.*
+import javax.swing.JFrame
+import javax.swing.JLabel
+import javax.swing.JOptionPane
+import javax.swing.JTextField
 
 class LoginPage : JFrame() {
     companion object {
         val portRegex = Regex("^[0-9]{1,5}\$")
+        const val FIELDS_LENGTH = 30
     }
 
     private val addressLabel = JLabel()
@@ -22,17 +26,13 @@ class LoginPage : JFrame() {
     private val passwordLabel = JLabel()
     private val welcomeLabel = JLabel()
 
-    private val addressEditor = JTextField(30)
-    private val portEditor = JTextField(30)
-    private val loginEditor = JTextField(30)
-    private val passwordEditor = JTextField(30)
-    private val buttonAction = object : AbstractAction() {
-        override fun actionPerformed(e: ActionEvent) {
-            loginPressed()
-        }
+    private val addressEditor = JTextField(FIELDS_LENGTH)
+    private val portEditor = JTextField(FIELDS_LENGTH)
+    private val loginEditor = JTextField(FIELDS_LENGTH)
+    private val passwordEditor = JTextField(FIELDS_LENGTH)
+    private val loginButton = buttonClickAdapter {
+        loginPressed()
     }
-
-    private val loginButton = JButton(buttonAction)
 
     private val layout = MigFontLayout(
         "",
