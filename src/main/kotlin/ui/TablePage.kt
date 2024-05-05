@@ -140,10 +140,10 @@ class TablePage(collection: CollectionInterface) : JFrame() {
         }
     }
 
-    private fun reload(fullReload: Boolean) {
+    private fun reload(requestFullReload: Boolean) {
         tableViewScope.launch {
             runCatching {
-                if (fullReload) {
+                if (requestFullReload) {
                     organizationStorage.clearCache()
                 }
 
@@ -152,7 +152,7 @@ class TablePage(collection: CollectionInterface) : JFrame() {
                 sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
                 tableModel.fireTableDataChanged()
                 visualPanel.repaint()
-            }.onFailure { reload(fullReload) }
+            }.onFailure { reload(requestFullReload) }
         }
     }
 
