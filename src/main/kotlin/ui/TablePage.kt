@@ -3,6 +3,7 @@ package ui
 import collection.CollectionInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import lib.sortedByUpOrDown
 import net.miginfocom.swing.MigLayout
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.*
 import javax.swing.table.DefaultTableModel
+import kotlin.concurrent.Volatile
 import kotlin.concurrent.withLock
 
 
@@ -39,6 +41,12 @@ class TablePage(collection: CollectionInterface) : JFrame() {
     val tableViewScope = CoroutineScope(Dispatchers.Default)
     private val databaseCommunicationLock = ReentrantLock()
     private val databaseCommunicationLockCondition = databaseCommunicationLock.newCondition()
+
+    @Volatile
+    private var needToStopUpdateFlag = false
+
+    @Volatile
+    private var visualPageUpdateRunning = false
 
     private var tableFilter: Pair<String, Int>? = null
         set(value) {
@@ -154,6 +162,34 @@ class TablePage(collection: CollectionInterface) : JFrame() {
         return -1
     }
 
+    private fun repaintVisualPanel() {
+        tableViewScope.launch {
+            needToStopUpdateFlag = true
+
+            while (needToStopUpdateFlag && visualPageUpdateRunning) {
+                delay(10)
+            }
+
+            // TODO: add lock
+            visualPageUpdateRunning = true
+            needToStopUpdateFlag = false
+            val points = visualPanel.getPoints()
+
+            for (i in 0 until points.size + 1) {
+                if (needToStopUpdateFlag) {
+                    break
+                }
+
+                delay(200)
+                visualPanel.stage = i
+                visualPanel.repaint()
+            }
+
+            needToStopUpdateFlag = false
+            visualPageUpdateRunning = false
+        }
+    }
+
     fun requestReload() {
         databaseCommunicationLock.withLock {
             databaseCommunicationLockCondition.signal()
@@ -171,7 +207,7 @@ class TablePage(collection: CollectionInterface) : JFrame() {
                 val sportColumn = table.columnModel.getColumn(8)
                 sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
                 tableModel.fireTableDataChanged()
-                visualPanel.repaint()
+                repaintVisualPanel()
             }.onFailure { reload(requestFullReload) }
         }
     }
@@ -228,5 +264,6 @@ class TablePage(collection: CollectionInterface) : JFrame() {
         tablePanel.localize()
         modificationObserver.start()
         setSize(1600, 900)
+        reload(true)
     }
 }
