@@ -1,12 +1,17 @@
 package ui
 
 import lib.Localization
+import ui.lib.getTextFieldWithKeyListener
 import javax.swing.JComboBox
 import javax.swing.JLabel
-import javax.swing.JPanel
 import javax.swing.JTextField
 
 class OrganizationPanel(private val parent: TablePanel) {
+    companion object
+    {
+        const val FIELD_LENGTH = 30
+    }
+
     val typeEditor = object : JComboBox<String>() {
         init {
             addItem("COMMERCIAL")
@@ -18,20 +23,26 @@ class OrganizationPanel(private val parent: TablePanel) {
     }
 
     private val uiElements = mapOf<String, Pair<JLabel, Any>>(
-        "ui.ID" to (JLabel() to JTextField(30)),
-        "ui.name" to (JLabel() to JTextField(30)),
-        "ui.coordinate_x" to (JLabel() to JTextField(30)),
-        "ui.coordinate_y" to (JLabel() to JTextField(30)),
-        "ui.creation_date" to (JLabel() to JTextField(30)),
-        "ui.annual_turnover" to (JLabel() to JTextField(30)),
-        "ui.full_name" to (JLabel() to JTextField(30)),
-        "ui.employees_count" to (JLabel() to JTextField(30)),
+        "ui.ID" to (JLabel() to object : JTextField(FIELD_LENGTH) {
+            init {
+                isEditable = false
+            }
+        }),
+        "ui.name" to (JLabel() to getTextFieldWithKeyListener(FIELD_LENGTH) {
+
+        }),
+        "ui.coordinate_x" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.coordinate_y" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.creation_date" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.annual_turnover" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.full_name" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.employees_count" to (JLabel() to JTextField(FIELD_LENGTH)),
         "ui.type" to (JLabel() to typeEditor),
-        "ui.zip_code" to (JLabel() to JTextField(30)),
-        "ui.location_x" to (JLabel() to JTextField(30)),
-        "ui.location_y" to (JLabel() to JTextField(30)),
-        "ui.location_z" to (JLabel() to JTextField(30)),
-        "ui.location_name" to (JLabel() to JTextField(30)),
+        "ui.zip_code" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.location_x" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.location_y" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.location_z" to (JLabel() to JTextField(FIELD_LENGTH)),
+        "ui.location_name" to (JLabel() to JTextField(FIELD_LENGTH)),
     )
 
     private fun getTextOfElement(key: String): String =
