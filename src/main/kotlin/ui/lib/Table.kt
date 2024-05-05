@@ -24,7 +24,7 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
 
         val result =
             tablePage.columnValuesSetters[column]?.invoke(
-                tablePage.organizationStorage.getOrganizationsList().find { it.id == id }!!,
+                tablePage.organizationStorage.getOrganizationById(id)!!,
                 aValue.toString()
             ) as Boolean
 

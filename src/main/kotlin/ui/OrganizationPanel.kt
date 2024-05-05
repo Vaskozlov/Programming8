@@ -1,5 +1,6 @@
 package ui
 
+import collection.Organization
 import lib.Localization
 import ui.lib.getTextFieldWithKeyListener
 import javax.swing.JComboBox
@@ -7,9 +8,9 @@ import javax.swing.JLabel
 import javax.swing.JTextField
 
 class OrganizationPanel(private val parent: TablePanel) {
-    companion object
-    {
+    companion object {
         const val FIELD_LENGTH = 30
+        const val ENTER_KEYCODE = 10
     }
 
     val typeEditor = object : JComboBox<String>() {
@@ -78,6 +79,9 @@ class OrganizationPanel(private val parent: TablePanel) {
             parent.setPostalAddressTownName(getOrganizationByIdInUI()!!, it.text)
         }),
     )
+
+    private fun getOrganizationByIdInUI(): Organization? =
+        parent.tablePage.organizationStorage.getOrganizationById(getTextOfElement("ui.ID").toIntOrNull())
 
     private fun getTextOfElement(key: String): String =
         when (val value = uiElements[key]!!.second) {

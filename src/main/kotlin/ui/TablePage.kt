@@ -4,6 +4,7 @@ import collection.CollectionInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import lib.sortedByUpOrDown
 import net.miginfocom.swing.MigLayout
 import ui.lib.MigFontLayout
 import ui.lib.OrganizationStorage
@@ -42,7 +43,7 @@ class TablePage(collection: CollectionInterface) : JFrame() {
     private var tableFilter: Pair<String, Int>? = null
         set(value) {
             field = value
-            organizationStorage.filterChanged = true
+            organizationStorage.sortedChanged = true
         }
 
     private var stringFilter: Pair<String, String>? = null
@@ -59,25 +60,44 @@ class TablePage(collection: CollectionInterface) : JFrame() {
     internal val tablePanel = TablePanel(this)
     private val visualPanel = Visualization(this)
 
-    internal val organizationStorage = OrganizationStorage(collection)
-    {
+    internal val organizationStorage = OrganizationStorage(collection, {
         var result = it
 
         tableFilter?.let { tFilter ->
             val (columnName, filterId) = tFilter
             val column = getColumnIndex(table, columnName)
 
-            result = when (filterId % 3) {
-                1 -> result.sortedBy { it[column] }
-                2 -> result.sortedByDescending { it[column] }
-                else -> result
+            if (filterId % 3 != 0) {
+                result = when (column) {
+                    0 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.id }
+                    1 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.name }
+                    2 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.coordinates?.x }
+                    3 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.coordinates?.y }
+                    4 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.creationDate }
+                    5 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.annualTurnover }
+                    6 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.fullName }
+                    7 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.employeesCount }
+                    8 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.type }
+                    9 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.zipCode }
+                    10 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.x }
+                    11 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.y }
+                    12 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.z }
+                    13 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.name }
+                    14 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.creatorId }
+                    else -> result
+                }
             }
         }
+
+        result
+    })
+    {
+        var result = it
 
         stringFilter?.let {
             val (columnName, filter) = stringFilter!!
             val column = getColumnIndex(table, columnName)
-            result = result.filter { result[column].contains(filter) }.toMutableList()
+            result = result.filter { row -> row[column]!!.contains(filter) }.toList()
         }
 
         result
