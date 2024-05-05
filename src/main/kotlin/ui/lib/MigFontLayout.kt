@@ -10,7 +10,7 @@ class MigFontLayout(
     rowConstraints: String = ""
 ) : MigLayout(layoutConstraints, colConstraints, rowConstraints) {
     private val componentsList = mutableListOf<Component>()
-    var fontName = "Times"
+    var fontName = "Arial"
     var fontSize: Int = 24
         set(value) {
             for (comp in componentsList) {
