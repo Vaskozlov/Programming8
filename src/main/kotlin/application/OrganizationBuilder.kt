@@ -3,7 +3,7 @@ package application
 import collection.Address
 import collection.Organization
 import lib.BufferedReaderWithQueueOfStreams
-import org.example.lib.getLocalDate
+import lib.getLocalDate
 
 object OrganizationBuilder {
     fun constructOrganization(reader: BufferedReaderWithQueueOfStreams, prototypedFromAnother: Boolean): Organization {

@@ -17,8 +17,8 @@ import database.CollectionToDatabase
 import database.Database
 import database.auth.AuthorizationInfo
 import org.example.lib.CircledStorage
-import org.example.lib.getLocalDate
-import org.example.lib.getLocalDateTime
+import lib.getLocalDate
+import lib.getLocalDateTime
 import java.sql.ResultSet
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
