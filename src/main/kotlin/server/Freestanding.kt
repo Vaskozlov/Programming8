@@ -1,14 +1,14 @@
 package server
 
+import client.DatabaseCommand
 import collection.Address
 import collection.NetworkCode
 import collection.Organization
 import exceptions.*
 import lib.ExecutionStatus
-import client.DatabaseCommand
 import server.commands.ServerSideCommand
 
-var commandMap: Map<DatabaseCommand, _root_ide_package_.server.commands.ServerSideCommand> = mapOf(
+var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
     DatabaseCommand.ADD to ServerSideCommand
     {
             _,
