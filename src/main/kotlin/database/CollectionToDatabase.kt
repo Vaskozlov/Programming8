@@ -21,11 +21,10 @@ WITH COORDS AS (
     INSERT INTO COORDINATES (X, Y) VALUES (?, ?)
         RETURNING ID)
    , LOCATIONS AS (
-    INSERT INTO LOCATION (X, Y, Z, NAME) SELECT ?, ?, ?, ? WHERE ?
+    INSERT INTO LOCATION (X, Y, Z, NAME) VALUES (?, ?, ?, ?)
         RETURNING ID)
    , ADDRESSES AS (
     INSERT INTO ADDRESS (ZIP_CODE, LOCATION_ID) SELECT ?, (SELECT ID FROM LOCATIONS)
-                                                WHERE EXISTS(SELECT 1 FROM LOCATIONS WHERE ID IS NOT NULL)
         RETURNING ID)
 INSERT
 INTO ORGANIZATIONS (NAME, COORDINATES_ID, CREATION_TIME, ANNUAL_TURNOVER, FULL_NAME, EMPLOYEES_COUNT,
@@ -37,9 +36,52 @@ VALUES (?, (SELECT ID FROM COORDS),
 
         const val REMOVE_BY_ID_QUERY = "DELETE FROM ORGANIZATIONS WHERE ID = ?;"
 
-        const val MODIFY_ORGANIZATION_ID_QUERY =
-            """
-UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
+        const val MODIFY_ORGANIZATION = """
+BEGIN;
+INSERT INTO COORDINATES (ID, X, Y)
+VALUES ((SELECT organizations.coordinates_id
+         from organizations
+         where organizations.id = ?),
+        ?,
+        ?)
+ON CONFLICT (ID) DO UPDATE
+    SET X = excluded.X,
+        y = excluded.y;
+
+INSERT INTO LOCATION (ID, X, Y, Z, NAME)
+VALUES ((SELECT address.location_id
+         FROM address
+                  join organizations
+                       on organizations.id = ? and
+                          organizations.postal_address_id = address.id),
+        ?,
+        ?,
+        ?,
+        ?)
+ON CONFLICT(ID) DO UPDATE
+    SET X    = excluded.X,
+        Y    = excluded.Y,
+        Z    = excluded.Z,
+        NAME = excluded.NAME;
+
+INSERT INTO ADDRESS (ID, ZIP_CODE, LOCATION_ID)
+VALUES ((SELECT organizations.postal_address_id
+         FROM organizations
+         WHERE organizations.id = ?), ?, 0)
+ON CONFLICT(ID)
+    DO UPDATE SET ZIP_CODE = excluded.ZIP_CODE;
+
+INSERT INTO ORGANIZATIONS (ID, NAME, COORDINATES_ID, CREATION_TIME, ANNUAL_TURNOVER, FULL_NAME, EMPLOYEES_COUNT,
+                           ORGANIZATION_TYPE_ID, POSTAL_ADDRESS_ID, CREATOR_ID)
+VALUES (?, ?, 0, CURRENT_DATE, ?, ?, ?, ?, 0, 0)
+ON CONFLICT(ID)
+    DO UPDATE
+    SET NAME                 = excluded.name,
+        annual_turnover      = excluded.annual_turnover,
+        full_name            = excluded.full_name,
+        employees_count      = excluded.employees_count,
+        organization_type_id = excluded.organization_type_id;
+COMMIT;
         """
     }
 
@@ -58,7 +100,6 @@ UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
                     location?.y,
                     location?.z,
                     location?.name,
-                    location != null,
                     organization.postalAddress?.zipCode,
                     organization.name,
                     organization.creationDate?.toJavaLocalDate(),
@@ -80,15 +121,31 @@ UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
         ).first().getInt("ID")
     }
 
-    fun modifyOrganizationId(oldId: Int, newId: Int) {
-        database.runCatching {
-            executeUpdate(
-                FINISH_MODIFICATION_QUERY,
-                listOf(oldId, oldId, newId)
+    fun modifyOrganization(organization: Organization) {
+        val organizationType = organizationTypeToId(organization.type)
+        val location = organization.postalAddress?.town
+        val coordinates = organization.coordinates
+
+        database.executeUpdate(
+            MODIFY_ORGANIZATION, listOf(
+                organization.id,
+                coordinates?.x,
+                coordinates?.y,
+                organization.id,
+                location?.x,
+                location?.y,
+                location?.z,
+                location?.name,
+                organization.id,
+                organization.postalAddress?.zipCode,
+                organization.id,
+                organization.name,
+                organization.annualTurnover,
+                organization.fullName,
+                organization.employeesCount,
+                organizationType
             )
-        }.onFailure {
-            throw IllegalArgumentsForOrganizationException()
-        }
+        )
     }
 
     fun removeOrganizationByID(id: Int) {

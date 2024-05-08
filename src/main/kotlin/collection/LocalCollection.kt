@@ -25,7 +25,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     private val databaseToCollection = CollectionToDatabase(database)
     private val initializationDate: LocalDateTime = getLocalDateTime()
     private val history = CircledStorage<String>(11)
-    private val organizations = HashSet<Organization>()
+    private val organizations = mutableListOf<Organization>()
     private val storedOrganizations =
         mutableListOf<Pair<String?, OrganizationType?>>()
 
@@ -95,11 +95,11 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             employeesCount = result.getObject("EMPLOYEES_COUNT") as Int?,
             type = valueOrNull<OrganizationType>(result.getString("ORGANIZATION_TYPE_NAME")),
             postalAddress = Address(
-                zipCode = result.getString("ZIP_CODE"),
+                zipCode = (result.getObject("ZIP_CODE") as String?).takeIf { it == null || it.isNotEmpty() },
                 town = Location(
-                    x = result.getDouble("LX"),
-                    y = result.getFloat("LY"),
-                    z = result.getLong("LZ"),
+                    x = result.getObject("LX") as Double?,
+                    y = result.getObject("LY") as Float?,
+                    z = result.getObject("LZ") as Long?,
                     name = result.getObject("LNAME") as String?
                 )
             ),
@@ -289,11 +289,12 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             throw OrganizationAlreadyPresentedException()
         }
 
-        val newId = addNoCheck(updatedOrganization)
-        organizations.removeIf { it.id == organization.id }
-        organizations.add(updatedOrganization)
-        databaseToCollection.modifyOrganizationId(organization.id!!, newId)
         updatedOrganization.id = organization.id
+        organizations[organizations.indexOf(organization)] = updatedOrganization
+        storedOrganizations[storedOrganizations.indexOf(organization.toPairOfFullNameAndType())] =
+            updatedOrganization.toPairOfFullNameAndType()
+
+        databaseToCollection.modifyOrganization(updatedOrganization)
 
         updateModificationTime()
     }
