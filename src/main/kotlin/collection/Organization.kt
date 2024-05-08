@@ -16,7 +16,7 @@ data class Organization(
     var type: OrganizationType? = null,
     var postalAddress: Address? = null,
     var creatorId: Int? = null,
-) : Comparable<Organization> {
+) : Comparable<Organization>, Cloneable {
     fun validate() {
         val validationResult = checkCorrectness()
 

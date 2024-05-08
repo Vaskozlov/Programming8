@@ -281,8 +281,6 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     private fun completeModification(organization: Organization, updatedOrganization: Organization) = lock.withLock {
-        updatedOrganization.fillNullFromAnotherOrganization(organization)
-
         if (updatedOrganization.type == OrganizationType.NULL_TYPE) {
             updatedOrganization.type = null
         }
@@ -294,7 +292,6 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         val newId = addNoCheck(updatedOrganization)
         organizations.removeIf { it.id == organization.id }
         organizations.add(updatedOrganization)
-        databaseToCollection.removeOrganizationByID(organization.id!!)
         databaseToCollection.modifyOrganizationId(organization.id!!, newId)
         updatedOrganization.id = organization.id
 

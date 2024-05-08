@@ -6,12 +6,19 @@ import java.awt.*
 import java.awt.event.MouseEvent
 
 abstract class BasicPointsVisualizer : Canvas() {
-    var radius: Int = 50
+    private var radius: Int = 50
     private val x = Point()
     private val y = Point()
     private var xScale = 1.0
     private var yScale = 1.0
     private val pointsCenters = mutableListOf<PointWithInfo>()
+
+    // should not be a part of init, because escaping this may happen
+    private val mouseClicker by lazy {
+        addMouseListener(mouseClickAdapter {
+            onMouseClick(it)
+        })
+    }
 
     abstract fun getPoints(): List<PointWithInfo>
 
@@ -62,11 +69,5 @@ abstract class BasicPointsVisualizer : Canvas() {
             .filter { it.distance(event.point) <= radius }
             .minByOrNull { it.distance(event.point) }
             ?.let { onClick(it) }
-    }
-
-    init {
-        addMouseListener(mouseClickAdapter {
-            onMouseClick(it)
-        })
     }
 }

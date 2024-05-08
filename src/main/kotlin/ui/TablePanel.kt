@@ -65,7 +65,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(Organization(organization.id, name))
+        return finishOrganizationModification(organization.copy(name = name))
     }
 
     fun setCoordinateX(organization: Organization, x: String): Boolean {
@@ -76,12 +76,19 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                coordinates = Coordinates(newX, null)
+        val copiedOrganization = organization.copy(
+            coordinates = Coordinates(
+                newX,
+                null
             )
         )
+
+        copiedOrganization.coordinates = fillCoordinatesWithMissedInformation(
+            copiedOrganization.coordinates,
+            organization.coordinates
+        )
+
+        return finishOrganizationModification(copiedOrganization)
     }
 
     fun setCoordinateY(organization: Organization, y: String): Boolean {
@@ -92,12 +99,19 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                coordinates = Coordinates(null, newY)
+        val copiedOrganization = organization.copy(
+            coordinates = Coordinates(
+                null,
+                newY
             )
         )
+
+        copiedOrganization.coordinates = fillCoordinatesWithMissedInformation(
+            copiedOrganization.coordinates,
+            organization.coordinates
+        )
+
+        return finishOrganizationModification(copiedOrganization)
     }
 
     fun setAnnualTurnover(organization: Organization, annualTurnover: String): Boolean {
@@ -108,12 +122,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                annualTurnover = newAnnualTurnover
-            )
-        )
+        return finishOrganizationModification(organization.copy(annualTurnover = newAnnualTurnover))
     }
 
     fun setFullName(organization: Organization, fullName: String): Boolean {
@@ -122,12 +131,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                fullName = fullName
-            )
-        )
+        return finishOrganizationModification(organization.copy(fullName = fullName))
     }
 
     fun setEmployeesCount(organization: Organization, employeesCount: String): Boolean {
@@ -138,12 +142,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                employeesCount = newEmployeesCount
-            )
-        )
+        return finishOrganizationModification(organization.copy(employeesCount = newEmployeesCount))
     }
 
     fun setType(organization: Organization, type: String): Boolean {
@@ -154,12 +153,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                type = if (type == "null") OrganizationType.NULL_TYPE else newType
-            )
-        )
+        return finishOrganizationModification(organization.copy(type = newType))
     }
 
     fun setPostalAddressZipCode(organization: Organization, zipCode: String?): Boolean {
@@ -168,12 +162,20 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                postalAddress = Address(zipCode.takeIf { zipCode != "null" } ?: "", null)
+        val copiedOrganization = organization.copy(
+            postalAddress = Address(
+                zipCode,
+                null
             )
         )
+
+        copiedOrganization.postalAddress!!.town =
+            fillLocationWithMissedInformation(
+                copiedOrganization.postalAddress?.town,
+                organization.postalAddress?.town
+            )
+
+        return finishOrganizationModification(copiedOrganization)
     }
 
     fun setPostalAddressTownX(organization: Organization, x: String): Boolean {
@@ -184,14 +186,21 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                postalAddress = Address(
-                    null,
-                    Location(newX, null, null, null)
-                )
+        val copiedOrganization = organization.copy(
+            postalAddress = Address(
+                null,
+                Location(newX, null, null, null)
             )
+        )
+
+        copiedOrganization.postalAddress =
+            fillAddressWithMissedInformation(
+                copiedOrganization.postalAddress,
+                organization.postalAddress
+            )
+
+        return finishOrganizationModification(
+            copiedOrganization
         )
     }
 
@@ -203,14 +212,21 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                postalAddress = Address(
-                    null,
-                    Location(null, newY, null, null)
-                )
+        val copiedOrganization = organization.copy(
+            postalAddress = Address(
+                null,
+                Location(null, newY, null, null)
             )
+        )
+
+        copiedOrganization.postalAddress =
+            fillAddressWithMissedInformation(
+                copiedOrganization.postalAddress,
+                organization.postalAddress
+            )
+
+        return finishOrganizationModification(
+            copiedOrganization
         )
     }
 
@@ -222,14 +238,21 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                postalAddress = Address(
-                    null,
-                    Location(null, null, newZ, null)
-                )
+        val copiedOrganization = organization.copy(
+            postalAddress = Address(
+                null,
+                Location(null, null, newZ, null)
             )
+        )
+
+        copiedOrganization.postalAddress =
+            fillAddressWithMissedInformation(
+                copiedOrganization.postalAddress,
+                organization.postalAddress
+            )
+
+        return finishOrganizationModification(
+            copiedOrganization
         )
     }
 
@@ -239,14 +262,21 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        return finishOrganizationModification(
-            Organization(
-                organization.id,
-                postalAddress = Address(
-                    null,
-                    Location(null, null, null, if (name == "null") null else name)
-                )
+        val copiedOrganization = organization.copy(
+            postalAddress = Address(
+                null,
+                Location(null, null, null, name)
             )
+        )
+
+        copiedOrganization.postalAddress =
+            fillAddressWithMissedInformation(
+                copiedOrganization.postalAddress,
+                organization.postalAddress
+            )
+
+        return finishOrganizationModification(
+            copiedOrganization
         )
     }
 

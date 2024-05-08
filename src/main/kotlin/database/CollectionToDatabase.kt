@@ -8,6 +8,13 @@ import kotlinx.datetime.toJavaLocalDate
 
 class CollectionToDatabase(private val database: Database) {
     companion object {
+        const val FINISH_MODIFICATION_QUERY = """
+BEGIN;
+DELETE FROM ORGANIZATIONS WHERE ID = ?;
+UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
+COMMIT;
+            """
+
         const val ADD_QUERY =
             """
 WITH COORDS AS (
@@ -76,8 +83,8 @@ UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
     fun modifyOrganizationId(oldId: Int, newId: Int) {
         database.runCatching {
             executeUpdate(
-                MODIFY_ORGANIZATION_ID_QUERY,
-                listOf(oldId, newId)
+                FINISH_MODIFICATION_QUERY,
+                listOf(oldId, oldId, newId)
             )
         }.onFailure {
             throw IllegalArgumentsForOrganizationException()

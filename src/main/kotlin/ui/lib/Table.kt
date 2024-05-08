@@ -1,8 +1,10 @@
 package ui.lib
 
+import kotlinx.coroutines.launch
 import ui.TablePage
 import javax.swing.DefaultCellEditor
 import javax.swing.JTable
+import javax.swing.SwingUtilities
 import javax.swing.event.ListSelectionEvent
 import javax.swing.table.TableModel
 
@@ -21,14 +23,19 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
 
         val id = (getValueAt(row, 0) as String).toInt()
 
-        val result =
-            tablePage.columnValuesSetters[column]?.invoke(
-                tablePage.getOrganizationById(id)!!,
-                aValue.toString()
-            ) as Boolean
+        tablePage.tableViewScope.launch {
 
-        if (result) {
-            super.setValueAt(aValue, row, column)
+            val result =
+                tablePage.columnValuesSetters[column]?.invoke(
+                    tablePage.getOrganizationById(id)!!,
+                    aValue.toString()
+                ) as Boolean
+
+            if (result) {
+                SwingUtilities.invokeAndWait {
+                    super.setValueAt(aValue, row, column)
+                }
+            }
         }
     }
 
