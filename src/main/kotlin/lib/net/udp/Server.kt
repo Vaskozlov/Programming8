@@ -1,7 +1,6 @@
 package lib.net.udp
 
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.lib.net.udp.User
 import lib.net.udp.slice.PacketSlicer
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor

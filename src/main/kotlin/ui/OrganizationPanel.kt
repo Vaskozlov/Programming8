@@ -81,7 +81,7 @@ class OrganizationPanel(private val parent: TablePanel) {
     )
 
     private fun getOrganizationByIdInUI(): Organization? =
-        parent.tablePage.organizationStorage.getOrganizationById(getTextOfElement("ui.ID").toIntOrNull())
+        parent.tablePage.getOrganizationById(getTextOfElement("ui.ID").toIntOrNull() ?: -1)
 
     private fun getTextOfElement(key: String): String =
         when (val value = uiElements[key]!!.second) {

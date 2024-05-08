@@ -1,6 +1,5 @@
 package lib.net.udp
 
-import org.example.lib.net.udp.UDPNetwork
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.InetSocketAddress
@@ -8,7 +7,8 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 
-open class ChannelUDPNetwork(private val delayMS: Long = 100, private val timeWaitingForPacket: Long = 10) :
+// TODO: change timeout
+open class ChannelUDPNetwork(private val delayMS: Long = 100, private val timeWaitingForPacket: Long = 100) :
     UDPNetwork() {
     private val channel = DatagramChannel.open()
 

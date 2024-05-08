@@ -1,6 +1,5 @@
 package lib.net.udp
 
-import org.example.lib.net.udp.User
 import java.net.DatagramPacket
 
 fun DatagramPacket.convertToString(): String {

@@ -60,6 +60,7 @@ class RemoteCollection(
             NetworkCode.INVALID_OUTPUT_FORMAT -> Result.failure(InvalidOutputFormatException())
             NetworkCode.UNAUTHORIZED -> Result.failure(UnauthorizedException())
             NetworkCode.ACCESS_LIMITED -> Result.failure(IllegalAccessException())
+            NetworkCode.ILLEGAL_ARGUMENTS -> Result.failure(IllegalArgumentsForOrganizationException())
             NetworkCode.FAILURE -> Result.failure(Exception())
         }
     }

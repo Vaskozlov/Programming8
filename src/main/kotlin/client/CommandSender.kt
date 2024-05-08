@@ -1,6 +1,6 @@
 package client
 
-import org.example.lib.net.udp.Frame
+import lib.net.udp.Frame
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement

@@ -6,7 +6,7 @@ fun fillAddressWithMissedInformation(first: Address?, second: Address?): Address
     }
 
     return Address(
-        first?.zipCode ?: second?.zipCode,
+        (first?.zipCode ?: second?.zipCode).takeIf { it == null || it.isNotEmpty() },
         fillLocationWithMissedInformation(first?.town, second?.town)
     )
 }

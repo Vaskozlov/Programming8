@@ -1,10 +1,7 @@
-package org.example.lib.net.udp
+package lib.net.udp
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import lib.net.udp.JsonHolder
-import lib.net.udp.constructJsonHolder
-import lib.net.udp.defaultUDPBufferSize
 import java.net.DatagramPacket
 import java.net.InetSocketAddress
 

@@ -1,11 +1,14 @@
 package ui
 
+import application.exceptionToMessage
 import collection.*
-import kotlinx.coroutines.launch
 import lib.Localization
 import lib.valueOrNull
+import ui.lib.BasicTablePage
 import ui.lib.MigFontLayout
 import ui.lib.getTextFieldWithKeyListener
+import java.awt.Dimension
+import java.awt.Toolkit
 import javax.swing.JComboBox
 import javax.swing.JLabel
 import javax.swing.JOptionPane
@@ -25,7 +28,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
     private val layout = MigFontLayout()
     private val columnComboBox = object : JComboBox<String>() {
         init {
-            for (column in TablePage.columnNames) {
+            for (column in BasicTablePage.columnNames) {
                 addItem(column)
             }
         }
@@ -36,6 +39,17 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
 
     val filter: Pair<String, String>
         get() = Pair(columnComboBox.selectedItem as String, textFilter.text)
+
+    private fun finishOrganizationModification(updatedOrganization: Organization): Boolean {
+        return runCatching {
+            tablePage.modifyOrganization(updatedOrganization)
+        }.onFailure {
+            JOptionPane.showMessageDialog(
+                this@TablePanel,
+                exceptionToMessage(it)
+            )
+        }.isSuccess
+    }
 
     fun localize() {
         labels.forEach { (label, key) ->
@@ -51,11 +65,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(organization.id, name)
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-
-        return true
+        return finishOrganizationModification(Organization(organization.id, name))
     }
 
     fun setCoordinateX(organization: Organization, x: String): Boolean {
@@ -66,14 +76,12 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            coordinates = Coordinates(newX, null)
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                coordinates = Coordinates(newX, null)
+            )
         )
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-
-        return true
     }
 
     fun setCoordinateY(organization: Organization, y: String): Boolean {
@@ -84,17 +92,12 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            coordinates = Coordinates(null, newY)
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                coordinates = Coordinates(null, newY)
+            )
         )
-
-        tablePage.tableViewScope.launch {
-            tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-            tablePage.requestReload()
-        }
-
-        return true
     }
 
     fun setAnnualTurnover(organization: Organization, annualTurnover: String): Boolean {
@@ -105,13 +108,12 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            annualTurnover = newAnnualTurnover
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                annualTurnover = newAnnualTurnover
+            )
         )
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
     }
 
     fun setFullName(organization: Organization, fullName: String): Boolean {
@@ -120,13 +122,12 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            fullName = fullName
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                fullName = fullName
+            )
         )
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
     }
 
     fun setEmployeesCount(organization: Organization, employeesCount: String): Boolean {
@@ -137,13 +138,12 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            employeesCount = newEmployeesCount
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                employeesCount = newEmployeesCount
+            )
         )
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
     }
 
     fun setType(organization: Organization, type: String): Boolean {
@@ -154,31 +154,26 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            type = if (type == "null") OrganizationType.NULL_TYPE else newType
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                type = if (type == "null") OrganizationType.NULL_TYPE else newType
+            )
         )
-
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-
-        return true
     }
 
-    fun setPostalAddressZipCode(organization: Organization, zipCode: String): Boolean {
-        if (zipCode.length < 3 || zipCode.toIntOrNull() == null) {
+    fun setPostalAddressZipCode(organization: Organization, zipCode: String?): Boolean {
+        if (zipCode != null && zipCode != "null" && (zipCode.length < 3 || zipCode.toIntOrNull() == null)) {
             JOptionPane.showMessageDialog(this, "Zip code must be at least 3 symbols long.")
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            postalAddress = Address(zipCode, null)
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                postalAddress = Address(zipCode.takeIf { zipCode != "null" } ?: "", null)
+            )
         )
-
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
     }
 
     fun setPostalAddressTownX(organization: Organization, x: String): Boolean {
@@ -189,16 +184,15 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            postalAddress = Address(
-                null,
-                Location(newX, null, null, null)
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                postalAddress = Address(
+                    null,
+                    Location(newX, null, null, null)
+                )
             )
         )
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
     }
 
     fun setPostalAddressTownY(organization: Organization, y: String): Boolean {
@@ -209,16 +203,15 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            postalAddress = Address(
-                null,
-                Location(null, newY, null, null)
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                postalAddress = Address(
+                    null,
+                    Location(null, newY, null, null)
+                )
             )
         )
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
     }
 
     fun setPostalAddressTownZ(organization: Organization, z: String): Boolean {
@@ -229,16 +222,15 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            postalAddress = Address(
-                null,
-                Location(null, null, newZ, null)
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                postalAddress = Address(
+                    null,
+                    Location(null, null, newZ, null)
+                )
             )
         )
-        tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-        tablePage.requestReload()
-        return true
     }
 
     fun setPostalAddressTownName(organization: Organization, name: String): Boolean {
@@ -247,23 +239,22 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             return false
         }
 
-        val updatedOrganization = Organization(
-            organization.id,
-            postalAddress = Address(
-                null,
-                Location(null, null, null, if (name == "null") null else name)
+        return finishOrganizationModification(
+            Organization(
+                organization.id,
+                postalAddress = Address(
+                    null,
+                    Location(null, null, null, if (name == "null") null else name)
+                )
             )
         )
-
-        return runCatching {
-            tablePage.organizationStorage.collection.modifyOrganization(updatedOrganization)
-            tablePage.requestReload()
-        }.isSuccess
     }
-
 
     init {
         setLayout(layout)
+        val screenSize: Dimension = Toolkit.getDefaultToolkit().screenSize
+        layout.fontSize = 15 * screenSize.width / 1920
+
         add(labels[0].first)
         add(textFilter, "wrap")
         add(labels[1].first)

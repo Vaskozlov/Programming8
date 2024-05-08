@@ -2,6 +2,7 @@ package database
 
 import collection.Organization
 import collection.OrganizationType
+import exceptions.IllegalArgumentsForOrganizationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toJavaLocalDate
 
@@ -40,26 +41,30 @@ UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
         val location = organization.postalAddress?.town
         val coordinates = organization.coordinates
 
-        database.executeUpdate(
-            ADD_QUERY,
-            listOf(
-                coordinates?.x,
-                coordinates?.y,
-                location?.x,
-                location?.y,
-                location?.z,
-                location?.name,
-                location != null,
-                organization.postalAddress?.zipCode,
-                organization.name,
-                organization.creationDate?.toJavaLocalDate(),
-                organization.annualTurnover,
-                organization.fullName,
-                organization.employeesCount,
-                organizationType,
-                organization.creatorId
+        database.runCatching {
+            executeUpdate(
+                ADD_QUERY,
+                listOf(
+                    coordinates?.x,
+                    coordinates?.y,
+                    location?.x,
+                    location?.y,
+                    location?.z,
+                    location?.name,
+                    location != null,
+                    organization.postalAddress?.zipCode,
+                    organization.name,
+                    organization.creationDate?.toJavaLocalDate(),
+                    organization.annualTurnover,
+                    organization.fullName,
+                    organization.employeesCount,
+                    organizationType,
+                    organization.creatorId
+                )
             )
-        )
+        }.onFailure {
+            throw IllegalArgumentsForOrganizationException()
+        }
 
         database.executeQuery(
             "SELECT ID FROM ORGANIZATIONS WHERE FULL_NAME = ? ORDER BY ID DESC LIMIT 1", listOf(
@@ -69,10 +74,14 @@ UPDATE ORGANIZATIONS SET ID = ? WHERE ID = ?;
     }
 
     fun modifyOrganizationId(oldId: Int, newId: Int) {
-        database.executeUpdate(
-            MODIFY_ORGANIZATION_ID_QUERY,
-            listOf(oldId, newId)
-        )
+        database.runCatching {
+            executeUpdate(
+                MODIFY_ORGANIZATION_ID_QUERY,
+                listOf(oldId, newId)
+            )
+        }.onFailure {
+            throw IllegalArgumentsForOrganizationException()
+        }
     }
 
     fun removeOrganizationByID(id: Int) {

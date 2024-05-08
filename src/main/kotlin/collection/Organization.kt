@@ -36,10 +36,10 @@ data class Organization(
         name = name ?: organization.name
         coordinates = fillCoordinatesWithMissedInformation(coordinates, organization.coordinates)
         creationDate = creationDate ?: organization.creationDate
-        annualTurnover = annualTurnover ?: organization.annualTurnover
+        annualTurnover = (annualTurnover ?: organization.annualTurnover).takeIf { it == null || it > 0 }
         fullName = fullName ?: organization.fullName
-        employeesCount = employeesCount ?: organization.employeesCount
-        type = type ?: organization.type
+        employeesCount = (employeesCount ?: organization.employeesCount).takeIf { it == null || it > 0 }
+        type = (type ?: organization.type).takeIf { it == null || it != OrganizationType.NULL_TYPE }
         postalAddress = fillAddressWithMissedInformation(postalAddress, organization.postalAddress)
     }
 

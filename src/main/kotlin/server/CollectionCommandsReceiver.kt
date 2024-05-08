@@ -15,7 +15,7 @@ import database.AuthorizationManager
 import database.Database
 import database.auth.AuthorizationInfo
 import lib.net.udp.CommandWithArgument
-import org.example.lib.net.udp.User
+import lib.net.udp.User
 import java.net.InetSocketAddress
 import java.util.concurrent.ForkJoinPool
 

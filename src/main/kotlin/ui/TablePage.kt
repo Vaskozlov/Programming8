@@ -5,61 +5,27 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import lib.sortedByUpOrDown
+import kotlinx.coroutines.sync.Semaphore
 import net.miginfocom.swing.MigLayout
+import ui.lib.BasicTablePage
 import ui.lib.MigFontLayout
-import ui.lib.OrganizationStorage
-import ui.lib.PointWithInfo
+import java.awt.Dimension
+import java.awt.Toolkit
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.*
-import javax.swing.table.DefaultTableModel
-import kotlin.concurrent.Volatile
+import javax.swing.DefaultCellEditor
+import javax.swing.JPanel
+import javax.swing.JScrollPane
 import kotlin.concurrent.withLock
+import kotlin.math.max
+import kotlin.math.min
 
 
-class TablePage(collection: CollectionInterface) : JFrame() {
-    companion object {
-        val columnNames = arrayOf(
-            "ID",
-            "Name",
-            "Coordinate x",
-            "Coordinate y",
-            "Creation date",
-            "Annual turnover",
-            "Full name",
-            "Employees count",
-            "Type",
-            "Zip code",
-            "Location x",
-            "Location y",
-            "Location z",
-            "Location name",
-            "Creator id"
-        )
-    }
-
+class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
     val tableViewScope = CoroutineScope(Dispatchers.Default)
     private val databaseCommunicationLock = ReentrantLock()
     private val databaseCommunicationLockCondition = databaseCommunicationLock.newCondition()
-
-    @Volatile
-    private var needToStopUpdateFlag = false
-
-    @Volatile
-    private var visualPageUpdateRunning = false
-
-    private var tableFilter: Pair<String, Int>? = null
-        set(value) {
-            field = value
-            organizationStorage.sortedChanged = true
-        }
-
-    private var stringFilter: Pair<String, String>? = null
-        set(value) {
-            field = value
-            organizationStorage.filterChanged = true
-        }
+    private val visualLock = Semaphore(1)
 
     private val layout = MigFontLayout(
         "",
@@ -69,69 +35,19 @@ class TablePage(collection: CollectionInterface) : JFrame() {
     internal val tablePanel = TablePanel(this)
     private val visualPanel = Visualization(this)
 
-    internal val organizationStorage = OrganizationStorage(collection, {
-        var result = it
-
-        tableFilter?.let { tFilter ->
-            val (columnName, filterId) = tFilter
-            val column = getColumnIndex(table, columnName)
-
-            if (filterId % 3 != 0) {
-                result = when (column) {
-                    0 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.id }
-                    1 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.name }
-                    2 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.coordinates?.x }
-                    3 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.coordinates?.y }
-                    4 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.creationDate }
-                    5 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.annualTurnover }
-                    6 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.fullName }
-                    7 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.employeesCount }
-                    8 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.type }
-                    9 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.zipCode }
-                    10 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.x }
-                    11 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.y }
-                    12 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.z }
-                    13 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.name }
-                    14 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.creatorId }
-                    else -> result
-                }
-            }
-        }
-
-        result
-    })
-    {
-        var result = it
-
-        stringFilter?.let {
-            val (columnName, filter) = stringFilter!!
-            val column = getColumnIndex(table, columnName)
-            result = result.filter { row -> row[column]!!.contains(filter) }.toList()
-        }
-
-        result
-    }
-
-    private var tableModel: DefaultTableModel =
-        object : DefaultTableModel(organizationStorage.getFilteredOrganizationAsArrayOfStrings(), columnNames) {
-            override fun isCellEditable(row: Int, column: Int): Boolean {
-                return table.isCellEditable(row, column)
-            }
-        }
-
     private val modificationObserver = tableViewScope.launch {
         var lastModificationTime = collection.getLastModificationTime()
 
         while (true) {
             databaseCommunicationLock.withLock {
-                databaseCommunicationLockCondition.await(
+                val forcedReload = databaseCommunicationLockCondition.await(
                     5,
                     TimeUnit.SECONDS
                 )
 
                 val currentModificationTime = collection.getLastModificationTime()
 
-                if (lastModificationTime != currentModificationTime) {
+                if (lastModificationTime != currentModificationTime || forcedReload) {
                     lastModificationTime = currentModificationTime
                     reload(true)
                 }
@@ -154,65 +70,44 @@ class TablePage(collection: CollectionInterface) : JFrame() {
         13 to tablePanel::setPostalAddressTownName
     )
 
-    private val table = ui.lib.Table(tableModel, this)
-
-    private fun getColumnIndex(table: JTable, header: String): Int {
-        for (i in 0 until table.columnCount) {
-            if (table.getColumnName(i) == header) return i
-        }
-        return -1
-    }
-
-    private fun getCurrentPoints() =
-        organizationStorage.getFilteredOrganizationAsArrayOfStrings()
-            .map {
-                PointWithInfo(it[2]?.toIntOrNull() ?: 0, it[3]?.toIntOrNull() ?: 0, it[0] as String, it)
-            }.toList()
-
     private fun repaintVisualPanel() {
         tableViewScope.launch {
-            needToStopUpdateFlag = true
-
-            while (needToStopUpdateFlag && visualPageUpdateRunning) {
-                delay(10)
+            while (!visualLock.tryAcquire()) {
+                delay(100)
             }
-
-            visualPageUpdateRunning = true
-            needToStopUpdateFlag = false
 
             val oldPoints = visualPanel.getPoints()
             val currentPoints = getCurrentPoints()
             val addedPoints = currentPoints.filterNot { oldPoints.contains(it) }
             val removedPoints = oldPoints.filterNot { currentPoints.contains(it) }
+            val visualEffectDelay = min(1000L / (max(1, addedPoints.size + removedPoints.size)), 200L)
+            println(visualEffectDelay)
 
-            for (point in removedPoints)
-            {
+            for (point in removedPoints) {
                 visualPanel.pointsV.remove(point)
                 visualPanel.repaint()
-                delay(400)
+                delay(visualEffectDelay)
             }
 
-            for (point in addedPoints)
-            {
+            for (point in addedPoints) {
                 visualPanel.pointsV.add(point)
                 visualPanel.repaint()
-                delay(400)
+                delay(visualEffectDelay)
             }
 
             visualPanel.pointsV = currentPoints.toMutableList()
             visualPanel.repaint()
-            needToStopUpdateFlag = false
-            visualPageUpdateRunning = false
+            visualLock.release()
         }
     }
 
-    fun requestReload() {
+    override fun requestReload() {
         databaseCommunicationLock.withLock {
             databaseCommunicationLockCondition.signal()
         }
     }
 
-    private fun reload(requestFullReload: Boolean) {
+    override fun reload(requestFullReload: Boolean) {
         tableViewScope.launch {
             runCatching {
                 if (requestFullReload) {
@@ -226,17 +121,6 @@ class TablePage(collection: CollectionInterface) : JFrame() {
                 repaintVisualPanel()
             }.onFailure { reload(requestFullReload) }
         }
-    }
-
-    internal fun addFilter(columnName: String) {
-        tableFilter?.let {
-            val (prevColumnName, prevFilterId) = it
-            tableFilter = columnName to (if (prevColumnName == columnName) prevFilterId + 1 else 1)
-        } ?: run {
-            tableFilter = columnName to 1
-        }
-
-        reload(false)
     }
 
     fun filterChanged() {
@@ -255,7 +139,10 @@ class TablePage(collection: CollectionInterface) : JFrame() {
     init {
         title = "Table"
         defaultCloseOperation = EXIT_ON_CLOSE
-        setSize(1200, 600)
+        val screenSize: Dimension = Toolkit.getDefaultToolkit().screenSize
+        layout.fontSize = 15 * screenSize.width / 1920
+
+        setSize(1200, 500)
         setLayout(layout)
 
         table.tableHeader.table.rowHeight = 30
@@ -276,6 +163,8 @@ class TablePage(collection: CollectionInterface) : JFrame() {
         panel.add(tablePanel, "wrap")
         panel.add(visualPanel)
         add(panel)
+        layout.addAsFontOnlyComponent(tablePanel)
+        layout.addAsFontOnlyComponent(visualPanel)
 
         tablePanel.localize()
         modificationObserver.start()

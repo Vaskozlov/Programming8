@@ -1,6 +1,6 @@
-package org.example.server.commands
+package server.commands
 
-import org.example.lib.net.udp.User
+import lib.net.udp.User
 import collection.CollectionInterface
 
 fun interface ServerSideCommand {

@@ -6,8 +6,8 @@ import lib.net.udp.JsonHolder
 import database.AuthorizationManager
 import database.auth.AuthorizationInfo
 import lib.net.udp.CommandWithArgument
-import org.example.lib.net.udp.Frame
-import org.example.lib.net.udp.User
+import lib.net.udp.Frame
+import lib.net.udp.User
 
 abstract class ServerWithAuthorization(
     port: Int,

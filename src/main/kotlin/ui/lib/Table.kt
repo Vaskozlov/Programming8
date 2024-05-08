@@ -11,8 +11,7 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
         return column != 0 &&
                 column != 4 &&
                 column != 14 &&
-                tablePage.organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row][14]
-                    ?.toIntOrNull() == tablePage.organizationStorage.collection.getCreatorId()
+                tablePage.getOrganizationByRow(row)?.creatorId == tablePage.getUserId()
     }
 
     override fun setValueAt(aValue: Any?, row: Int, column: Int) {
@@ -24,13 +23,12 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
 
         val result =
             tablePage.columnValuesSetters[column]?.invoke(
-                tablePage.organizationStorage.getOrganizationById(id)!!,
+                tablePage.getOrganizationById(id)!!,
                 aValue.toString()
             ) as Boolean
 
         if (result) {
             super.setValueAt(aValue, row, column)
-            println("Setting value at $row, $column to $aValue")
         }
     }
 
@@ -45,6 +43,16 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
                 if (it.clickCount == 2) {
                     val row = rowAtPoint(it.point)
                     tablePage.selectOrganization(row)
+                }
+            }
+        )
+
+        addKeyListener(
+            keyboardKeyReleasedAdapter {
+                if (it.keyCode == 127 || (it.keyCode == 8 && it.isShiftDown)) {
+                    val row = selectedRow
+                    val id = (getValueAt(row, 0) as String).toInt()
+                    tablePage.removeById(id)
                 }
             }
         )

@@ -4,8 +4,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import lib.net.udp.JsonHolder
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.lib.net.udp.UDPNetwork
-import org.example.lib.net.udp.User
+import lib.net.udp.UDPNetwork
+import lib.net.udp.User
 import java.net.InetSocketAddress
 import kotlin.random.Random
 

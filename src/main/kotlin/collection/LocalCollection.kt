@@ -1,5 +1,8 @@
 package collection
 
+import database.CollectionToDatabase
+import database.Database
+import database.auth.AuthorizationInfo
 import exceptions.OrganizationAlreadyPresentedException
 import exceptions.OrganizationNotFoundException
 import kotlinx.coroutines.runBlocking
@@ -8,17 +11,9 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import lib.ExecutionStatus
-import lib.IdFactory
-import lib.Localization
-import lib.valueOrNull
+import lib.*
 import org.apache.logging.log4j.kotlin.Logging
-import database.CollectionToDatabase
-import database.Database
-import database.auth.AuthorizationInfo
 import org.example.lib.CircledStorage
-import lib.getLocalDate
-import lib.getLocalDateTime
 import java.sql.ResultSet
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -160,7 +155,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             throw OrganizationAlreadyPresentedException()
         }
 
-         addNoCheck(organization)
+        addNoCheck(organization)
     }
 
     override fun add(organization: Organization): Unit = lock.withLock {
@@ -297,10 +292,13 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         }
 
         val newId = addNoCheck(updatedOrganization)
-        organizations.remove(organization)
+        organizations.removeIf { it.id == organization.id }
         organizations.add(updatedOrganization)
         databaseToCollection.removeOrganizationByID(organization.id!!)
         databaseToCollection.modifyOrganizationId(organization.id!!, newId)
+        updatedOrganization.id = organization.id
+
+        updateModificationTime()
     }
 
     private fun isModificationLegal(previous: Organization, newVersion: Organization): Boolean {

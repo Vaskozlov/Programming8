@@ -6,17 +6,18 @@ import collection.Organization
 import exceptions.*
 import lib.ExecutionStatus
 import client.DatabaseCommand
-import org.example.server.commands.ServerSideCommand
+import server.commands.ServerSideCommand
 
-var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
+var commandMap: Map<DatabaseCommand, _root_ide_package_.server.commands.ServerSideCommand> = mapOf(
     DatabaseCommand.ADD to ServerSideCommand
     {
             _,
             database,
             argument,
         ->
-        database.add(argument as Organization)
-        Result.success(null)
+        database.runCatching {
+            add(argument as Organization)
+        }
     },
 
     DatabaseCommand.ADD_IF_MAX to ServerSideCommand
@@ -109,8 +110,9 @@ var commandMap: Map<DatabaseCommand, ServerSideCommand> = mapOf(
             database,
             argument,
         ->
-        database.modifyOrganization(argument as Organization)
-        Result.success(null)
+        database.runCatching {
+            modifyOrganization(argument as Organization)
+        }
     },
 
     DatabaseCommand.EXIT to ServerSideCommand
@@ -155,6 +157,8 @@ fun errorToNetworkCode(error: Throwable?): NetworkCode {
         is OrganizationAlreadyPresentedException -> NetworkCode.ORGANIZATION_ALREADY_EXISTS
 
         is OrganizationNotFoundException -> NetworkCode.NOT_FOUND
+
+        is IllegalArgumentsForOrganizationException -> NetworkCode.ILLEGAL_ARGUMENTS
 
         is NotMaximumOrganizationException -> NetworkCode.NOT_A_MAXIMUM_ORGANIZATION
 
