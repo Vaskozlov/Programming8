@@ -2,6 +2,9 @@ package server
 
 import client.DatabaseCommand
 import collection.*
+import database.AuthorizationManager
+import database.Database
+import database.auth.AuthorizationInfo
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.encodeToString
@@ -9,15 +12,11 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import lib.net.udp.ResultFrame
-import org.apache.logging.log4j.kotlin.Logging
-import database.AuthorizationManager
-import database.Database
-import database.auth.AuthorizationInfo
 import lib.net.udp.CommandWithArgument
+import lib.net.udp.ResultFrame
 import lib.net.udp.User
+import org.apache.logging.log4j.kotlin.Logging
 import java.net.InetSocketAddress
-import java.util.concurrent.ForkJoinPool
 
 class CollectionCommandsReceiver(
     port: Int,
@@ -121,11 +120,7 @@ class CollectionCommandsReceiver(
         result: Result<Any?>,
     ) {
         val code = if (result.isSuccess) NetworkCode.SUCCESS else errorToNetworkCode(result.exceptionOrNull())
-
-        ForkJoinPool.commonPool().execute {
-            logger.trace("Sending result to $user, code: $code")
-        }
-
+        logger.trace("Sending result to $user, code: $code")
         send(user, code, serialize(result.getOrNull()))
     }
 
@@ -150,9 +145,6 @@ class CollectionCommandsReceiver(
         logger.trace("Executing command: $command , from $user")
         val commandArgument = getArgumentForTheCommand(command, authorizationInfo, commandWithArgument.value)
         val result = execute(command, user, collectionOfOrganizations, commandArgument)
-
-        ForkJoinPool.commonPool().execute {
-            sendResult(user, result)
-        }
+        sendResult(user, result)
     }
 }
