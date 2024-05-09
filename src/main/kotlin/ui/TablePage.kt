@@ -9,8 +9,7 @@ import kotlinx.coroutines.sync.Semaphore
 import net.miginfocom.swing.MigLayout
 import ui.lib.BasicTablePage
 import ui.lib.MigFontLayout
-import java.awt.Dimension
-import java.awt.Toolkit
+import ui.lib.calculateFontSize
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.DefaultCellEditor
@@ -81,7 +80,6 @@ class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
             val addedPoints = currentPoints.filterNot { oldPoints.contains(it) }
             val removedPoints = oldPoints.filterNot { currentPoints.contains(it) }
             val visualEffectDelay = min(1000L / (max(1, addedPoints.size + removedPoints.size)), 200L)
-            println(visualEffectDelay)
 
             for (point in removedPoints) {
                 visualPanel.pointsV.remove(point)
@@ -139,8 +137,7 @@ class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
     init {
         title = "Table"
         defaultCloseOperation = EXIT_ON_CLOSE
-        val screenSize: Dimension = Toolkit.getDefaultToolkit().screenSize
-        layout.fontSize = 15 * screenSize.width / 1920
+        layout.fontSize = calculateFontSize(15)
 
         setSize(1200, 500)
         setLayout(layout)

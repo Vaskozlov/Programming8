@@ -7,8 +7,7 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 
-// TODO: change timeout
-open class ChannelUDPNetwork(private val delayMS: Long = 100, private val timeWaitingForPacket: Long = 100) :
+open class ChannelUDPNetwork(private val delayMS: Long = 10, private val timeWaitingForPacket: Long = 1000) :
     UDPNetwork() {
     private val channel = DatagramChannel.open()
 

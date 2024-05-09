@@ -14,6 +14,7 @@ abstract class BasicPointsVisualizer : Canvas() {
     private val pointsCenters = mutableListOf<PointWithInfo>()
 
     // should not be a part of init, because escaping this may happen
+    @Suppress("Unused")
     private val mouseClicker by lazy {
         addMouseListener(mouseClickAdapter {
             onMouseClick(it)
@@ -31,11 +32,19 @@ abstract class BasicPointsVisualizer : Canvas() {
 
     override fun paint(g: Graphics) {
         val points = getPoints()
+        val borderSize = radius * 2
         pointsCenters.clear()
-        x.x = (points.minByOrNull { it.x }?.x ?: 0) - radius * 2
-        x.y = (points.maxByOrNull { it.x }?.x ?: 100) + radius * 2
-        y.x = (points.minByOrNull { it.y }?.y ?: 0) - radius * 2
-        y.y = (points.maxByOrNull { it.y }?.y ?: 100) + radius * 2
+
+        x.x = points.minByOrNull { it.x }?.x ?: 0
+        x.y = points.maxByOrNull { it.x }?.x ?: 1000
+        y.x = points.minByOrNull { it.y }?.y ?: 0
+        y.y = points.maxByOrNull { it.y }?.y ?: 100
+
+        x.x -= borderSize
+        x.y += borderSize
+        y.x -= borderSize
+        y.y += borderSize
+
         xScale = width.toDouble() / (x.y - x.x).toDouble()
         yScale = height.toDouble() / (y.y - y.x).toDouble()
 
@@ -43,7 +52,6 @@ abstract class BasicPointsVisualizer : Canvas() {
     }
 
     private fun drawPoint(g: Graphics, point: PointWithInfo) {
-        g.color = Color.RED
         val x = (point.x - x.x) * xScale
         val y = (point.y - y.x) * yScale
         val virtualPoint = PointWithInfo(
@@ -52,7 +60,10 @@ abstract class BasicPointsVisualizer : Canvas() {
             point.text,
             point.additionalInfo
         )
+
+        g.color = Color.RED
         g.fillOval(virtualPoint.x, virtualPoint.y, radius, radius)
+
         g.color = Color.BLACK
         g.drawChars(
             point.text.toCharArray(),
@@ -61,6 +72,7 @@ abstract class BasicPointsVisualizer : Canvas() {
             virtualPoint.x + radius / 4,
             virtualPoint.y - radius / 5
         )
+
         pointsCenters.add(virtualPoint)
     }
 

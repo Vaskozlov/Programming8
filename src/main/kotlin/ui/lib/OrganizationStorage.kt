@@ -48,7 +48,7 @@ class OrganizationStorage(
         return organizationListCache!!
     }
 
-    fun getSortedOrganizationsList(): List<Organization> = databaseCommunicationLock.withLock {
+    private fun getSortedOrganizationsList(): List<Organization> = databaseCommunicationLock.withLock {
         if (sortedChanged || sortedOrganizationListCache == null) {
             sortedOrganizationListCache = sorter(getOrganizationsList())
         }
@@ -56,7 +56,7 @@ class OrganizationStorage(
         return sortedOrganizationListCache!!
     }
 
-    fun getOrganizationAsArrayOfStrings(): List<Array<String?>> = databaseCommunicationLock.withLock {
+    private fun getOrganizationAsArrayOfStrings(): List<Array<String?>> = databaseCommunicationLock.withLock {
         if (organizationTypedArrayCache != null) {
             return organizationTypedArrayCache!!
         }

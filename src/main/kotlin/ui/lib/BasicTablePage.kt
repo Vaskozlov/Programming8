@@ -50,21 +50,81 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
 
             if (filterId % 3 != 0) {
                 result = when (column) {
-                    0 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.id }
-                    1 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.name }
-                    2 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.coordinates?.x }
-                    3 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.coordinates?.y }
-                    4 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.creationDate }
-                    5 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.annualTurnover }
-                    6 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.fullName }
-                    7 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.employeesCount }
-                    8 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.type }
-                    9 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.zipCode }
-                    10 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.x }
-                    11 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.y }
-                    12 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.z }
-                    13 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.postalAddress?.town?.name }
-                    14 -> result.sortedByUpOrDown(filterId % 3 == 2) { elem -> elem.creatorId }
+                    Table.ORGANIZATION_ID_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.id
+                        }
+
+                    Table.ORGANIZATION_NAME_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.name
+                        }
+
+                    Table.ORGANIZATION_COORDINATE_X_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.coordinates?.x
+                        }
+
+                    Table.ORGANIZATION_COORDINATE_Y_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.coordinates?.y
+                        }
+
+                    Table.ORGANIZATION_CREATION_DATE_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.creationDate
+                        }
+
+                    Table.ORGANIZATION_ANNUAL_TURNOVER_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.annualTurnover
+                        }
+
+                    Table.ORGANIZATION_FULL_NAME_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.fullName
+                        }
+
+                    Table.ORGANIZATION_EMPLOYEES_COUNT_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.employeesCount
+                        }
+
+                    Table.ORGANIZATION_TYPE_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.type
+                        }
+
+                    Table.ORGANIZATION_ZIP_CODE_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.postalAddress?.zipCode
+                        }
+
+                    Table.ORGANIZATION_LOCATION_X_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.postalAddress?.town?.x
+                        }
+
+                    Table.ORGANIZATION_LOCATION_Y_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.postalAddress?.town?.y
+                        }
+
+                    Table.ORGANIZATION_LOCATION_Z_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.postalAddress?.town?.z
+                        }
+
+                    Table.ORGANIZATION_LOCATION_NAME_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.postalAddress?.town?.name
+                        }
+
+                    Table.ORGANIZATION_CREATOR_ID_COLUMN ->
+                        result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
+                            elem.creatorId
+                        }
+
                     else -> result
                 }
             }
@@ -108,9 +168,9 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
         organizationStorage.getFilteredOrganizationAsArrayOfStrings()
             .map {
                 PointWithInfo(
-                    it[2]?.toIntOrNull() ?: 0,
-                    it[3]?.toIntOrNull() ?: 0,
-                    it[0] as String,
+                    it[Table.ORGANIZATION_COORDINATE_X_COLUMN]?.toIntOrNull() ?: 0,
+                    it[Table.ORGANIZATION_COORDINATE_Y_COLUMN]?.toIntOrNull() ?: 0,
+                    it[Table.ORGANIZATION_ID_COLUMN] as String,
                     it
                 )
             }.toList()
@@ -123,7 +183,8 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
     fun getOrganizationById(id: Int) = organizationStorage.getOrganizationById(id)
 
     fun getOrganizationByRow(row: Int) = organizationStorage.getOrganizationById(
-        organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row][0]?.toIntOrNull() ?: -1
+        organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row][Table.ORGANIZATION_ID_COLUMN]?.toIntOrNull()
+            ?: -1
     )
 
     fun modifyOrganization(organization: Organization) {

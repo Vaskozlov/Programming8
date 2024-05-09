@@ -1,14 +1,14 @@
 package ui
 
 import ui.lib.PointWithInfo
+import ui.lib.Table
 import ui.lib.keyboardKeyReleasedAdapter
 import java.awt.Color
-import java.awt.Point
 
 
 class Visualization(private val tablePage: TablePage) : BasicPointsVisualizer() {
-    var pointsV : MutableList<PointWithInfo> = mutableListOf()
-    private var selectedPoint : PointWithInfo? = null
+    var pointsV: MutableList<PointWithInfo> = mutableListOf()
+    private var selectedPoint: PointWithInfo? = null
 
     override fun getPoints(): List<PointWithInfo> = pointsV
 
@@ -33,7 +33,7 @@ class Visualization(private val tablePage: TablePage) : BasicPointsVisualizer() 
                 if (it.keyCode == 127 || (it.keyCode == 8 && it.isShiftDown)) {
                     @Suppress("UNCHECKED_CAST")
                     val castedInfo = selectedPoint?.additionalInfo as Array<String?>
-                    tablePage.removeById(castedInfo[0]?.toInt() ?: -1)
+                    tablePage.removeById(castedInfo[Table.ORGANIZATION_ID_COLUMN]?.toInt() ?: -1)
                 }
             }
         )

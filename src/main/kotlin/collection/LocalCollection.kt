@@ -92,15 +92,15 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             creationDate = result.getDate("CREATION_TIME").toLocalDate().toKotlinLocalDate(),
             annualTurnover = result.getDouble("ANNUAL_TURNOVER"),
             fullName = result.getString("FULL_NAME"),
-            employeesCount = result.getObject("EMPLOYEES_COUNT") as Int?,
+            employeesCount = result.getObject("EMPLOYEES_COUNT") as? Int,
             type = valueOrNull<OrganizationType>(result.getString("ORGANIZATION_TYPE_NAME")),
             postalAddress = Address(
-                zipCode = (result.getObject("ZIP_CODE") as String?).takeIf { it == null || it.isNotEmpty() },
+                zipCode = (result.getObject("ZIP_CODE") as?  String).takeIf { it == null || it.isNotEmpty() },
                 town = Location(
-                    x = result.getObject("LX") as Double?,
-                    y = result.getObject("LY") as Float?,
-                    z = result.getObject("LZ") as Long?,
-                    name = result.getObject("LNAME") as String?
+                    x = result.getObject("LX") as? Double,
+                    y = result.getObject("LY") as? Float,
+                    z = result.getObject("LZ") as? Long,
+                    name = result.getObject("LNAME") as? String
                 )
             ),
             creatorId = result.getInt("CREATOR_ID")
@@ -281,10 +281,6 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     private fun completeModification(organization: Organization, updatedOrganization: Organization) = lock.withLock {
-        if (updatedOrganization.type == OrganizationType.NULL_TYPE) {
-            updatedOrganization.type = null
-        }
-
         if (!isModificationLegal(organization, updatedOrganization)) {
             throw OrganizationAlreadyPresentedException()
         }

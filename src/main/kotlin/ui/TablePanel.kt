@@ -6,9 +6,8 @@ import lib.Localization
 import lib.valueOrNull
 import ui.lib.BasicTablePage
 import ui.lib.MigFontLayout
+import ui.lib.calculateFontSize
 import ui.lib.getTextFieldWithKeyListener
-import java.awt.Dimension
-import java.awt.Toolkit
 import javax.swing.JComboBox
 import javax.swing.JLabel
 import javax.swing.JOptionPane
@@ -282,8 +281,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
 
     init {
         setLayout(layout)
-        val screenSize: Dimension = Toolkit.getDefaultToolkit().screenSize
-        layout.fontSize = 15 * screenSize.width / 1920
+        layout.fontSize = calculateFontSize(15)
 
         add(labels[0].first)
         add(textFilter, "wrap")
