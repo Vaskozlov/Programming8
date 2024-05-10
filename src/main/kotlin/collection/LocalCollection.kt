@@ -13,7 +13,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import lib.*
 import org.apache.logging.log4j.kotlin.Logging
-import org.example.lib.CircledStorage
+import lib.CircledStorage
 import java.sql.ResultSet
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -178,11 +178,11 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
 
     private fun addNoCheck(organization: Organization): Int = lock.withLock {
         organization.validate()
-        updateModificationTime()
         val realId = databaseToCollection.addOrganization(organization)
         organization.id = realId
         organizations.add(organization)
         storedOrganizations.add(organization.toPairOfFullNameAndType())
+        updateModificationTime()
         realId
     }
 

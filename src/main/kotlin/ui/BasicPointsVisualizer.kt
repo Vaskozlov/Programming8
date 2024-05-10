@@ -13,15 +13,9 @@ abstract class BasicPointsVisualizer : Canvas() {
     private var yScale = 1.0
     private val pointsCenters = mutableListOf<PointWithInfo>()
 
-    // should not be a part of init, because escaping this may happen
-    @Suppress("Unused")
-    private val mouseClicker by lazy {
-        addMouseListener(mouseClickAdapter {
-            onMouseClick(it)
-        })
-    }
-
     abstract fun getPoints(): List<PointWithInfo>
+
+    abstract fun pointColor(point: PointWithInfo): Color
 
     abstract fun onClick(closedPoint: PointWithInfo)
 
@@ -61,7 +55,7 @@ abstract class BasicPointsVisualizer : Canvas() {
             point.additionalInfo
         )
 
-        g.color = Color.RED
+        g.color = pointColor(point)
         g.fillOval(virtualPoint.x, virtualPoint.y, radius, radius)
 
         g.color = Color.BLACK
@@ -81,5 +75,11 @@ abstract class BasicPointsVisualizer : Canvas() {
             .filter { it.distance(event.point) <= radius }
             .minByOrNull { it.distance(event.point) }
             ?.let { onClick(it) }
+    }
+
+    init {
+        addMouseListener(mouseClickAdapter {
+            onMouseClick(it)
+        })
     }
 }

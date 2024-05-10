@@ -158,7 +158,8 @@ fun errorToNetworkCode(error: Throwable?): NetworkCode {
 
         is OrganizationNotFoundException -> NetworkCode.NOT_FOUND
 
-        is IllegalArgumentsForOrganizationException -> NetworkCode.ILLEGAL_ARGUMENTS
+        is IllegalArgumentsForOrganizationException,
+        is java.lang.IllegalArgumentException -> NetworkCode.ILLEGAL_ARGUMENTS
 
         is NotMaximumOrganizationException -> NetworkCode.NOT_A_MAXIMUM_ORGANIZATION
 

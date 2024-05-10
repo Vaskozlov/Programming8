@@ -1,14 +1,14 @@
-package org.example.lib
+package lib
 
 /**
- * Stores limited number of elements, when user attempts to add more overrides the oldest-added element
+ * Stores limited number of elements when a user attempts to add more overrides the oldest-added element
  */
 class CircledStorage<T>(size: Int) {
     private val buffer: Array<T?>
     private var currentIndex = 0
 
     /**
-     * @param size can not be less than 0
+     * @param size cannot be less than 0
      */
     init {
         require(size >= 0) { "Size of CircleStorage can not contain less than 0 elements" }

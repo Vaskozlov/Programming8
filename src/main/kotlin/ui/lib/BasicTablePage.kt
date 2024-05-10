@@ -1,7 +1,10 @@
 package ui.lib
 
 import collection.CollectionInterface
+import collection.Coordinates
 import collection.Organization
+import collection.OrganizationType
+import lib.getLocalDate
 import lib.sortedByUpOrDown
 import ui.TablePage
 import javax.swing.JFrame
@@ -203,5 +206,32 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
         }
 
         reload(false)
+    }
+
+    protected fun addOrganization(organization: Organization) {
+        organizationStorage.collection.add(organization)
+        requestReload()
+    }
+
+    open fun addOrganization() {
+        val organization = Organization(
+            id = 0,
+            name = "New organization",
+            coordinates = Coordinates(0, 0),
+            creationDate = getLocalDate(),
+            annualTurnover = 1.0,
+            fullName = "New organization",
+            employeesCount = 1,
+            type = OrganizationType.PUBLIC,
+            postalAddress = null,
+            creatorId = getUserId()
+        )
+
+        addOrganization(organization)
+    }
+
+    fun clearOrganizations() {
+        organizationStorage.collection.clear()
+        requestReload()
     }
 }

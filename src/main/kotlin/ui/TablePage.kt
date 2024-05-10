@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
+import lib.Localization
 import net.miginfocom.swing.MigLayout
 import ui.lib.BasicTablePage
 import ui.lib.MigFontLayout
@@ -20,7 +21,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
+class TablePage(collection: CollectionInterface, userLogin: String) : BasicTablePage(collection) {
     val tableViewScope = CoroutineScope(Dispatchers.Default)
     private val databaseCommunicationLock = ReentrantLock()
     private val databaseCommunicationLockCondition = databaseCommunicationLock.newCondition()
@@ -28,7 +29,7 @@ class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
 
     private val layout = MigFontLayout(
         "",
-        "[fill,70%][fill,30%]",
+        "[fill,grow,65%][fill,grow,35%]",
         "[fill,grow]"
     )
     internal val tablePanel = TablePanel(this)
@@ -121,6 +122,12 @@ class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
         }
     }
 
+    override fun addOrganization() {
+        tablePanel.organizationPanel.getOrganization()?.let {
+            addOrganization(it)
+        }
+    }
+
     fun filterChanged() {
         stringFilter = tablePanel.filter
         reload(false)
@@ -134,12 +141,15 @@ class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
         }
     }
 
+    fun unselectOrganization() {
+        table.clearSelection()
+        tablePanel.organizationPanel.clearFields()
+    }
+
     init {
         title = "Table"
         defaultCloseOperation = EXIT_ON_CLOSE
         layout.fontSize = calculateFontSize(15)
-
-        setSize(1200, 500)
         setLayout(layout)
 
         table.tableHeader.table.rowHeight = 30
@@ -167,5 +177,8 @@ class TablePage(collection: CollectionInterface) : BasicTablePage(collection) {
         modificationObserver.start()
         setSize(1600, 900)
         reload(true)
+
+        title =
+            "${Localization.get("ui.current_user")} $userLogin, ${Localization.get("ui.your_id_is")}: ${getUserId()}"
     }
 }

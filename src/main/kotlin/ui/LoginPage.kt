@@ -95,7 +95,7 @@ class LoginPage : JFrame() {
         }.onSuccess {
             isVisible = false
 
-            TablePage(collection).apply {
+            TablePage(collection, loginEditor.text).apply {
                 isVisible = true
             }
         }

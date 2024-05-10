@@ -23,6 +23,8 @@ class TypeEditor(private val panel: OrganizationPanel) : JComboBox<String>() {
         addItem("OPEN_JOINT_STOCK_COMPANY")
         addItem("null")
 
+        prototypeDisplayValue = "XXXXXXXXXXXXXXXXXXXXXX";
+
         addItemListener {
             if (!isUnderTextModification) {
                 panel.getOrganizationByIdInUI()?.let { org ->

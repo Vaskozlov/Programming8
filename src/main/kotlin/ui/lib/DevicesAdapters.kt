@@ -30,9 +30,23 @@ fun buttonClickAdapter(action: (e: ActionEvent) -> Unit): JButton =
         }
     })
 
-fun getTextFieldWithKeyListener(size: Int, keyCode: Int?, action: (JTextField) -> Unit) =
-    object : JTextField(size) {
+fun buttonDoubleClickAdapter(action: (e: MouseEvent) -> Unit): JButton =
+    object : JButton() {
+        init {
+            addMouseListener(
+                mouseClickAdapter {
+                    action(it)
+                }
+            )
+        }
+    }
+
+fun getTextFieldWithKeyListener(keyCode: Int?, action: (JTextField) -> Unit) =
+    object : JTextField() {
         private val targetKeyCode = keyCode
+
+        @Volatile
+        private var hasChanged = false
 
         private fun forceGetThis(): JTextField {
             return this
@@ -42,7 +56,10 @@ fun getTextFieldWithKeyListener(size: Int, keyCode: Int?, action: (JTextField) -
             addKeyListener(
                 keyboardKeyReleasedAdapter {
                     if (targetKeyCode == null || it.keyCode == targetKeyCode) {
+                        hasChanged = false
                         action(this)
+                    } else {
+                        hasChanged = true
                     }
                 }
             )
@@ -53,7 +70,12 @@ fun getTextFieldWithKeyListener(size: Int, keyCode: Int?, action: (JTextField) -
                 }
 
                 override fun focusLost(e: FocusEvent?) {
-                    action(forceGetThis())
+                    // make sure that the last key press is processed
+                    Thread.yield()
+
+                    if (hasChanged) {
+                        action(forceGetThis())
+                    }
                 }
             })
         }
