@@ -7,7 +7,6 @@ import lib.valueOrNull
 import ui.lib.*
 import javax.swing.JComponent
 import javax.swing.JLabel
-import javax.swing.JOptionPane
 import javax.swing.JTextField
 
 class OrganizationPanel(internal val parent: TablePanel) {
@@ -29,6 +28,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
         const val UI_LOCATION_NAME = "ui.location_name"
     }
 
+    private val tableViewScope = parent.tablePage.tableViewScope
     val typeEditor = TypeEditor(this)
 
     private val uiElements = mapOf<String, Pair<JLabel, JComponent>>(
@@ -37,18 +37,18 @@ class OrganizationPanel(internal val parent: TablePanel) {
                 isEnabled = false
             }
         }),
-        UI_NAME to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE) {
+        UI_NAME to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope) {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setOrgName(org, it.text)
             }
         }),
-        UI_COORDINATE_X to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_COORDINATE_X to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setCoordinateX(org, it.text)
             }
         }),
-        UI_COORDINATE_Y to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_COORDINATE_Y to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setCoordinateY(org, it.text)
@@ -59,32 +59,32 @@ class OrganizationPanel(internal val parent: TablePanel) {
                 isEnabled = false
             }
         }),
-        UI_ANNUAL_TURNOVER to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_ANNUAL_TURNOVER to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setAnnualTurnover(org, it.text)
             }
         }),
-        UI_FULL_NAME to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_FULL_NAME to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setFullName(org, it.text)
             }
         }),
-        UI_EMPLOYEES_COUNT to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_EMPLOYEES_COUNT to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setEmployeesCount(org, it.text)
             }
         }),
         UI_TYPE to (JLabel() to typeEditor),
-        UI_ZIP_CODE to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_ZIP_CODE to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setPostalAddressZipCode(org, it.text)
             }
         }),
-        UI_LOCATION_X to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_LOCATION_X to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setPostalAddressTownLocation(
@@ -95,7 +95,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
                 )
             }
         }),
-        UI_LOCATION_Y to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_LOCATION_Y to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setPostalAddressTownLocation(
@@ -106,7 +106,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
                 )
             }
         }),
-        UI_LOCATION_Z to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_LOCATION_Z to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setPostalAddressTownLocation(
@@ -117,7 +117,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
                 )
             }
         }),
-        UI_LOCATION_NAME to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE)
+        UI_LOCATION_NAME to (JLabel() to getTextFieldWithKeyListener(ENTER_KEYCODE, tableViewScope)
         {
             getOrganizationByIdInUI()?.let { org ->
                 parent.setPostalAddressTownName(org, it.text)
@@ -146,36 +146,36 @@ class OrganizationPanel(internal val parent: TablePanel) {
     }
 
     fun loadOrganization(organization: Array<String?>) {
-        setTextOfElement("ui.ID", organization[Table.ORGANIZATION_ID_COLUMN])
-        setTextOfElement("ui.name", organization[Table.ORGANIZATION_NAME_COLUMN])
-        setTextOfElement("ui.coordinate_x", organization[Table.ORGANIZATION_COORDINATE_X_COLUMN])
-        setTextOfElement("ui.coordinate_y", organization[Table.ORGANIZATION_COORDINATE_Y_COLUMN])
-        setTextOfElement("ui.creation_date", organization[Table.ORGANIZATION_CREATION_DATE_COLUMN])
-        setTextOfElement("ui.annual_turnover", organization[Table.ORGANIZATION_ANNUAL_TURNOVER_COLUMN])
-        setTextOfElement("ui.full_name", organization[Table.ORGANIZATION_FULL_NAME_COLUMN])
-        setTextOfElement("ui.employees_count", organization[Table.ORGANIZATION_EMPLOYEES_COUNT_COLUMN])
-        setTextOfElement("ui.type", organization[Table.ORGANIZATION_TYPE_COLUMN])
-        setTextOfElement("ui.zip_code", organization[Table.ORGANIZATION_ZIP_CODE_COLUMN])
-        setTextOfElement("ui.location_x", organization[Table.ORGANIZATION_LOCATION_X_COLUMN])
-        setTextOfElement("ui.location_y", organization[Table.ORGANIZATION_LOCATION_Y_COLUMN])
-        setTextOfElement("ui.location_z", organization[Table.ORGANIZATION_LOCATION_Z_COLUMN])
-        setTextOfElement("ui.location_name", organization[Table.ORGANIZATION_CREATOR_ID_COLUMN])
+        setTextOfElement(UI_ID, organization[Table.ORGANIZATION_ID_COLUMN])
+        setTextOfElement(UI_NAME, organization[Table.ORGANIZATION_NAME_COLUMN])
+        setTextOfElement(UI_COORDINATE_X, organization[Table.ORGANIZATION_COORDINATE_X_COLUMN])
+        setTextOfElement(UI_COORDINATE_Y, organization[Table.ORGANIZATION_COORDINATE_Y_COLUMN])
+        setTextOfElement(UI_CREATION_DATE, organization[Table.ORGANIZATION_CREATION_DATE_COLUMN])
+        setTextOfElement(UI_ANNUAL_TURNOVER, organization[Table.ORGANIZATION_ANNUAL_TURNOVER_COLUMN])
+        setTextOfElement(UI_FULL_NAME, organization[Table.ORGANIZATION_FULL_NAME_COLUMN])
+        setTextOfElement(UI_EMPLOYEES_COUNT, organization[Table.ORGANIZATION_EMPLOYEES_COUNT_COLUMN])
+        setTextOfElement(UI_TYPE, organization[Table.ORGANIZATION_TYPE_COLUMN])
+        setTextOfElement(UI_ZIP_CODE, organization[Table.ORGANIZATION_ZIP_CODE_COLUMN])
+        setTextOfElement(UI_LOCATION_X, organization[Table.ORGANIZATION_LOCATION_X_COLUMN])
+        setTextOfElement(UI_LOCATION_Y, organization[Table.ORGANIZATION_LOCATION_Y_COLUMN])
+        setTextOfElement(UI_LOCATION_Z, organization[Table.ORGANIZATION_LOCATION_Z_COLUMN])
+        setTextOfElement(UI_LOCATION_NAME, organization[Table.ORGANIZATION_CREATOR_ID_COLUMN])
 
         val isEditable =
             organization[Table.ORGANIZATION_CREATOR_ID_COLUMN]?.toIntOrNull() == parent.tablePage.getUserId()
 
-        uiElements["ui.name"]!!.second.isEnabled = isEditable
-        uiElements["ui.coordinate_x"]!!.second.isEnabled = isEditable
-        uiElements["ui.coordinate_y"]!!.second.isEnabled = isEditable
-        uiElements["ui.annual_turnover"]!!.second.isEnabled = isEditable
-        uiElements["ui.full_name"]!!.second.isEnabled = isEditable
-        uiElements["ui.employees_count"]!!.second.isEnabled = isEditable
-        uiElements["ui.type"]!!.second.isEnabled = isEditable
-        uiElements["ui.zip_code"]!!.second.isEnabled = isEditable
-        uiElements["ui.location_x"]!!.second.isEnabled = isEditable
-        uiElements["ui.location_y"]!!.second.isEnabled = isEditable
-        uiElements["ui.location_z"]!!.second.isEnabled = isEditable
-        uiElements["ui.location_name"]!!.second.isEnabled = isEditable
+        uiElements[UI_NAME]!!.second.isEnabled = isEditable
+        uiElements[UI_COORDINATE_X]!!.second.isEnabled = isEditable
+        uiElements[UI_COORDINATE_Y]!!.second.isEnabled = isEditable
+        uiElements[UI_ANNUAL_TURNOVER]!!.second.isEnabled = isEditable
+        uiElements[UI_FULL_NAME]!!.second.isEnabled = isEditable
+        uiElements[UI_EMPLOYEES_COUNT]!!.second.isEnabled = isEditable
+        uiElements[UI_TYPE]!!.second.isEnabled = isEditable
+        uiElements[UI_ZIP_CODE]!!.second.isEnabled = isEditable
+        uiElements[UI_LOCATION_X]!!.second.isEnabled = isEditable
+        uiElements[UI_LOCATION_Y]!!.second.isEnabled = isEditable
+        uiElements[UI_LOCATION_Z]!!.second.isEnabled = isEditable
+        uiElements[UI_LOCATION_NAME]!!.second.isEnabled = isEditable
     }
 
     fun localize() {
@@ -196,20 +196,21 @@ class OrganizationPanel(internal val parent: TablePanel) {
         }
     }
 
-    fun getOrganization(): Organization? {
-        var result = validateOrganizationName(parent, getTextOfElement(UI_NAME))
+    suspend fun getOrganization(): Organization? {
+        val result = listOf(
+            validateOrganizationName(parent, getTextOfElement(UI_NAME)),
+            validateOrganizationCoordinateX(parent, getTextOfElement(UI_COORDINATE_X)),
+            validateOrganizationCoordinateY(parent, getTextOfElement(UI_COORDINATE_Y)),
+            validateOrganizationAnnualTurnover(parent, getTextOfElement(UI_ANNUAL_TURNOVER)),
+            validateOrganizationFullName(parent, getTextOfElement(UI_FULL_NAME)),
+            validateOrganizationEmployeesCount(parent, getTextOfElement(UI_EMPLOYEES_COUNT)),
+            validateOrganizationZipCode(parent, getTextOfElement(UI_ZIP_CODE)),
+            validateOrganizationLocationX(parent, getTextOfElement(UI_LOCATION_X)),
+            validateOrganizationLocationY(parent, getTextOfElement(UI_LOCATION_Y)),
+            validateOrganizationLocationZ(parent, getTextOfElement(UI_LOCATION_Z))
+        )
 
-        result = result && validateOrganizationCoordinateX(parent, getTextOfElement(UI_COORDINATE_X))
-        result = result && validateOrganizationCoordinateY(parent, getTextOfElement(UI_COORDINATE_Y))
-        result = result && validateOrganizationAnnualTurnover(parent, getTextOfElement(UI_ANNUAL_TURNOVER))
-        result = result && validateOrganizationFullName(parent, getTextOfElement(UI_FULL_NAME))
-        result = result && validateOrganizationEmployeesCount(parent, getTextOfElement(UI_EMPLOYEES_COUNT))
-        result = result && validateOrganizationZipCode(parent, getTextOfElement(UI_ZIP_CODE))
-        result = result && validateOrganizationLocationX(parent, getTextOfElement(UI_LOCATION_X))
-        result = result && validateOrganizationLocationY(parent, getTextOfElement(UI_LOCATION_Y))
-        result = result && validateOrganizationLocationZ(parent, getTextOfElement(UI_LOCATION_Z))
-
-        if (!result) {
+        if (result.any { !it }) {
             return null
         }
 
@@ -244,7 +245,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
         organization.runCatching {
             validate()
         }.onFailure {
-            JOptionPane.showMessageDialog(parent, exceptionToMessage(it))
+            showMessageDialog(parent, exceptionToMessage(it))
         }
 
         return organization

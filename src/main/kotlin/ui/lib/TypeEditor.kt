@@ -1,11 +1,14 @@
 package ui.lib
 
+import kotlinx.coroutines.launch
 import ui.OrganizationPanel
 import javax.swing.JComboBox
 
 class TypeEditor(private val panel: OrganizationPanel) : JComboBox<String>() {
     @Volatile
     private var isUnderTextModification = false
+
+    private val tableViewScope = panel.parent.tablePage.tableViewScope
 
     fun setTextNoUpdate(text: String?) {
         runCatching {
@@ -23,12 +26,12 @@ class TypeEditor(private val panel: OrganizationPanel) : JComboBox<String>() {
         addItem("OPEN_JOINT_STOCK_COMPANY")
         addItem("null")
 
-        prototypeDisplayValue = "XXXXXXXXXXXXXXXXXXXXXX";
-
         addItemListener {
             if (!isUnderTextModification) {
-                panel.getOrganizationByIdInUI()?.let { org ->
-                    panel.parent.setType(org, it.item.toString())
+                tableViewScope.launch {
+                    panel.getOrganizationByIdInUI()?.let { org ->
+                        panel.parent.setType(org, it.item.toString())
+                    }
                 }
             }
         }

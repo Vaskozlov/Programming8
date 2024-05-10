@@ -4,6 +4,7 @@ import ui.lib.PointWithInfo
 import ui.lib.Table
 import ui.lib.keyboardKeyReleasedAdapter
 import java.awt.Color
+import java.util.*
 
 
 class Visualization(private val tablePage: TablePage) : BasicPointsVisualizer() {
@@ -21,7 +22,7 @@ class Visualization(private val tablePage: TablePage) : BasicPointsVisualizer() 
         )
     }
 
-    var pointsV: MutableList<PointWithInfo> = mutableListOf()
+    var pointsV: MutableList<PointWithInfo> = Vector()
     private var selectedPoint: PointWithInfo? = null
 
     override fun getPoints(): List<PointWithInfo> = pointsV

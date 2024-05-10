@@ -1,5 +1,7 @@
 package ui.lib
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.awt.event.*
 import javax.swing.AbstractAction
 import javax.swing.JButton
@@ -41,7 +43,7 @@ fun buttonDoubleClickAdapter(action: (e: MouseEvent) -> Unit): JButton =
         }
     }
 
-fun getTextFieldWithKeyListener(keyCode: Int?, action: (JTextField) -> Unit) =
+fun getTextFieldWithKeyListener(keyCode: Int?, scope: CoroutineScope, action: suspend (JTextField) -> Unit) =
     object : JTextField() {
         private val targetKeyCode = keyCode
 
@@ -57,7 +59,9 @@ fun getTextFieldWithKeyListener(keyCode: Int?, action: (JTextField) -> Unit) =
                 keyboardKeyReleasedAdapter {
                     if (targetKeyCode == null || it.keyCode == targetKeyCode) {
                         hasChanged = false
-                        action(this)
+                        scope.launch {
+                            action(forceGetThis())
+                        }
                     } else {
                         hasChanged = true
                     }
@@ -74,7 +78,9 @@ fun getTextFieldWithKeyListener(keyCode: Int?, action: (JTextField) -> Unit) =
                     Thread.yield()
 
                     if (hasChanged) {
-                        action(forceGetThis())
+                        scope.launch {
+                            action(forceGetThis())
+                        }
                     }
                 }
             })

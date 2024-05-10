@@ -12,12 +12,12 @@ import javax.swing.JPanel
 
 
 class TablePanel(internal val tablePage: TablePage) : JPanel() {
-    private val textFilter = getTextFieldWithKeyListener(null) {
+    private val textFilter = getTextFieldWithKeyListener(null, tablePage.tableViewScope) {
         tablePage.filterChanged()
     }
 
-    private val unselectOrganization = buttonClickAdapter { tablePage.unselectOrganization() }
-    private val addOrganization = buttonClickAdapter {
+    private val unselectOrganizationButton = buttonClickAdapter { tablePage.unselectOrganization() }
+    private val addOrganizationButton = buttonClickAdapter {
         tablePage.runCatching { addOrganization() }.onFailure {
             JOptionPane.showMessageDialog(
                 this@TablePanel,
@@ -26,8 +26,8 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
         }
     }
 
-    private val clearOrganizationsButton = buttonDoubleClickAdapter {
-        if (it.clickCount == 2) {
+    private val clearOrganizationsButton = buttonDoubleClickAdapter { mouseEvent ->
+        if (mouseEvent.clickCount == 2) {
             tablePage.runCatching { clearOrganizations() }.onFailure {
                 JOptionPane.showMessageDialog(
                     this@TablePanel,
@@ -51,13 +51,12 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
         }
     }
 
-
     val organizationPanel = OrganizationPanel(this)
 
     val filter: Pair<String, String>
         get() = Pair(columnComboBox.selectedItem as String, textFilter.text)
 
-    private fun finishOrganizationModification(updatedOrganization: Organization): Boolean {
+    private suspend fun finishOrganizationModification(updatedOrganization: Organization): Boolean {
         if (!validateLocationInOrganization(this, updatedOrganization)) {
             return false
         }
@@ -77,18 +76,18 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             label.text = Localization.get(key)
         }
 
-        addOrganization.text = Localization.get("ui.add_organization")
-        unselectOrganization.text = Localization.get("ui.unselect_organization")
+        addOrganizationButton.text = Localization.get("ui.add_organization")
+        unselectOrganizationButton.text = Localization.get("ui.unselect_organization")
         clearOrganizationsButton.text = Localization.get("ui.clear_organizations")
         organizationPanel.localize()
     }
 
-    fun setOrgName(organization: Organization, name: String): Boolean {
+    suspend fun setOrgName(organization: Organization, name: String): Boolean {
         return validateOrganizationName(this, name) &&
                 finishOrganizationModification(organization.copy(name = name))
     }
 
-    fun setCoordinateX(organization: Organization, x: String): Boolean {
+    suspend fun setCoordinateX(organization: Organization, x: String): Boolean {
         val newX = x.toLongOrNull()
 
         val copiedOrganization = organization.copy(
@@ -107,7 +106,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
                 finishOrganizationModification(copiedOrganization)
     }
 
-    fun setCoordinateY(organization: Organization, y: String): Boolean {
+    suspend fun setCoordinateY(organization: Organization, y: String): Boolean {
         val newY = y.toLongOrNull()
 
         val copiedOrganization = organization.copy(
@@ -126,29 +125,29 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
                 finishOrganizationModification(copiedOrganization)
     }
 
-    fun setAnnualTurnover(organization: Organization, annualTurnover: String): Boolean {
+    suspend fun setAnnualTurnover(organization: Organization, annualTurnover: String): Boolean {
         return validateOrganizationAnnualTurnover(this, annualTurnover) &&
                 finishOrganizationModification(organization.copy(annualTurnover = annualTurnover.toDoubleOrNull()))
     }
 
-    fun setFullName(organization: Organization, fullName: String): Boolean {
+    suspend fun setFullName(organization: Organization, fullName: String): Boolean {
         return validateOrganizationFullName(this, fullName) &&
                 finishOrganizationModification(organization.copy(fullName = fullName))
     }
 
-    fun setEmployeesCount(organization: Organization, employeesCount: String): Boolean {
+    suspend fun setEmployeesCount(organization: Organization, employeesCount: String): Boolean {
         val newEmployeesCount = employeesCount.toIntOrNull()
 
         return validateOrganizationEmployeesCount(this, employeesCount) &&
                 finishOrganizationModification(organization.copy(employeesCount = newEmployeesCount))
     }
 
-    fun setType(organization: Organization, type: String): Boolean {
+    suspend fun setType(organization: Organization, type: String): Boolean {
         val newType = valueOrNull<OrganizationType>(type)
         return finishOrganizationModification(organization.copy(type = newType))
     }
 
-    fun setPostalAddressZipCode(organization: Organization, zipCode: String?): Boolean {
+    suspend fun setPostalAddressZipCode(organization: Organization, zipCode: String?): Boolean {
         val copiedOrganization = organization.copy(
             postalAddress = Address(
                 zipCode,
@@ -166,7 +165,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
                 finishOrganizationModification(copiedOrganization)
     }
 
-    fun setPostalAddressTownLocation(organization: Organization, x: String?, y: String?, z: String?): Boolean {
+    suspend fun setPostalAddressTownLocation(organization: Organization, x: String?, y: String?, z: String?): Boolean {
         val newX = x?.toDoubleOrNull()
         val newY = y?.toFloatOrNull()
         val newZ = z?.toLongOrNull()
@@ -190,7 +189,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
                 finishOrganizationModification(copiedOrganization)
     }
 
-    fun setPostalAddressTownX(organization: Organization, x: String): Boolean {
+    suspend fun setPostalAddressTownX(organization: Organization, x: String): Boolean {
         val newX = x.toDoubleOrNull()
 
         val copiedOrganization = organization.copy(
@@ -210,7 +209,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
                 finishOrganizationModification(copiedOrganization)
     }
 
-    fun setPostalAddressTownY(organization: Organization, y: String): Boolean {
+    suspend fun setPostalAddressTownY(organization: Organization, y: String): Boolean {
         val newY = y.toFloatOrNull()
 
         val copiedOrganization = organization.copy(
@@ -230,7 +229,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
                 finishOrganizationModification(copiedOrganization)
     }
 
-    fun setPostalAddressTownZ(organization: Organization, z: String): Boolean {
+    suspend fun setPostalAddressTownZ(organization: Organization, z: String): Boolean {
         val newZ = z.toLongOrNull()
 
         val copiedOrganization = organization.copy(
@@ -250,7 +249,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
                 finishOrganizationModification(copiedOrganization)
     }
 
-    fun setPostalAddressTownName(organization: Organization, name: String): Boolean {
+    suspend fun setPostalAddressTownName(organization: Organization, name: String): Boolean {
         val copiedOrganization = organization.copy(
             postalAddress = Address(
                 null,
@@ -277,8 +276,8 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             init {
                 setLayout(layout)
                 layout.fontSize = calculateFontSize(15)
-                add(addOrganization)
-                add(unselectOrganization)
+                add(addOrganizationButton)
+                add(unselectOrganizationButton)
                 add(clearOrganizationsButton)
             }
         }

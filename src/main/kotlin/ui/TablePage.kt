@@ -1,11 +1,10 @@
 package ui
 
 import collection.CollectionInterface
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import lib.Localization
 import net.miginfocom.swing.MigLayout
 import ui.lib.BasicTablePage
@@ -22,7 +21,6 @@ import kotlin.math.min
 
 
 class TablePage(collection: CollectionInterface, userLogin: String) : BasicTablePage(collection) {
-    val tableViewScope = CoroutineScope(Dispatchers.Default)
     private val databaseCommunicationLock = ReentrantLock()
     private val databaseCommunicationLockCondition = databaseCommunicationLock.newCondition()
     private val visualLock = Semaphore(1)
@@ -70,12 +68,8 @@ class TablePage(collection: CollectionInterface, userLogin: String) : BasicTable
         13 to tablePanel::setPostalAddressTownName
     )
 
-    private fun repaintVisualPanel() {
-        tableViewScope.launch {
-            while (!visualLock.tryAcquire()) {
-                delay(100)
-            }
-
+    private fun repaintVisualPanel() = tableViewScope.launch {
+        visualLock.withPermit {
             val oldPoints = visualPanel.getPoints()
             val currentPoints = getCurrentPoints()
             val addedPoints = currentPoints.filterNot { oldPoints.contains(it) }
@@ -84,19 +78,26 @@ class TablePage(collection: CollectionInterface, userLogin: String) : BasicTable
 
             for (point in removedPoints) {
                 visualPanel.pointsV.remove(point)
-                visualPanel.repaint()
+
+                withContext(Dispatchers.Swing) {
+                    visualPanel.repaint()
+                }
+
                 delay(visualEffectDelay)
             }
 
             for (point in addedPoints) {
                 visualPanel.pointsV.add(point)
-                visualPanel.repaint()
+
+                withContext(Dispatchers.Swing) {
+                    visualPanel.repaint()
+                }
+
                 delay(visualEffectDelay)
             }
 
             visualPanel.pointsV = currentPoints.toMutableList()
             visualPanel.repaint()
-            visualLock.release()
         }
     }
 
@@ -109,22 +110,28 @@ class TablePage(collection: CollectionInterface, userLogin: String) : BasicTable
     override fun reload(requestFullReload: Boolean) {
         tableViewScope.launch {
             runCatching {
-                if (requestFullReload) {
-                    organizationStorage.clearCache()
-                }
-
-                tableModel.setDataVector(organizationStorage.getFilteredOrganizationAsArrayOfStrings(), columnNames)
-                val sportColumn = table.columnModel.getColumn(8)
-                sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
-                tableModel.fireTableDataChanged()
-                repaintVisualPanel()
+                tryToReload(requestFullReload)
             }.onFailure { reload(requestFullReload) }
         }
     }
 
+    private fun tryToReload(requestFullReload: Boolean) {
+        if (requestFullReload) {
+            organizationStorage.clearCache()
+        }
+
+        tableModel.setDataVector(organizationStorage.getFilteredOrganizationAsArrayOfStrings(), columnNames)
+        val sportColumn = table.columnModel.getColumn(8)
+        sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
+        tableModel.fireTableDataChanged()
+        repaintVisualPanel()
+    }
+
     override fun addOrganization() {
-        tablePanel.organizationPanel.getOrganization()?.let {
-            addOrganization(it)
+        tableViewScope.launch {
+            tablePanel.organizationPanel.getOrganization()?.let {
+                addOrganization(it)
+            }
         }
     }
 

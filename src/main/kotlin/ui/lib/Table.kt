@@ -1,10 +1,12 @@
 package ui.lib
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.swing.Swing
+import kotlinx.coroutines.withContext
 import ui.TablePage
 import javax.swing.DefaultCellEditor
 import javax.swing.JTable
-import javax.swing.SwingUtilities
 import javax.swing.event.ListSelectionEvent
 import javax.swing.table.TableModel
 
@@ -53,7 +55,7 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
                 ) as Boolean
 
             if (result) {
-                SwingUtilities.invokeAndWait {
+                withContext(Dispatchers.Swing) {
                     super.setValueAt(aValue, row, column)
                 }
             }

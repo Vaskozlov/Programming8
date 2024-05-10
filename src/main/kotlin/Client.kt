@@ -2,6 +2,7 @@ import application.Application
 import client.RemoteCollection
 import lib.Localization
 import ui.LoginPage
+import java.util.*
 import javax.swing.SwingUtilities
 
 object Client {
@@ -10,6 +11,8 @@ object Client {
         val serverIp = System.getenv("SERVER_IP") ?: "localhost"
         val serverPort = System.getenv("SERVER_PORT")?.toIntOrNull() ?: 8080
         val authFile = System.getenv("AUTH_FILE") ?: null
+
+        Locale.setDefault(Locale.of("ru"))
 
         val application = Application(
             authFile,

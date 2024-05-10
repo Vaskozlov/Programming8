@@ -4,6 +4,9 @@ import collection.CollectionInterface
 import collection.Coordinates
 import collection.Organization
 import collection.OrganizationType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import lib.getLocalDate
 import lib.sortedByUpOrDown
 import ui.TablePage
@@ -31,6 +34,8 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
             "Creator id"
         )
     }
+
+    val tableViewScope = CoroutineScope(Dispatchers.Default)
 
     private var tableFilter: Pair<String, Int>? = null
         set(value) {
@@ -208,7 +213,7 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
         reload(false)
     }
 
-    protected fun addOrganization(organization: Organization) {
+    protected fun addOrganization(organization: Organization) = tableViewScope.launch {
         organizationStorage.collection.add(organization)
         requestReload()
     }
@@ -230,7 +235,7 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
         addOrganization(organization)
     }
 
-    fun clearOrganizations() {
+    fun clearOrganizations() = tableViewScope.launch {
         organizationStorage.collection.clear()
         requestReload()
     }

@@ -6,7 +6,15 @@ import java.awt.*
 import java.awt.event.MouseEvent
 
 abstract class BasicPointsVisualizer : Canvas() {
-    private var radius: Int = 50
+    companion object {
+        private const val SCALE_FACTOR_TO_FIT_ORGANIZATION_WITH_LARGE_COORDINATES = 0.95
+        private const val DEFAULT_LEFT_BORDER = 0
+        private const val DEFAULT_RIGHT_BORDER = 100
+        private const val DEFAULT_TOP_BORDER = 0
+        private const val DEFAULT_BOTTOM_BORDER = 100
+    }
+
+    private var radius: Int = 15 * 2
     private val x = Point()
     private val y = Point()
     private var xScale = 1.0
@@ -26,21 +34,21 @@ abstract class BasicPointsVisualizer : Canvas() {
 
     override fun paint(g: Graphics) {
         val points = getPoints()
-        val borderSize = radius * 2
+        val diameter = radius * 2
         pointsCenters.clear()
 
-        x.x = points.minByOrNull { it.x }?.x ?: 0
-        x.y = points.maxByOrNull { it.x }?.x ?: 1000
-        y.x = points.minByOrNull { it.y }?.y ?: 0
-        y.y = points.maxByOrNull { it.y }?.y ?: 100
+        x.x = points.minByOrNull { it.x }?.x ?: DEFAULT_LEFT_BORDER
+        x.y = points.maxByOrNull { it.x }?.x ?: DEFAULT_RIGHT_BORDER
+        y.x = points.minByOrNull { it.y }?.y ?: DEFAULT_TOP_BORDER
+        y.y = points.maxByOrNull { it.y }?.y ?: DEFAULT_BOTTOM_BORDER
 
-        x.x -= borderSize
-        x.y += borderSize
-        y.x -= borderSize
-        y.y += borderSize
+        x.x -= diameter
+        x.y += diameter
+        y.x -= diameter
+        y.y += diameter
 
-        xScale = width.toDouble() / (x.y - x.x).toDouble()
-        yScale = height.toDouble() / (y.y - y.x).toDouble()
+        xScale = width.toDouble() / (x.y - x.x).toDouble() * SCALE_FACTOR_TO_FIT_ORGANIZATION_WITH_LARGE_COORDINATES
+        yScale = height.toDouble() / (y.y - y.x).toDouble() * SCALE_FACTOR_TO_FIT_ORGANIZATION_WITH_LARGE_COORDINATES
 
         points.forEach { drawPoint(g, it) }
     }
