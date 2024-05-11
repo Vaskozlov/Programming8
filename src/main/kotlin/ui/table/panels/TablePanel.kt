@@ -1,40 +1,21 @@
-package ui
+package ui.table.panels
 
 import application.exceptionToMessage
 import collection.*
 import lib.Localization
 import lib.valueOrNull
 import ui.lib.*
+import ui.table.BasicTablePage
+import ui.table.TablePageWithOrganizationPanels
 import javax.swing.JComboBox
 import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
 
 
-class TablePanel(internal val tablePage: TablePage) : JPanel() {
+class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPanel() {
     private val textFilter = getTextFieldWithKeyListener(null, tablePage.tableViewScope) {
         tablePage.filterChanged()
-    }
-
-    private val unselectOrganizationButton = buttonClickAdapter { tablePage.unselectOrganization() }
-    private val addOrganizationButton = buttonClickAdapter {
-        tablePage.runCatching { addOrganization() }.onFailure {
-            JOptionPane.showMessageDialog(
-                this@TablePanel,
-                exceptionToMessage(it)
-            )
-        }
-    }
-
-    private val clearOrganizationsButton = buttonDoubleClickAdapter { mouseEvent ->
-        if (mouseEvent.clickCount == 2) {
-            tablePage.runCatching { clearOrganizations() }.onFailure {
-                JOptionPane.showMessageDialog(
-                    this@TablePanel,
-                    exceptionToMessage(it)
-                )
-            }
-        }
     }
 
     private val labels = listOf(
@@ -50,6 +31,8 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             }
         }
     }
+
+    private val buttonPanel = ButtonPanel(this)
 
     val organizationPanel = OrganizationPanel(this)
 
@@ -76,9 +59,7 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
             label.text = Localization.get(key)
         }
 
-        addOrganizationButton.text = Localization.get("ui.add_organization")
-        unselectOrganizationButton.text = Localization.get("ui.unselect_organization")
-        clearOrganizationsButton.text = Localization.get("ui.clear_organizations")
+        buttonPanel.localize()
         organizationPanel.localize()
     }
 
@@ -269,18 +250,6 @@ class TablePanel(internal val tablePage: TablePage) : JPanel() {
     init {
         setLayout(layout)
         layout.fontSize = calculateFontSize(15)
-
-        val buttonPanel = object : JPanel() {
-            private val layout = MigFontLayout("", "[fill,grow][fill,grow]", "[fill,grow]")
-
-            init {
-                setLayout(layout)
-                layout.fontSize = calculateFontSize(15)
-                add(addOrganizationButton)
-                add(unselectOrganizationButton)
-                add(clearOrganizationsButton)
-            }
-        }
 
         add(buttonPanel, "span 2,wrap")
         add(labels[0].first)

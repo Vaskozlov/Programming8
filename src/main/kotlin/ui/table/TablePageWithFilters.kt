@@ -1,42 +1,12 @@
-package ui.lib
+package ui.table
 
 import collection.CollectionInterface
-import collection.Coordinates
-import collection.Organization
-import collection.OrganizationType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import lib.getLocalDate
 import lib.sortedByUpOrDown
-import ui.TablePage
-import javax.swing.JFrame
-import javax.swing.JTable
+import ui.lib.OrganizationStorage
+import ui.lib.Table
 import javax.swing.table.DefaultTableModel
 
-abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
-    companion object {
-        val columnNames = arrayOf(
-            "ID",
-            "Name",
-            "Coordinate x",
-            "Coordinate y",
-            "Creation date",
-            "Annual turnover",
-            "Full name",
-            "Employees count",
-            "Type",
-            "Zip code",
-            "Location x",
-            "Location y",
-            "Location z",
-            "Location name",
-            "Creator id"
-        )
-    }
-
-    val tableViewScope = CoroutineScope(Dispatchers.Default)
-
+abstract class TablePageWithFilters(collection: CollectionInterface) : BasicTablePage() {
     private var tableFilter: Pair<String, Int>? = null
         set(value) {
             field = value
@@ -152,55 +122,9 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
         result
     }
 
-    protected var tableModel: DefaultTableModel =
-        object :
-            DefaultTableModel(organizationStorage.getFilteredOrganizationAsArrayOfStrings(), columnNames) {
-            override fun isCellEditable(row: Int, column: Int): Boolean {
-                return table.isCellEditable(row, column)
-            }
-        }
-
-    protected val table by lazy { Table(tableModel, this as TablePage) }
-
-    abstract fun requestReload()
-    abstract fun reload(requestFullReload: Boolean)
-
-    private fun getColumnIndex(table: JTable, header: String): Int {
-        for (i in 0 until table.columnCount) {
-            if (table.getColumnName(i) == header) return i
-        }
-        return -1
+    final override fun getOrganizationsAsArrayOfStrings(): Array<Array<String?>> {
+        return organizationStorage.getFilteredOrganizationAsArrayOfStrings()
     }
-
-    fun getCurrentPoints() =
-        organizationStorage.getFilteredOrganizationAsArrayOfStrings()
-            .map {
-                PointWithInfo(
-                    it[Table.ORGANIZATION_COORDINATE_X_COLUMN]?.toIntOrNull() ?: 0,
-                    it[Table.ORGANIZATION_COORDINATE_Y_COLUMN]?.toIntOrNull() ?: 0,
-                    it[Table.ORGANIZATION_ID_COLUMN] as String,
-                    it
-                )
-            }.toList()
-
-    fun removeById(id: Int) {
-        organizationStorage.collection.removeById(id)
-        requestReload()
-    }
-
-    fun getOrganizationById(id: Int) = organizationStorage.getOrganizationById(id)
-
-    fun getOrganizationByRow(row: Int) = organizationStorage.getOrganizationById(
-        organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row][Table.ORGANIZATION_ID_COLUMN]?.toIntOrNull()
-            ?: -1
-    )
-
-    fun modifyOrganization(organization: Organization) {
-        organizationStorage.collection.modifyOrganization(organization)
-        requestReload()
-    }
-
-    fun getUserId() = organizationStorage.collection.getCreatorId()
 
     fun addFilter(columnName: String) {
         tableFilter?.let {
@@ -213,30 +137,7 @@ abstract class BasicTablePage(collection: CollectionInterface) : JFrame() {
         reload(false)
     }
 
-    protected fun addOrganization(organization: Organization) = tableViewScope.launch {
-        organizationStorage.collection.add(organization)
-        requestReload()
-    }
-
-    open fun addOrganization() {
-        val organization = Organization(
-            id = 0,
-            name = "New organization",
-            coordinates = Coordinates(0, 0),
-            creationDate = getLocalDate(),
-            annualTurnover = 1.0,
-            fullName = "New organization",
-            employeesCount = 1,
-            type = OrganizationType.PUBLIC,
-            postalAddress = null,
-            creatorId = getUserId()
-        )
-
-        addOrganization(organization)
-    }
-
-    fun clearOrganizations() = tableViewScope.launch {
-        organizationStorage.collection.clear()
-        requestReload()
+    init {
+        tableModel = DefaultTableModel(getOrganizationsAsArrayOfStrings(), columnNames)
     }
 }

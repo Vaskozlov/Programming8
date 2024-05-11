@@ -3,11 +3,12 @@ package ui
 import ui.lib.PointWithInfo
 import ui.lib.Table
 import ui.lib.keyboardKeyReleasedAdapter
+import ui.table.TablePageWithOrganizationPanels
 import java.awt.Color
 import java.util.*
 
 
-class Visualization(private val tablePage: TablePage) : BasicPointsVisualizer() {
+class Visualization(private val tablePage: TablePageWithOrganizationPanels) : BasicPointsVisualizer() {
     companion object {
         val availableColors = listOf(
             Color.RED,

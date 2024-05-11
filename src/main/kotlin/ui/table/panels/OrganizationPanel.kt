@@ -1,4 +1,4 @@
-package ui
+package ui.table.panels
 
 import application.exceptionToMessage
 import collection.*
@@ -197,6 +197,10 @@ class OrganizationPanel(internal val parent: TablePanel) {
     }
 
     suspend fun getOrganization(): Organization? {
+        if (getTextOfElement(UI_ID).isNullOrBlank()) {
+            return null
+        }
+
         val result = listOf(
             validateOrganizationName(parent, getTextOfElement(UI_NAME)),
             validateOrganizationCoordinateX(parent, getTextOfElement(UI_COORDINATE_X)),
@@ -215,7 +219,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
         }
 
         val organization = Organization(
-            id = null,
+            id = getTextOfElement(UI_ID)?.toIntOrNull(),
             name = getTextOfElement(UI_NAME),
             coordinates = Coordinates(
                 getTextOfElement(UI_COORDINATE_X)?.toLongOrNull(),

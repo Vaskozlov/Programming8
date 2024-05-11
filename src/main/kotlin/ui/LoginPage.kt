@@ -8,6 +8,7 @@ import localization.LocalizedResources
 import org.example.database.auth.Password
 import ui.lib.MigFontLayout
 import ui.lib.buttonClickAdapter
+import ui.table.TablePage
 import java.util.concurrent.TimeoutException
 import javax.swing.JFrame
 import javax.swing.JLabel

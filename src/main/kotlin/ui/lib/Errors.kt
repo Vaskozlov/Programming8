@@ -1,5 +1,6 @@
 package ui.lib
 
+import application.exceptionToMessage
 import collection.Organization
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.swing.Swing
@@ -7,6 +8,12 @@ import kotlinx.coroutines.withContext
 import lib.Localization
 import java.awt.Component
 import javax.swing.JOptionPane
+
+suspend fun showMessageDialog(parentComponent: Component, error: Throwable) {
+    withContext(Dispatchers.Swing) {
+        JOptionPane.showMessageDialog(parentComponent, exceptionToMessage(error))
+    }
+}
 
 suspend fun showMessageDialog(parentComponent: Component, message: String) {
     withContext(Dispatchers.Swing) {

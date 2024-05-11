@@ -1,7 +1,7 @@
 package ui.lib
 
 import kotlinx.coroutines.launch
-import ui.OrganizationPanel
+import ui.table.panels.OrganizationPanel
 import javax.swing.JComboBox
 
 class TypeEditor(private val panel: OrganizationPanel) : JComboBox<String>() {

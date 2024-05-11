@@ -4,13 +4,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
-import ui.TablePage
+import ui.table.TablePageWithOrganizationPanels
 import javax.swing.DefaultCellEditor
 import javax.swing.JTable
+import javax.swing.ListSelectionModel.SINGLE_SELECTION
 import javax.swing.event.ListSelectionEvent
 import javax.swing.table.TableModel
 
-class Table(model: TableModel, private val tablePage: TablePage) : JTable(model) {
+class Table(model: TableModel, private val tablePage: TablePageWithOrganizationPanels) : JTable(model) {
     companion object {
         const val ORGANIZATION_ID_COLUMN = 0
         const val ORGANIZATION_NAME_COLUMN = 1
@@ -102,5 +103,7 @@ class Table(model: TableModel, private val tablePage: TablePage) : JTable(model)
 
         val sportColumn = columnModel.getColumn(ORGANIZATION_TYPE_COLUMN)
         sportColumn.cellEditor = DefaultCellEditor(tablePage.tablePanel.organizationPanel.typeEditor)
+
+        setSelectionMode(SINGLE_SELECTION)
     }
 }
