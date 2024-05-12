@@ -43,7 +43,7 @@ class LoginPage : JFrame() {
         "",
         "[fill,40%][fill,50%]",
         "[fill,grow]"
-    ){
+    ) {
         fontSize = calculateFontSize(24)
     }
 

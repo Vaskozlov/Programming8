@@ -29,6 +29,9 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
         const val LOCATION_NAME_COLUMN = 13
         const val CREATOR_NAME_COLUMN = 14
         const val CREATOR_ID_COLUMN = 15
+
+        const val DELETE_KEY_CODE = 127
+        const val BACKSPACE_KEY_CODE = 8
     }
 
     private fun doesRowBelongToUser(row: Int): Boolean {
@@ -86,7 +89,7 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
 
         addKeyListener(
             keyboardKeyReleasedAdapter {
-                if (it.keyCode == 127 || (it.keyCode == 8 && it.isShiftDown)) {
+                if (it.keyCode == DELETE_KEY_CODE || (it.keyCode == BACKSPACE_KEY_CODE && it.isShiftDown)) {
                     val row = selectedRow
                     val id = tablePage.getIdByRow(row)
                     tablePage.removeById(id)
@@ -104,7 +107,7 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
             }
         )
 
-        tableHeader.table.rowHeight = 50
+        tableHeader.table.rowHeight = calculateFontSize(30)
         tableHeader.reorderingAllowed = false
 
         val sportColumn = columnModel.getColumn(TYPE_COLUMN)

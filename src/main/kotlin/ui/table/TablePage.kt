@@ -7,7 +7,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import ui.lib.GuiLocalization
 import ui.lib.MigFontLayout
-import ui.lib.calculateFontSize
 import ui.table.panels.TablePanelAndVisualPanel
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -26,7 +25,6 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
         "[fill,grow,65%][fill,grow,35%]",
         "[fill,grow]"
     ) {
-        fontSize = calculateFontSize(15)
         addAsFontOnlyComponent(table)
         addAsFontOnlyComponent(table.tableHeader)
         addAsFontOnlyComponent(
@@ -49,7 +47,7 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
         while (true) {
             databaseCommunicationLock.withLock {
                 val forcedReload = databaseCommunicationLockCondition.await(
-                    5,
+                    2,
                     TimeUnit.SECONDS
                 )
 
@@ -111,7 +109,7 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
         reload(true)
 
         title = "${GuiLocalization.get("ui.current_user")} $userLogin, " +
-                "${GuiLocalization.get("ui.your_id_is")}: ${getUserId()}"
+                "${GuiLocalization.get("ui.your_id_is")}: ${GuiLocalization.format(getUserId())}"
 
         tableViewScope.launch {
             GuiLocalization.setLanguage("en")

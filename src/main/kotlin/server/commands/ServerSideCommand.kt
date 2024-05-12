@@ -1,7 +1,7 @@
 package server.commands
 
-import lib.net.udp.User
 import collection.CollectionInterface
+import lib.net.udp.User
 
 fun interface ServerSideCommand {
     fun execute(

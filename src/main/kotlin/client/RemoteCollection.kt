@@ -4,6 +4,7 @@ import collection.Address
 import collection.CollectionInterface
 import collection.NetworkCode
 import collection.Organization
+import database.auth.AuthorizationInfo
 import exceptions.*
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
@@ -12,7 +13,6 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import lib.ExecutionStatus
 import lib.net.udp.ResultFrame
-import database.auth.AuthorizationInfo
 import org.example.exceptions.UnauthorizedException
 import java.net.InetSocketAddress
 import java.util.concurrent.locks.ReentrantLock

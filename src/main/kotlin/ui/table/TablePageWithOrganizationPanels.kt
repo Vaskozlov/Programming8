@@ -101,8 +101,5 @@ abstract class TablePageWithOrganizationPanels(collection: CollectionInterface) 
     init {
         @Suppress("LeakingThis")
         table = Table(tableModel, this)
-
-        table.tableHeader.table.rowHeight = 30
-        table.tableHeader.reorderingAllowed = false
     }
 }

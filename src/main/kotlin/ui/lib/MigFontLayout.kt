@@ -13,7 +13,7 @@ open class MigFontLayout(
     private val componentsList = mutableListOf<Component>()
     private var fontName = "Arial"
 
-    var fontSize: Int = 24
+    var fontSize = calculateFontSize(15)
         set(value) {
             for (comp in componentsList) {
                 setFontForComponent(comp)

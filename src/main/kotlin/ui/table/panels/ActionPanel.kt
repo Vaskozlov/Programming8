@@ -1,12 +1,13 @@
 package ui.table.panels
 
-import ui.lib.*
+import ui.lib.GuiLocalization
+import ui.lib.MigFontLayout
+import ui.lib.buttonClickAdapter
+import ui.lib.buttonDoubleClickAdapter
 import javax.swing.JPanel
 
 class ActionPanel(tablePanel: TablePanel) : JPanel() {
-    private val layout = MigFontLayout {
-        fontSize = calculateFontSize(15)
-    }
+    private val layout = MigFontLayout()
 
     private val tablePage = tablePanel.tablePage
     private val unselectOrganizationButton = buttonClickAdapter { tablePage.unselectOrganization() }

@@ -21,9 +21,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
         JLabel() to "ui.filter_column",
     )
 
-    private val layout = MigFontLayout {
-        fontSize = calculateFontSize(15)
-    }
+    private val layout = MigFontLayout()
 
     private val columnComboBox = object : JComboBox<String>() {
         init {
