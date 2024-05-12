@@ -23,7 +23,7 @@ interface CollectionInterface {
 
     fun removeById(id: Int, creatorId: Int? = null): ExecutionStatus
 
-    fun removeAllByPostalAddress(address: Address, creatorId: Int? = null)
+    fun removeAllByPostalAddress(address: Address?, creatorId: Int? = null)
 
     fun removeHead(creatorId: Int? = null): Organization?
 

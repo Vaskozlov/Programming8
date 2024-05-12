@@ -4,17 +4,17 @@ import client.DatabaseCommand
 import collection.Address
 import collection.CollectionInterface
 import collection.Organization
+import database.auth.AuthorizationInfo
+import database.auth.Login
 import exceptions.NotMaximumOrganizationException
 import exceptions.OrganizationKeyException
 import exceptions.OrganizationNotFoundException
 import kotlinx.serialization.json.Json
 import lib.BufferedReaderWithQueueOfStreams
+import lib.CliLocalization
 import lib.ExecutionStatus
 import lib.IOHelper
-import lib.Localization
 import org.example.client.Command
-import database.auth.AuthorizationInfo
-import database.auth.Login
 import org.example.database.auth.Password
 import java.io.IOException
 import java.io.InputStreamReader
@@ -33,7 +33,7 @@ class Application(
     private val databaseCommandToExecutor = mapOf(
         DatabaseCommand.HELP to Command
         { _, _ ->
-            Result.success(Localization.get("message.help"))
+            Result.success(CliLocalization.get("message.help"))
         },
 
         DatabaseCommand.INFO to Command
@@ -145,7 +145,7 @@ class Application(
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER to { null },
         DatabaseCommand.SHOW to { null },
         DatabaseCommand.EXECUTE_SCRIPT to { it },
-        DatabaseCommand.REMOVE_BY_ID to { it?.toIntOrNull() },
+        DatabaseCommand.REMOVE_BY_ID to { CliLocalization.toInt(it) },
         DatabaseCommand.ADD to {
             OrganizationBuilder.constructOrganization(
                 bufferedReaderWithQueueOfStreams,
@@ -157,7 +157,7 @@ class Application(
                 bufferedReaderWithQueueOfStreams,
                 true
             )
-            org.id = it!!.toInt()
+            org.id = CliLocalization.toInt(it)!!
             org
         },
         DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS to {
@@ -178,12 +178,33 @@ class Application(
         localNameToDatabaseCommand.clear()
 
         for ((key, value) in commandNameToDatabaseCommand) {
-            localNameToDatabaseCommand[Localization.get(key)] = value
+            localNameToDatabaseCommand[CliLocalization.get(key)] = value
+        }
+    }
+
+    private fun askUserForALanguage(bufferedReaderWithQueueOfStreams: BufferedReaderWithQueueOfStreams) {
+        println(
+            """
+                Choose language:
+                0 en (default)
+                1 ru
+                """.trimIndent()
+        )
+
+        val line = bufferedReaderWithQueueOfStreams.readLine()
+
+        when (line) {
+            "", "0", "en" -> CliLocalization.setLanguage("en")
+            "1", "ru" -> CliLocalization.setLanguage("ru")
+            else -> {
+                println("Invalid input. Try again.")
+                askUserForALanguage(bufferedReaderWithQueueOfStreams)
+            }
         }
     }
 
     private fun localize() {
-        Localization.askUserForALanguage(bufferedReaderWithQueueOfStreams)
+        askUserForALanguage(bufferedReaderWithQueueOfStreams)
         loadCommands()
     }
 
@@ -194,9 +215,9 @@ class Application(
             val fileContext = IOHelper.readFile(authFile) ?: throw IOException("Unable to read from file $authFile")
             authorizationInfo = Json.decodeFromString(fileContext)
         } else {
-            print(Localization.get("message.ask.login"))
+            print(CliLocalization.get("message.ask.login"))
             val login = bufferedReaderWithQueueOfStreams.readLine()
-            print(Localization.get("message.ask.password"))
+            print(CliLocalization.get("message.ask.password"))
             val password = bufferedReaderWithQueueOfStreams.readLine()
 
             authorizationInfo =
@@ -209,7 +230,7 @@ class Application(
     fun start() {
         localize()
         login()
-        println(Localization.get("message.introduction"))
+        println(CliLocalization.get("message.introduction"))
         running = true
 
         while (running) {
@@ -239,7 +260,7 @@ class Application(
         val argumentExecutor = argumentForCommand[databaseCommand]
 
         if (databaseCommand == null || argumentExecutor == null || !argumentForCommand.containsKey(databaseCommand)) {
-            System.out.printf(Localization.get("message.command.not_found"), commandName)
+            System.out.printf(CliLocalization.get("message.command.not_found"), commandName)
             return
         }
 

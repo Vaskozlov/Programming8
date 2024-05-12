@@ -1,5 +1,6 @@
 package collection
 
+import database.AuthorizationManager
 import database.CollectionToDatabase
 import database.Database
 import database.auth.AuthorizationInfo
@@ -13,12 +14,12 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import lib.*
 import org.apache.logging.log4j.kotlin.Logging
-import lib.CircledStorage
 import java.sql.ResultSet
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-class LocalCollection(private val database: Database) : CollectionInterface, Logging {
+class LocalCollection(private val database: Database, private val authorizationManager: AuthorizationManager) :
+    CollectionInterface, Logging {
     private var idFactory = IdFactory(1)
     private val lock = ReentrantLock()
     private var lastUpdateTime = getLocalDateTime()
@@ -28,6 +29,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     private val organizations = mutableListOf<Organization>()
     private val storedOrganizations =
         mutableListOf<Pair<String?, OrganizationType?>>()
+    private val userIdToLogin = mutableMapOf<Int, String>()
 
     companion object {
         @OptIn(ExperimentalSerializationApi::class)
@@ -82,6 +84,8 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     private fun loadOrganization(result: ResultSet): Organization = lock.withLock {
+        val creatorId = result.getInt("CREATOR_ID")
+
         val organization = Organization(
             id = result.getInt("ID"),
             name = result.getString("NAME"),
@@ -95,7 +99,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
             employeesCount = result.getObject("EMPLOYEES_COUNT") as? Int,
             type = valueOrNull<OrganizationType>(result.getString("ORGANIZATION_TYPE_NAME")),
             postalAddress = Address(
-                zipCode = (result.getObject("ZIP_CODE") as?  String).takeIf { it == null || it.isNotEmpty() },
+                zipCode = (result.getObject("ZIP_CODE") as? String).takeIf { it == null || it.isNotEmpty() },
                 town = Location(
                     x = result.getObject("LX") as? Double,
                     y = result.getObject("LY") as? Float,
@@ -103,7 +107,8 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
                     name = result.getObject("LNAME") as? String
                 )
             ),
-            creatorId = result.getInt("CREATOR_ID")
+            creatorId = creatorId,
+            creatorName = getLogin(creatorId)
         )
 
         organization.optimize()
@@ -113,6 +118,20 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         return organization
     }
 
+    private fun getLogin(id: Int?): String? {
+        if (id == null) {
+            return null
+        }
+
+        if (userIdToLogin.containsKey(id)) {
+            return userIdToLogin[id]
+        }
+
+        return runBlocking {
+            authorizationManager.getUserLogin(id)
+        }
+    }
+
     override fun login(authorizationInfo: AuthorizationInfo) {
         // Do nothing
     }
@@ -120,7 +139,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     override fun getInfo(): String {
 
         return String.format(
-            Localization.get("organization.info_message"), initializationDate.toString(), organizations.size
+            CliLocalization.get("organization.info_message"), initializationDate.toString(), organizations.size
         )
     }
 
@@ -128,7 +147,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         return StringBuilder().apply {
             history.applyFunctionOnAllElements {
                 append(it).append('\n')
-                addToHistory(Localization.get("command.history"))
+                addToHistory(CliLocalization.get("command.history"))
             }
         }.toString()
     }
@@ -138,12 +157,12 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     override fun maxByFullName(): Organization? = lock.withLock {
-        addToHistory(Localization.get("command.max_by_full_name"))
+        addToHistory(CliLocalization.get("command.max_by_full_name"))
         return organizations.maxByOrNull { it.fullName!! }
     }
 
     override fun getSumOfAnnualTurnover(): Double = lock.withLock {
-        addToHistory(Localization.get("command.sum_of_annual_turnover"))
+        addToHistory(CliLocalization.get("command.sum_of_annual_turnover"))
         return organizations.sumOf { it.annualTurnover ?: 0.0 }
     }
 
@@ -159,12 +178,12 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     override fun add(organization: Organization): Unit = lock.withLock {
-        addToHistory(Localization.get("command.add") + " " + organization.fullName!!)
+        addToHistory(CliLocalization.get("command.add") + " " + organization.fullName!!)
         addImplementation(organization)
     }
 
     override fun addIfMax(newOrganization: Organization): ExecutionStatus = lock.withLock {
-        addToHistory(Localization.get("command.add_if_max") + " " + newOrganization.fullName!!)
+        addToHistory(CliLocalization.get("command.add_if_max") + " " + newOrganization.fullName!!)
 
         val maxOrganization = organizations.maxByOrNull { it.fullName!! }
 
@@ -180,6 +199,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         organization.validate()
         val realId = databaseToCollection.addOrganization(organization)
         organization.id = realId
+        organization.creatorName = getLogin(organization.creatorId)
         organizations.add(organization)
         storedOrganizations.add(organization.toPairOfFullNameAndType())
         updateModificationTime()
@@ -187,7 +207,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     override fun modifyOrganization(updatedOrganization: Organization) = lock.withLock {
-        addToHistory(Localization.get("command.update") + " " + updatedOrganization.id)
+        addToHistory(CliLocalization.get("command.update") + " " + updatedOrganization.id)
         val organization = organizations.find { it.id == updatedOrganization.id }
 
         if (organization == null) {
@@ -201,11 +221,21 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
         completeModification(organization, updatedOrganization)
     }
 
-    override fun removeAllByPostalAddress(address: Address, creatorId: Int?) = lock.withLock {
-        addToHistory(Localization.get("command.remove_all_by_postal_address") + " " + address.toString())
+    override fun removeAllByPostalAddress(address: Address?, creatorId: Int?) = lock.withLock {
+        addToHistory(CliLocalization.get("command.remove_all_by_postal_address") + " " + address.toString())
+
+        var resultingAddress = address
+
+        if (resultingAddress?.town != null && resultingAddress.town!!.allNull()) {
+            resultingAddress.town = null
+        }
+
+        if (resultingAddress?.town == null && resultingAddress?.zipCode == null) {
+            resultingAddress = null
+        }
 
         organizations
-            .filter { it.postalAddress == address && (it.creatorId == creatorId || creatorId == null) }
+            .filter { it.postalAddress == resultingAddress && (it.creatorId == creatorId || creatorId == null) }
             .forEach {
                 organizations.remove(it)
                 storedOrganizations.remove(it.toPairOfFullNameAndType())
@@ -218,7 +248,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     override fun removeById(id: Int, creatorId: Int?): ExecutionStatus = lock.withLock {
-        addToHistory(Localization.get("command.remove_by_id") + " " + id.toString())
+        addToHistory(CliLocalization.get("command.remove_by_id") + " " + id.toString())
         val organizationWithGivenId = organizations.firstOrNull { it.id == id }
 
         if (organizationWithGivenId == null) {
@@ -238,7 +268,7 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     override fun removeHead(creatorId: Int?): Organization? = lock.withLock {
-        addToHistory(Localization.get("command.remove_head"))
+        addToHistory(CliLocalization.get("command.remove_head"))
         val removedOrganization = organizations.firstOrNull { creatorId == null || it.creatorId == creatorId }
         organizations.remove(removedOrganization)
 
@@ -263,12 +293,12 @@ class LocalCollection(private val database: Database) : CollectionInterface, Log
     }
 
     override fun clear(creatorId: Int?): Result<Unit> {
-        addToHistory(Localization.get("command.clear"))
+        addToHistory(CliLocalization.get("command.clear"))
         return clearImplementation(creatorId)
     }
 
     override fun toJson(): String = lock.withLock {
-        addToHistory(Localization.get("command.show") + " JSON")
+        addToHistory(CliLocalization.get("command.show") + " JSON")
         prettyJson.encodeToString(organizations.toList())
     }
 

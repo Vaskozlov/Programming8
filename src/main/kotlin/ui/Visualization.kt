@@ -1,5 +1,6 @@
 package ui
 
+import ui.lib.GuiLocalization
 import ui.lib.PointWithInfo
 import ui.lib.Table
 import ui.lib.keyboardKeyReleasedAdapter
@@ -31,7 +32,7 @@ class Visualization(private val tablePage: TablePageWithOrganizationPanels) : Ba
     override fun pointColor(point: PointWithInfo): Color {
         @Suppress("UNCHECKED_CAST")
         val castedInfo = point.additionalInfo as Array<String?>
-        val creatorId = castedInfo[Table.ORGANIZATION_CREATOR_ID_COLUMN]?.toInt() ?: -1
+        val creatorId = GuiLocalization.toInt(castedInfo[Table.CREATOR_ID_COLUMN]) ?: -1
         val id = (creatorId - tablePage.getUserId()!!).run { if (this < 0) this + availableColors.size else this }
         var color = availableColors[id % availableColors.size]
 
@@ -51,7 +52,7 @@ class Visualization(private val tablePage: TablePageWithOrganizationPanels) : Ba
 
     override fun setSize(width: Int, height: Int) {
         super.setSize(width, height)
-        println("resizeing $width $height")
+        println("resizing $width $height")
     }
 
     init {
@@ -62,7 +63,7 @@ class Visualization(private val tablePage: TablePageWithOrganizationPanels) : Ba
                 if (it.keyCode == 127 || (it.keyCode == 8 && it.isShiftDown)) {
                     @Suppress("UNCHECKED_CAST")
                     val castedInfo = selectedPoint?.additionalInfo as Array<String?>
-                    tablePage.removeById(castedInfo[Table.ORGANIZATION_ID_COLUMN]?.toInt() ?: -1)
+                    tablePage.removeById(GuiLocalization.toInt(castedInfo[Table.ID_COLUMN]) ?: -1)
                 }
             }
         )

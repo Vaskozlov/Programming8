@@ -13,21 +13,22 @@ import javax.swing.table.TableModel
 
 class Table(model: TableModel, private val tablePage: TablePageWithOrganizationPanels) : JTable(model) {
     companion object {
-        const val ORGANIZATION_ID_COLUMN = 0
-        const val ORGANIZATION_NAME_COLUMN = 1
-        const val ORGANIZATION_COORDINATE_X_COLUMN = 2
-        const val ORGANIZATION_COORDINATE_Y_COLUMN = 3
-        const val ORGANIZATION_CREATION_DATE_COLUMN = 4
-        const val ORGANIZATION_ANNUAL_TURNOVER_COLUMN = 5
-        const val ORGANIZATION_FULL_NAME_COLUMN = 6
-        const val ORGANIZATION_EMPLOYEES_COUNT_COLUMN = 7
-        const val ORGANIZATION_TYPE_COLUMN = 8
-        const val ORGANIZATION_ZIP_CODE_COLUMN = 9
-        const val ORGANIZATION_LOCATION_X_COLUMN = 10
-        const val ORGANIZATION_LOCATION_Y_COLUMN = 11
-        const val ORGANIZATION_LOCATION_Z_COLUMN = 12
-        const val ORGANIZATION_LOCATION_NAME_COLUMN = 13
-        const val ORGANIZATION_CREATOR_ID_COLUMN = 14
+        const val ID_COLUMN = 0
+        const val NAME_COLUMN = 1
+        const val COORDINATE_X_COLUMN = 2
+        const val COORDINATE_Y_COLUMN = 3
+        const val CREATION_DATE_COLUMN = 4
+        const val ANNUAL_TURNOVER_COLUMN = 5
+        const val FULL_NAME_COLUMN = 6
+        const val EMPLOYEES_COUNT_COLUMN = 7
+        const val TYPE_COLUMN = 8
+        const val ZIP_CODE_COLUMN = 9
+        const val LOCATION_X_COLUMN = 10
+        const val LOCATION_Y_COLUMN = 11
+        const val LOCATION_Z_COLUMN = 12
+        const val LOCATION_NAME_COLUMN = 13
+        const val CREATOR_NAME_COLUMN = 14
+        const val CREATOR_ID_COLUMN = 15
     }
 
     private fun doesRowBelongToUser(row: Int): Boolean {
@@ -35,9 +36,10 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
     }
 
     override fun isCellEditable(row: Int, column: Int): Boolean {
-        return column != ORGANIZATION_ID_COLUMN &&
-                column != ORGANIZATION_CREATION_DATE_COLUMN &&
-                column != ORGANIZATION_CREATOR_ID_COLUMN &&
+        return column != ID_COLUMN &&
+                column != CREATION_DATE_COLUMN &&
+                column != CREATOR_ID_COLUMN &&
+                column != CREATOR_NAME_COLUMN &&
                 doesRowBelongToUser(row)
     }
 
@@ -46,7 +48,7 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
             return
         }
 
-        val id = (getValueAt(row, ORGANIZATION_ID_COLUMN) as String).toInt()
+        val id = tablePage.getIdByRow(row)
 
         tablePage.tableViewScope.launch {
             val result =
@@ -68,6 +70,10 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
         tablePage.selectOrganization(selectedRow)
     }
 
+    fun hideCreatorIdColumn() {
+        columnModel.removeColumn(columnModel.getColumn(CREATOR_ID_COLUMN))
+    }
+
     init {
         addMouseListener(
             mouseClickAdapter {
@@ -82,7 +88,7 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
             keyboardKeyReleasedAdapter {
                 if (it.keyCode == 127 || (it.keyCode == 8 && it.isShiftDown)) {
                     val row = selectedRow
-                    val id = (getValueAt(row, ORGANIZATION_ID_COLUMN) as String).toInt()
+                    val id = tablePage.getIdByRow(row)
                     tablePage.removeById(id)
                 }
             }
@@ -98,10 +104,10 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
             }
         )
 
-        tableHeader.table.rowHeight = 30
+        tableHeader.table.rowHeight = 50
         tableHeader.reorderingAllowed = false
 
-        val sportColumn = columnModel.getColumn(ORGANIZATION_TYPE_COLUMN)
+        val sportColumn = columnModel.getColumn(TYPE_COLUMN)
         sportColumn.cellEditor = DefaultCellEditor(tablePage.tablePanel.organizationPanel.typeEditor)
 
         setSelectionMode(SINGLE_SELECTION)

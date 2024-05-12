@@ -6,7 +6,7 @@ import collection.Organization
 import exceptions.*
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.encodeToString
-import lib.Localization
+import lib.CliLocalization
 import org.example.exceptions.UnauthorizedException
 import java.io.IOException
 
@@ -32,33 +32,33 @@ val commandNameToDatabaseCommand = mapOf(
 fun commandSuccessMessage(command: DatabaseCommand, argument: Any?): String =
     when (command) {
         DatabaseCommand.ADD, DatabaseCommand.ADD_IF_MAX ->
-            Localization.get("message.collection.add.succeed")
+            CliLocalization.get("message.collection.add.succeed")
 
         DatabaseCommand.REMOVE_BY_ID ->
-            Localization.get("message.organization_removed")
+            CliLocalization.get("message.organization_removed")
 
         DatabaseCommand.REMOVE_HEAD, DatabaseCommand.MAX_BY_FULL_NAME ->
             LocalCollection.prettyJson.encodeToString(argument as Organization?)
 
         DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS ->
-            Localization.get("message.organizations_by_postal_address_removed")
+            CliLocalization.get("message.organizations_by_postal_address_removed")
 
         DatabaseCommand.UPDATE ->
-            Localization.get("message.organization_modified")
+            CliLocalization.get("message.organization_modified")
 
         DatabaseCommand.UPDATE_TIME ->
             (argument as LocalDateTime).toString()
 
         DatabaseCommand.CLEAR ->
-            Localization.get("message.collection_cleared")
+            CliLocalization.get("message.collection_cleared")
 
         DatabaseCommand.EXIT ->
-            Localization.get("message.exit")
+            CliLocalization.get("message.exit")
 
         DatabaseCommand.HISTORY -> argument as String
 
         DatabaseCommand.EXECUTE_SCRIPT ->
-            Localization.get("message.script_execution.started")
+            CliLocalization.get("message.script_execution.started")
 
         DatabaseCommand.INFO, DatabaseCommand.SHOW, DatabaseCommand.HELP ->
             argument as String
@@ -66,7 +66,7 @@ fun commandSuccessMessage(command: DatabaseCommand, argument: Any?): String =
         DatabaseCommand.SUM_OF_ANNUAL_TURNOVER ->
             String.format(
                 "%s: %f.",
-                Localization.get("message.sum_of_annual_turnover"),
+                CliLocalization.get("message.sum_of_annual_turnover"),
                 argument as Double?
             )
     }
@@ -75,57 +75,57 @@ fun exceptionToMessage(exception: Throwable?): String =
     when (exception) {
         is FileReadException -> String.format(
             "%s %s.",
-            Localization.get("message.collection.load.failed"),
+            CliLocalization.get("message.collection.load.failed"),
             exception.message!!
         )
 
         is FileWriteException -> String.format(
             "%s %s.",
-            Localization.get("message.collection.unable_to_save_to_file"),
+            CliLocalization.get("message.collection.unable_to_save_to_file"),
             exception.message!!
         )
 
-        is NotMaximumOrganizationException -> Localization.get(
+        is NotMaximumOrganizationException -> CliLocalization.get(
             "message.collection.add.max_check_failed"
         )
 
-        is KeyboardInterruptException -> Localization.get(
+        is KeyboardInterruptException -> CliLocalization.get(
             "message.operation.canceled"
         )
 
-        is IllegalArgumentException -> Localization.get(
+        is IllegalArgumentException -> CliLocalization.get(
             "message.organization.modification_error"
         )
 
-        is OrganizationAlreadyPresentedException -> Localization.get(
+        is OrganizationAlreadyPresentedException -> CliLocalization.get(
             "message.organization.error.already_presented"
         )
 
-        is OrganizationKeyException -> Localization.get(
+        is OrganizationKeyException -> CliLocalization.get(
             "message.organization.error.key_error"
         )
 
-        is IllegalAccessException -> Localization.get(
+        is IllegalAccessException -> CliLocalization.get(
             "message.illegal_access"
         )
 
-        is IOException -> Localization.get(
+        is IOException -> CliLocalization.get(
             "message.network.error"
         )
 
-        is UnauthorizedException -> Localization.get(
+        is UnauthorizedException -> CliLocalization.get(
             "message.network.unauthorized"
         )
 
-        is InvalidOutputFormatException -> Localization.get(
+        is InvalidOutputFormatException -> CliLocalization.get(
             "message.show.unrecognizable_format"
         )
 
-        is RecursionReadErrorException -> Localization.get(
+        is RecursionReadErrorException -> CliLocalization.get(
             "message.file.recursion"
         )
 
-        else -> "${Localization.get("message.command.failed")}, ${exception?.message}"
+        else -> "${CliLocalization.get("message.command.failed")}, ${exception?.message}"
     }
 
 fun splitInputIntoArguments(input: String): Array<String> =

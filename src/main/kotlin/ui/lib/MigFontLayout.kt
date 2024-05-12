@@ -4,13 +4,15 @@ import net.miginfocom.swing.MigLayout
 import java.awt.Component
 import java.awt.Font
 
-class MigFontLayout(
+open class MigFontLayout(
     layoutConstraints: String = "",
-    colConstraints: String = "",
-    rowConstraints: String = ""
+    colConstraints: String = "[fill,grow]",
+    rowConstraints: String = "[fill,grow]",
+    initAction: MigFontLayout.() -> Unit = {}
 ) : MigLayout(layoutConstraints, colConstraints, rowConstraints) {
     private val componentsList = mutableListOf<Component>()
-    var fontName = "Arial"
+    private var fontName = "Arial"
+
     var fontSize: Int = 24
         set(value) {
             for (comp in componentsList) {
@@ -30,9 +32,12 @@ class MigFontLayout(
         componentsList.add(comp)
     }
 
-    fun addAsFontOnlyComponent(comp: Component)
-    {
+    fun addAsFontOnlyComponent(comp: Component) {
         componentsList.add(comp)
         setFontForComponent(comp)
+    }
+
+    init {
+        initAction()
     }
 }

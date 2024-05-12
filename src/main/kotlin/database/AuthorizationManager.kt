@@ -22,6 +22,15 @@ class AuthorizationManager(private val database: Database) {
         ).firstOrNull()?.getInt("ID")
     }
 
+    fun getUserLogin(id: Int?): String? = runBlocking {
+        database.executeQuery(
+            "SELECT LOGIN FROM USERS WHERE ID = ?",
+            listOf(
+                id
+            )
+        ).firstOrNull()?.getObject("LOGIN") as? String
+    }
+
     fun getUserId(login: Login) = runBlocking {
         database.executeQuery(
             "SELECT ID FROM USERS WHERE LOGIN = ?",

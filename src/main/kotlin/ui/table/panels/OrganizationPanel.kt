@@ -2,9 +2,11 @@ package ui.table.panels
 
 import application.exceptionToMessage
 import collection.*
-import lib.Localization
+import kotlinx.coroutines.launch
+import lib.ExecutionStatus
 import lib.valueOrNull
 import ui.lib.*
+import java.awt.Color
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JTextField
@@ -31,7 +33,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
     private val tableViewScope = parent.tablePage.tableViewScope
     val typeEditor = TypeEditor(this)
 
-    private val uiElements = mapOf<String, Pair<JLabel, JComponent>>(
+    val uiElements = mapOf<String, Pair<JLabel, JComponent>>(
         UI_ID to (JLabel() to object : JTextField() {
             init {
                 isEnabled = false
@@ -91,7 +93,8 @@ class OrganizationPanel(internal val parent: TablePanel) {
                     org,
                     it.text,
                     getTextOfElement(UI_LOCATION_Y),
-                    getTextOfElement(UI_LOCATION_Z)
+                    getTextOfElement(UI_LOCATION_Z),
+                    getTextOfElement(UI_LOCATION_NAME)
                 )
             }
         }),
@@ -102,7 +105,8 @@ class OrganizationPanel(internal val parent: TablePanel) {
                     org,
                     getTextOfElement(UI_LOCATION_X),
                     it.text,
-                    getTextOfElement(UI_LOCATION_Z)
+                    getTextOfElement(UI_LOCATION_Z),
+                    getTextOfElement(UI_LOCATION_NAME)
                 )
             }
         }),
@@ -113,7 +117,8 @@ class OrganizationPanel(internal val parent: TablePanel) {
                     org,
                     getTextOfElement(UI_LOCATION_X),
                     getTextOfElement(UI_LOCATION_Y),
-                    it.text
+                    it.text,
+                    getTextOfElement(UI_LOCATION_NAME)
                 )
             }
         }),
@@ -125,8 +130,13 @@ class OrganizationPanel(internal val parent: TablePanel) {
         }),
     )
 
+    private fun constantFields() = listOf(
+        UI_ID,
+        UI_CREATION_DATE
+    )
+
     internal fun getOrganizationByIdInUI(): Organization? =
-        parent.tablePage.getOrganizationById(getTextOfElement(UI_ID)?.toIntOrNull() ?: -1)
+        parent.tablePage.getOrganizationById(GuiLocalization.toInt(getTextOfElement(UI_ID)) ?: -1)
 
     private fun getTextOfElement(key: String): String? =
         when (val value = uiElements[key]!!.second) {
@@ -136,7 +146,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
         }
 
     private fun setTextOfElement(key: String, value: String?) {
-        uiElements[key]!!.first.text = Localization.get(key)
+        uiElements[key]!!.first.text = GuiLocalization.get(key)
 
         when (val element = uiElements[key]!!.second) {
             is JTextField -> element.text = value
@@ -146,23 +156,23 @@ class OrganizationPanel(internal val parent: TablePanel) {
     }
 
     fun loadOrganization(organization: Array<String?>) {
-        setTextOfElement(UI_ID, organization[Table.ORGANIZATION_ID_COLUMN])
-        setTextOfElement(UI_NAME, organization[Table.ORGANIZATION_NAME_COLUMN])
-        setTextOfElement(UI_COORDINATE_X, organization[Table.ORGANIZATION_COORDINATE_X_COLUMN])
-        setTextOfElement(UI_COORDINATE_Y, organization[Table.ORGANIZATION_COORDINATE_Y_COLUMN])
-        setTextOfElement(UI_CREATION_DATE, organization[Table.ORGANIZATION_CREATION_DATE_COLUMN])
-        setTextOfElement(UI_ANNUAL_TURNOVER, organization[Table.ORGANIZATION_ANNUAL_TURNOVER_COLUMN])
-        setTextOfElement(UI_FULL_NAME, organization[Table.ORGANIZATION_FULL_NAME_COLUMN])
-        setTextOfElement(UI_EMPLOYEES_COUNT, organization[Table.ORGANIZATION_EMPLOYEES_COUNT_COLUMN])
-        setTextOfElement(UI_TYPE, organization[Table.ORGANIZATION_TYPE_COLUMN])
-        setTextOfElement(UI_ZIP_CODE, organization[Table.ORGANIZATION_ZIP_CODE_COLUMN])
-        setTextOfElement(UI_LOCATION_X, organization[Table.ORGANIZATION_LOCATION_X_COLUMN])
-        setTextOfElement(UI_LOCATION_Y, organization[Table.ORGANIZATION_LOCATION_Y_COLUMN])
-        setTextOfElement(UI_LOCATION_Z, organization[Table.ORGANIZATION_LOCATION_Z_COLUMN])
-        setTextOfElement(UI_LOCATION_NAME, organization[Table.ORGANIZATION_CREATOR_ID_COLUMN])
+        setTextOfElement(UI_ID, organization[Table.ID_COLUMN])
+        setTextOfElement(UI_NAME, organization[Table.NAME_COLUMN])
+        setTextOfElement(UI_COORDINATE_X, organization[Table.COORDINATE_X_COLUMN])
+        setTextOfElement(UI_COORDINATE_Y, organization[Table.COORDINATE_Y_COLUMN])
+        setTextOfElement(UI_CREATION_DATE, organization[Table.CREATION_DATE_COLUMN])
+        setTextOfElement(UI_ANNUAL_TURNOVER, organization[Table.ANNUAL_TURNOVER_COLUMN])
+        setTextOfElement(UI_FULL_NAME, organization[Table.FULL_NAME_COLUMN])
+        setTextOfElement(UI_EMPLOYEES_COUNT, organization[Table.EMPLOYEES_COUNT_COLUMN])
+        setTextOfElement(UI_TYPE, organization[Table.TYPE_COLUMN])
+        setTextOfElement(UI_ZIP_CODE, organization[Table.ZIP_CODE_COLUMN])
+        setTextOfElement(UI_LOCATION_X, organization[Table.LOCATION_X_COLUMN])
+        setTextOfElement(UI_LOCATION_Y, organization[Table.LOCATION_Y_COLUMN])
+        setTextOfElement(UI_LOCATION_Z, organization[Table.LOCATION_Z_COLUMN])
+        setTextOfElement(UI_LOCATION_NAME, organization[Table.LOCATION_NAME_COLUMN])
 
         val isEditable =
-            organization[Table.ORGANIZATION_CREATOR_ID_COLUMN]?.toIntOrNull() == parent.tablePage.getUserId()
+            GuiLocalization.toInt(organization[Table.CREATOR_ID_COLUMN]) == parent.tablePage.getUserId()
 
         uiElements[UI_NAME]!!.second.isEnabled = isEditable
         uiElements[UI_COORDINATE_X]!!.second.isEnabled = isEditable
@@ -176,32 +186,76 @@ class OrganizationPanel(internal val parent: TablePanel) {
         uiElements[UI_LOCATION_Y]!!.second.isEnabled = isEditable
         uiElements[UI_LOCATION_Z]!!.second.isEnabled = isEditable
         uiElements[UI_LOCATION_NAME]!!.second.isEnabled = isEditable
-    }
 
-    fun localize() {
-        uiElements.forEach { (key, elem) ->
-            val (label, _) = elem
-            label.text = Localization.get(key)
+        tableViewScope.launch {
+            setColorToTablePanelLabel(
+                parent,
+                listOf(
+                    UI_NAME,
+                    UI_COORDINATE_X,
+                    UI_COORDINATE_Y,
+                    UI_ANNUAL_TURNOVER,
+                    UI_FULL_NAME,
+                    UI_EMPLOYEES_COUNT,
+                    UI_TYPE,
+                    UI_ZIP_CODE,
+                    UI_LOCATION_X,
+                    UI_LOCATION_Y,
+                    UI_LOCATION_Z,
+                    UI_LOCATION_NAME
+                ),
+                Color.WHITE
+            )
         }
     }
 
     fun clearFields() {
-        uiElements.forEach { (_, elem) ->
+        uiElements.forEach { (name, elem) ->
             val (_, component) = elem
 
             when (component) {
-                is JTextField -> component.text = ""
-                is TypeEditor -> component.setTextNoUpdate("null")
+                is JTextField -> {
+                    component.text = ""
+
+                    constantFields().contains(name).takeUnless { it }?.let {
+                        component.isEnabled = true
+                    }
+                }
+
+                is TypeEditor -> {
+                    component.setTextNoUpdate("null")
+
+                    constantFields().contains(name).takeUnless { it }?.let {
+                        component.isEnabled = true
+                    }
+                }
             }
         }
     }
 
-    suspend fun getOrganization(): Organization? {
+    fun getOrganizationAddress(): Address? {
         if (getTextOfElement(UI_ID).isNullOrBlank()) {
             return null
         }
 
-        val result = listOf(
+        return Address(
+            getTextOfElement(UI_ZIP_CODE).takeUnless { isNullString(it) },
+            Location(
+                GuiLocalization.toDouble(getTextOfElement(UI_LOCATION_X)),
+                GuiLocalization.toFloat(getTextOfElement(UI_LOCATION_Y)),
+                GuiLocalization.toLong(getTextOfElement(UI_LOCATION_Z)),
+                getTextOfElement(UI_LOCATION_NAME).takeUnless { isNullString(it) }
+            )
+        )
+    }
+
+    private fun constructCoordinates() = Coordinates(
+        GuiLocalization.toLong(getTextOfElement(UI_COORDINATE_X)),
+        GuiLocalization.toLong(getTextOfElement(UI_COORDINATE_Y))
+    )
+
+    private suspend fun checkOrganizationFieldsCorrectness(): ExecutionStatus {
+        val result = mutableListOf(
             validateOrganizationName(parent, getTextOfElement(UI_NAME)),
             validateOrganizationCoordinateX(parent, getTextOfElement(UI_COORDINATE_X)),
             validateOrganizationCoordinateY(parent, getTextOfElement(UI_COORDINATE_Y)),
@@ -209,35 +263,39 @@ class OrganizationPanel(internal val parent: TablePanel) {
             validateOrganizationFullName(parent, getTextOfElement(UI_FULL_NAME)),
             validateOrganizationEmployeesCount(parent, getTextOfElement(UI_EMPLOYEES_COUNT)),
             validateOrganizationZipCode(parent, getTextOfElement(UI_ZIP_CODE)),
-            validateOrganizationLocationX(parent, getTextOfElement(UI_LOCATION_X)),
-            validateOrganizationLocationY(parent, getTextOfElement(UI_LOCATION_Y)),
-            validateOrganizationLocationZ(parent, getTextOfElement(UI_LOCATION_Z))
         )
 
+        val locationX = getTextOfElement(UI_LOCATION_X)
+        val locationY = getTextOfElement(UI_LOCATION_Y)
+        val locationZ = getTextOfElement(UI_LOCATION_Z)
+
+        if (!isNullString(locationX) || !isNullString(locationY) || !isNullString(locationZ)) {
+            result.add(validateOrganizationLocationX(parent, locationX))
+            result.add(validateOrganizationLocationY(parent, locationY))
+            result.add(validateOrganizationLocationZ(parent, locationZ))
+        }
+
         if (result.any { !it }) {
+            return ExecutionStatus.FAILURE
+        }
+
+        return ExecutionStatus.SUCCESS
+    }
+
+    suspend fun getOrganization(): Organization? {
+        if (checkOrganizationFieldsCorrectness() == ExecutionStatus.FAILURE) {
             return null
         }
 
         val organization = Organization(
-            id = getTextOfElement(UI_ID)?.toIntOrNull(),
+            id = GuiLocalization.toInt(getTextOfElement(UI_ID)),
             name = getTextOfElement(UI_NAME),
-            coordinates = Coordinates(
-                getTextOfElement(UI_COORDINATE_X)?.toLongOrNull(),
-                getTextOfElement(UI_COORDINATE_Y)?.toLongOrNull()
-            ),
-            annualTurnover = getTextOfElement(UI_ANNUAL_TURNOVER)?.toDoubleOrNull(),
+            coordinates = constructCoordinates(),
+            annualTurnover = GuiLocalization.toDouble(getTextOfElement(UI_ANNUAL_TURNOVER)),
             fullName = getTextOfElement(UI_FULL_NAME),
-            employeesCount = getTextOfElement(UI_EMPLOYEES_COUNT)?.toIntOrNull(),
+            employeesCount = GuiLocalization.toInt(getTextOfElement(UI_EMPLOYEES_COUNT)),
             type = valueOrNull<OrganizationType>(getTextOfElement(UI_TYPE)),
-            postalAddress = Address(
-                getTextOfElement(UI_ZIP_CODE),
-                Location(
-                    getTextOfElement(UI_LOCATION_X)?.toDoubleOrNull(),
-                    getTextOfElement(UI_LOCATION_Y)?.toFloatOrNull(),
-                    getTextOfElement(UI_LOCATION_Z)?.toLongOrNull(),
-                    getTextOfElement(UI_LOCATION_NAME)
-                )
-            ),
+            postalAddress = getOrganizationAddress()
         )
 
         if (!validateLocationInOrganization(parent, organization)) {
@@ -256,9 +314,12 @@ class OrganizationPanel(internal val parent: TablePanel) {
     }
 
     fun init() {
-        uiElements.forEach { (_, value) ->
+        uiElements.forEach { (key, value) ->
             parent.add(value.first)
             parent.add(value.second, "wrap")
+
+            val (label, _) = value
+            GuiLocalization.addElement(key, label)
         }
     }
 }

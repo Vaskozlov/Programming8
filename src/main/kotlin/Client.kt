@@ -1,6 +1,5 @@
 import application.Application
 import client.RemoteCollection
-import lib.Localization
 import ui.LoginPage
 import java.util.*
 import javax.swing.SwingUtilities
@@ -26,11 +25,8 @@ object Client {
             application.start()
         }.start()
 
-        Localization.loadBundle("localization/localization", "en")
-
         SwingUtilities.invokeLater {
             LoginPage().apply {
-                localize()
                 isVisible = true
             }
         }

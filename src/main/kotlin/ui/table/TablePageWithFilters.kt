@@ -28,77 +28,77 @@ abstract class TablePageWithFilters(collection: CollectionInterface) : BasicTabl
 
             if (filterId % 3 != 0) {
                 result = when (column) {
-                    Table.ORGANIZATION_ID_COLUMN ->
+                    Table.ID_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.id
                         }
 
-                    Table.ORGANIZATION_NAME_COLUMN ->
+                    Table.NAME_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.name
                         }
 
-                    Table.ORGANIZATION_COORDINATE_X_COLUMN ->
+                    Table.COORDINATE_X_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.coordinates?.x
                         }
 
-                    Table.ORGANIZATION_COORDINATE_Y_COLUMN ->
+                    Table.COORDINATE_Y_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.coordinates?.y
                         }
 
-                    Table.ORGANIZATION_CREATION_DATE_COLUMN ->
+                    Table.CREATION_DATE_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.creationDate
                         }
 
-                    Table.ORGANIZATION_ANNUAL_TURNOVER_COLUMN ->
+                    Table.ANNUAL_TURNOVER_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.annualTurnover
                         }
 
-                    Table.ORGANIZATION_FULL_NAME_COLUMN ->
+                    Table.FULL_NAME_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.fullName
                         }
 
-                    Table.ORGANIZATION_EMPLOYEES_COUNT_COLUMN ->
+                    Table.EMPLOYEES_COUNT_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.employeesCount
                         }
 
-                    Table.ORGANIZATION_TYPE_COLUMN ->
+                    Table.TYPE_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.type
                         }
 
-                    Table.ORGANIZATION_ZIP_CODE_COLUMN ->
+                    Table.ZIP_CODE_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.postalAddress?.zipCode
                         }
 
-                    Table.ORGANIZATION_LOCATION_X_COLUMN ->
+                    Table.LOCATION_X_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.postalAddress?.town?.x
                         }
 
-                    Table.ORGANIZATION_LOCATION_Y_COLUMN ->
+                    Table.LOCATION_Y_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.postalAddress?.town?.y
                         }
 
-                    Table.ORGANIZATION_LOCATION_Z_COLUMN ->
+                    Table.LOCATION_Z_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.postalAddress?.town?.z
                         }
 
-                    Table.ORGANIZATION_LOCATION_NAME_COLUMN ->
+                    Table.LOCATION_NAME_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.postalAddress?.town?.name
                         }
 
-                    Table.ORGANIZATION_CREATOR_ID_COLUMN ->
+                    Table.CREATOR_ID_COLUMN ->
                         result.sortedByUpOrDown(filterId % 3 == 2) { elem ->
                             elem.creatorId
                         }

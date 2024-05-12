@@ -122,7 +122,7 @@ class RemoteCollection(
             Json.encodeToJsonElement(id)
         ).let { ExecutionStatus.getByValue(it.isSuccess) }
 
-    override fun removeAllByPostalAddress(address: Address, creatorId: Int?) {
+    override fun removeAllByPostalAddress(address: Address?, creatorId: Int?) {
         sendCommandAndReceiveResult(
             DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS,
             Json.encodeToJsonElement(address)

@@ -3,11 +3,14 @@ package ui
 import client.RemoteCollection
 import database.auth.AuthorizationInfo
 import database.auth.Login
-import lib.Localization
-import localization.LocalizedResources
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.example.database.auth.Password
+import ui.lib.GuiLocalization
 import ui.lib.MigFontLayout
 import ui.lib.buttonClickAdapter
+import ui.lib.calculateFontSize
 import ui.table.TablePage
 import java.util.concurrent.TimeoutException
 import javax.swing.JFrame
@@ -21,6 +24,7 @@ class LoginPage : JFrame() {
         const val FIELDS_LENGTH = 30
     }
 
+    private val loginScope = CoroutineScope(Dispatchers.Default)
     private val addressLabel = JLabel()
     private val portLabel = JLabel()
     private val loginLabel = JLabel()
@@ -39,15 +43,8 @@ class LoginPage : JFrame() {
         "",
         "[fill,40%][fill,50%]",
         "[fill,grow]"
-    )
-
-    fun localize() {
-        addressLabel.text = LocalizedResources.address
-        portLabel.text = LocalizedResources.port
-        loginLabel.text = LocalizedResources.login
-        passwordLabel.text = LocalizedResources.password
-        welcomeLabel.text = LocalizedResources.welcome
-        loginButton.text = LocalizedResources.loginButton
+    ){
+        fontSize = calculateFontSize(24)
     }
 
     private fun loginPressed() {
@@ -71,7 +68,7 @@ class LoginPage : JFrame() {
             return
         }
 
-        val collection = RemoteCollection(addressEditor.text, portEditor.text.toInt())
+        val collection = RemoteCollection(addressEditor.text, GuiLocalization.toInt(portEditor.text)!!)
 
         // TODO: add check
         collection.login(
@@ -86,16 +83,23 @@ class LoginPage : JFrame() {
         }.onFailure {
             when (it) {
                 is TimeoutException ->
-                    JOptionPane.showMessageDialog(this, Localization.get("ui.unable_to_connect"))
+                    JOptionPane.showMessageDialog(
+                        this,
+                        GuiLocalization.get("ui.unable_to_connect")
+                    )
 
                 else ->
-                    JOptionPane.showMessageDialog(this, Localization.get("ui.unable_to_login"))
+                    JOptionPane.showMessageDialog(
+                        this,
+                        GuiLocalization.get("ui.unable_to_login")
+                    )
             }
 
             return
         }.onSuccess {
             isVisible = false
 
+            GuiLocalization.clearElements()
             TablePage(collection, loginEditor.text).apply {
                 isVisible = true
             }
@@ -133,5 +137,16 @@ class LoginPage : JFrame() {
         add(passwordEditor, "wrap")
 
         add(loginButton, "dock center")
+
+        GuiLocalization.addElement("ui.welcome", welcomeLabel)
+        GuiLocalization.addElement("ui.address", addressLabel)
+        GuiLocalization.addElement("ui.port", portLabel)
+        GuiLocalization.addElement("ui.login", loginLabel)
+        GuiLocalization.addElement("ui.password", passwordLabel)
+        GuiLocalization.addElement("ui.login_button", loginButton)
+
+        loginScope.launch {
+            GuiLocalization.setLanguage("en")
+        }
     }
 }

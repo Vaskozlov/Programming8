@@ -6,7 +6,7 @@ import collection.Location
 import collection.OrganizationType
 import exceptions.KeyboardInterruptException
 import lib.BufferedReaderWithQueueOfStreams
-import lib.Localization
+import lib.CliLocalization
 
 /**
  * Reads information needed to construct Organization from the buffer
@@ -17,25 +17,25 @@ class UserInteractiveOrganizationBuilder(
 ) {
     fun getName(): String? =
         getString(
-            Localization.get("organization_builder.input.organization_name"),
+            CliLocalization.get("organization_builder.input.organization_name"),
             false
         )
 
     fun getCoordinates(): Coordinates {
         val x = getNumber(
-            Localization.get("organization_builder.input.coordinate.x"),
+            CliLocalization.get("organization_builder.input.coordinate.x"),
             false,
-            String::toLongOrNull
+            CliLocalization::toLong
         )
 
         val y = getNumber(
-            Localization.get("organization_builder.input.coordinate.y"),
+            CliLocalization.get("organization_builder.input.coordinate.y"),
             false,
-            String::toLongOrNull
+            CliLocalization::toLong
         )
 
         if (y != null && y > 464) {
-            println(Localization.get("organization_builder.input.coordinate.y.limit.message"))
+            println(CliLocalization.get("organization_builder.input.coordinate.y.limit.message"))
             return getCoordinates()
         }
 
@@ -44,13 +44,13 @@ class UserInteractiveOrganizationBuilder(
 
     fun getAnnualTurnover(): Double? {
         val result = getNumber(
-            Localization.get("organization_builder.input.annual_turnover"),
+            CliLocalization.get("organization_builder.input.annual_turnover"),
             false,
-            String::toDoubleOrNull
+            CliLocalization::toDouble
         )
 
         if (result != null && result <= 0) {
-            println(Localization.get("organization_builder.input.annual_turnover.limit.message"))
+            println(CliLocalization.get("organization_builder.input.annual_turnover.limit.message"))
             return getAnnualTurnover()
         }
 
@@ -58,19 +58,19 @@ class UserInteractiveOrganizationBuilder(
     }
 
     fun getFullName(): String? = getString(
-        Localization.get("organization_builder.input.full_name"),
+        CliLocalization.get("organization_builder.input.full_name"),
         false
     )
 
     fun getEmployeesCount(): Int? =
         getNumber(
-            Localization.get("organization_builder.input.employees_count"),
+            CliLocalization.get("organization_builder.input.employees_count"),
             true,
-            String::toIntOrNull
+            CliLocalization::toInt
         )
 
     fun getOrganizationType(): OrganizationType? {
-        System.out.printf(Localization.get("organization_builder.input.type"))
+        System.out.printf(CliLocalization.get("organization_builder.input.type"))
         val line = reader.readLine()
         checkForExitCommand(line)
 
@@ -81,7 +81,7 @@ class UserInteractiveOrganizationBuilder(
             "2" -> OrganizationType.PRIVATE_LIMITED_COMPANY
             "3" -> OrganizationType.OPEN_JOINT_STOCK_COMPANY
             else -> {
-                println(Localization.get("organization_builder.input.type.invalid_input"))
+                println(CliLocalization.get("organization_builder.input.type.invalid_input"))
                 return getOrganizationType()
             }
         }
@@ -89,18 +89,18 @@ class UserInteractiveOrganizationBuilder(
 
     fun getAddress(): Address? {
         val zipCode = getString(
-            Localization.get("organization_builder.input.zip_code"),
+            CliLocalization.get("organization_builder.input.zip_code"),
             true
         )
 
         if (zipCode != null && zipCode.length < 3) {
-            println(Localization.get("organization_builder.input.zip_code.limit.message"))
+            println(CliLocalization.get("organization_builder.input.zip_code.limit.message"))
             return getAddress()
         }
 
         if (zipCode == null) {
             val answer = getString(
-                Localization.get("organization_builder.input.address.possible_null"),
+                CliLocalization.get("organization_builder.input.address.possible_null"),
                 true
             )
 
@@ -110,25 +110,25 @@ class UserInteractiveOrganizationBuilder(
         }
 
         val x = getNumber(
-            Localization.get("organization_builder.input.location.x"),
+            CliLocalization.get("organization_builder.input.location.x"),
             false,
-            String::toDoubleOrNull
+            CliLocalization::toDouble
         )
 
         val y = getNumber(
-            Localization.get("organization_builder.input.location.y"),
+            CliLocalization.get("organization_builder.input.location.y"),
             false,
-            String::toFloatOrNull
+            CliLocalization::toFloat
         )
 
         val z = getNumber(
-            Localization.get("organization_builder.input.location.z"),
+            CliLocalization.get("organization_builder.input.location.z"),
             false,
-            String::toLong
+            CliLocalization::toLong
         )
 
         val name = getString(
-            Localization.get("organization_builder.input.location.name"),
+            CliLocalization.get("organization_builder.input.location.name"),
             true
         )
 
@@ -142,7 +142,7 @@ class UserInteractiveOrganizationBuilder(
         val line = getInput(fieldName, nullable)
 
         if (line.contains(";")) {
-            println(Localization.get("message.input.error.semicolon"))
+            println(CliLocalization.get("message.input.error.semicolon"))
             return getString(fieldName, nullable)
         }
 
@@ -184,9 +184,9 @@ class UserInteractiveOrganizationBuilder(
         nullable: Boolean
     ): String {
         System.out.printf(
-            Localization.get("organization_builder.input.get"),
+            CliLocalization.get("organization_builder.input.get"),
             fieldName,
-            if (nullable) String.format(" (%s) ", Localization.get("input.nullable")) else ""
+            if (nullable) String.format(" (%s) ", CliLocalization.get("input.nullable")) else ""
         )
 
         return reader.readLine()
@@ -199,7 +199,7 @@ class UserInteractiveOrganizationBuilder(
     }
 
     private fun isNullInput(nullable: Boolean, input: String): Boolean {
-        return nullable && (input.isEmpty() || input == Localization.get("input.null"))
+        return nullable && (input.isEmpty() || input == CliLocalization.get("input.null"))
     }
 
     private fun needToTakeDataFromProvidedOrganization(line: String): Boolean {

@@ -5,14 +5,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
-import lib.Localization
-import net.miginfocom.swing.MigLayout
+import ui.lib.GuiLocalization
 import ui.lib.MigFontLayout
 import ui.lib.calculateFontSize
+import ui.table.panels.TablePanelAndVisualPanel
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.DefaultCellEditor
-import javax.swing.JPanel
 import javax.swing.JScrollPane
 import kotlin.concurrent.withLock
 
@@ -26,7 +25,23 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
         "",
         "[fill,grow,65%][fill,grow,35%]",
         "[fill,grow]"
-    )
+    ) {
+        fontSize = calculateFontSize(15)
+        addAsFontOnlyComponent(table)
+        addAsFontOnlyComponent(table.tableHeader)
+        addAsFontOnlyComponent(
+            (table.getDefaultEditor(
+                Any::
+                class.java
+            ) as DefaultCellEditor).component
+        )
+
+        addAsFontOnlyComponent(tablePanel)
+        addAsFontOnlyComponent(visualPanel)
+    }
+
+    private val scrollPane = JScrollPane(table)
+    private val tablePanelAndVisualPanel = TablePanelAndVisualPanel(tablePanel, visualPanel)
 
     private val modificationObserver = tableViewScope.launch {
         var lastModificationTime = collection.getLastModificationTime()
@@ -81,38 +96,25 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
         tableViewScope.launch(Dispatchers.Swing) {
             table.clearSelection()
             selectedRows.forEach { table.addRowSelectionInterval(it, it) }
+            table.hideCreatorIdColumn()
         }
     }
 
     init {
-        layout.fontSize = calculateFontSize(15)
         setLayout(layout)
 
-        layout.addAsFontOnlyComponent(table)
-        layout.addAsFontOnlyComponent(table.tableHeader)
-        layout.addAsFontOnlyComponent(
-            (table.getDefaultEditor(Any::class.java) as DefaultCellEditor).component
-        )
-        add(JScrollPane(table))
+        add(scrollPane)
+        add(tablePanelAndVisualPanel)
 
-        val panel = JPanel()
-        panel.layout = MigLayout(
-            "",
-            "[fill,grow]",
-            "[fill,grow]"
-        )
-        panel.add(tablePanel, "wrap")
-        panel.add(visualPanel)
-        add(panel)
-        layout.addAsFontOnlyComponent(tablePanel)
-        layout.addAsFontOnlyComponent(visualPanel)
-
-        tablePanel.localize()
         modificationObserver.start()
         setSize(1600, 900)
         reload(true)
 
-        title =
-            "${Localization.get("ui.current_user")} $userLogin, ${Localization.get("ui.your_id_is")}: ${getUserId()}"
+        title = "${GuiLocalization.get("ui.current_user")} $userLogin, " +
+                "${GuiLocalization.get("ui.your_id_is")}: ${getUserId()}"
+
+        tableViewScope.launch {
+            GuiLocalization.setLanguage("en")
+        }
     }
 }

@@ -2,10 +2,8 @@ package ui.table.panels
 
 import application.exceptionToMessage
 import collection.*
-import lib.Localization
 import lib.valueOrNull
 import ui.lib.*
-import ui.table.BasicTablePage
 import ui.table.TablePageWithOrganizationPanels
 import javax.swing.JComboBox
 import javax.swing.JLabel
@@ -23,16 +21,19 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
         JLabel() to "ui.filter_column",
     )
 
-    private val layout = MigFontLayout("", "[fill,grow]", "[fill,grow]")
+    private val layout = MigFontLayout {
+        fontSize = calculateFontSize(15)
+    }
+
     private val columnComboBox = object : JComboBox<String>() {
         init {
-            for (column in BasicTablePage.columnNames) {
+            for (column in tablePage.columnNames) {
                 addItem(column)
             }
         }
     }
 
-    private val buttonPanel = ButtonPanel(this)
+    private val actionPanel = ActionPanel(this)
 
     val organizationPanel = OrganizationPanel(this)
 
@@ -54,22 +55,13 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
         }.isSuccess
     }
 
-    fun localize() {
-        labels.forEach { (label, key) ->
-            label.text = Localization.get(key)
-        }
-
-        buttonPanel.localize()
-        organizationPanel.localize()
-    }
-
     suspend fun setOrgName(organization: Organization, name: String): Boolean {
         return validateOrganizationName(this, name) &&
                 finishOrganizationModification(organization.copy(name = name))
     }
 
     suspend fun setCoordinateX(organization: Organization, x: String): Boolean {
-        val newX = x.toLongOrNull()
+        val newX = GuiLocalization.toLong(x)
 
         val copiedOrganization = organization.copy(
             coordinates = Coordinates(
@@ -88,7 +80,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
     }
 
     suspend fun setCoordinateY(organization: Organization, y: String): Boolean {
-        val newY = y.toLongOrNull()
+        val newY = GuiLocalization.toLong(y)
 
         val copiedOrganization = organization.copy(
             coordinates = Coordinates(
@@ -108,7 +100,11 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
 
     suspend fun setAnnualTurnover(organization: Organization, annualTurnover: String): Boolean {
         return validateOrganizationAnnualTurnover(this, annualTurnover) &&
-                finishOrganizationModification(organization.copy(annualTurnover = annualTurnover.toDoubleOrNull()))
+                finishOrganizationModification(
+                    organization.copy(
+                        annualTurnover = GuiLocalization.toDouble(annualTurnover)
+                    )
+                )
     }
 
     suspend fun setFullName(organization: Organization, fullName: String): Boolean {
@@ -117,7 +113,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
     }
 
     suspend fun setEmployeesCount(organization: Organization, employeesCount: String): Boolean {
-        val newEmployeesCount = employeesCount.toIntOrNull()
+        val newEmployeesCount = GuiLocalization.toInt(employeesCount)
 
         return validateOrganizationEmployeesCount(this, employeesCount) &&
                 finishOrganizationModification(organization.copy(employeesCount = newEmployeesCount))
@@ -146,15 +142,21 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
                 finishOrganizationModification(copiedOrganization)
     }
 
-    suspend fun setPostalAddressTownLocation(organization: Organization, x: String?, y: String?, z: String?): Boolean {
-        val newX = x?.toDoubleOrNull()
-        val newY = y?.toFloatOrNull()
-        val newZ = z?.toLongOrNull()
+    suspend fun setPostalAddressTownLocation(
+        organization: Organization,
+        x: String?,
+        y: String?,
+        z: String?,
+        townName: String?
+    ): Boolean {
+        val newX = GuiLocalization.toDouble(x)
+        val newY = GuiLocalization.toFloat(y)
+        val newZ = GuiLocalization.toLong(z)
 
         val copiedOrganization = organization.copy(
             postalAddress = Address(
                 null,
-                Location(newX, newY, newZ, null)
+                Location(newX, newY, newZ, townName)
             )
         )
 
@@ -171,7 +173,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
     }
 
     suspend fun setPostalAddressTownX(organization: Organization, x: String): Boolean {
-        val newX = x.toDoubleOrNull()
+        val newX = GuiLocalization.toDouble(x)
 
         val copiedOrganization = organization.copy(
             postalAddress = Address(
@@ -191,7 +193,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
     }
 
     suspend fun setPostalAddressTownY(organization: Organization, y: String): Boolean {
-        val newY = y.toFloatOrNull()
+        val newY = GuiLocalization.toFloat(y)
 
         val copiedOrganization = organization.copy(
             postalAddress = Address(
@@ -211,7 +213,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
     }
 
     suspend fun setPostalAddressTownZ(organization: Organization, z: String): Boolean {
-        val newZ = z.toLongOrNull()
+        val newZ = GuiLocalization.toLong(z)
 
         val copiedOrganization = organization.copy(
             postalAddress = Address(
@@ -230,7 +232,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
                 finishOrganizationModification(copiedOrganization)
     }
 
-    suspend fun setPostalAddressTownName(organization: Organization, name: String): Boolean {
+    suspend fun setPostalAddressTownName(organization: Organization, name: String?): Boolean {
         val copiedOrganization = organization.copy(
             postalAddress = Address(
                 null,
@@ -249,13 +251,16 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
 
     init {
         setLayout(layout)
-        layout.fontSize = calculateFontSize(15)
 
-        add(buttonPanel, "span 2,wrap")
+        add(actionPanel, "span 2,wrap")
         add(labels[0].first)
         add(textFilter, "wrap")
         add(labels[1].first)
         add(columnComboBox, "wrap")
         organizationPanel.init()
+
+        labels.forEach { (label, key) ->
+            GuiLocalization.addElement(key, label)
+        }
     }
 }

@@ -1,0 +1,74 @@
+package ui.table.panels
+
+import ui.lib.*
+import javax.swing.JPanel
+
+class ActionPanel(tablePanel: TablePanel) : JPanel() {
+    private val layout = MigFontLayout {
+        fontSize = calculateFontSize(15)
+    }
+
+    private val tablePage = tablePanel.tablePage
+    private val unselectOrganizationButton = buttonClickAdapter { tablePage.unselectOrganization() }
+    private val addOrganizationButton = buttonClickAdapter {
+        tablePage.addOrganization()
+    }
+
+    private val addOrganizationIfMaxButton = buttonClickAdapter {
+        tablePage.addOrganizationIfMax()
+    }
+
+    private val clearOrganizationsButton = buttonDoubleClickAdapter { mouseEvent ->
+        if (mouseEvent.clickCount == 2) {
+            tablePage.clearOrganizations()
+        }
+    }
+
+    private val clearOrganizationAddressButton = buttonClickAdapter {
+        tablePage.clearOrganizationAddress()
+    }
+
+    private val removeAllByPostalAddressButton = buttonClickAdapter {
+        tablePage.removeAllByPostalAddress()
+    }
+
+    init {
+        setLayout(layout)
+        add(addOrganizationButton)
+        add(addOrganizationIfMaxButton)
+        add(unselectOrganizationButton, "wrap")
+        add(clearOrganizationAddressButton)
+        add(removeAllByPostalAddressButton)
+        add(clearOrganizationsButton)
+
+        GuiLocalization.addElement(
+            "ui.add_organization",
+            addOrganizationButton
+        )
+
+        GuiLocalization.addElement(
+            "ui.add_organization_if_max",
+            addOrganizationIfMaxButton
+        )
+
+        GuiLocalization.addElement(
+            "ui.unselect_organization",
+            unselectOrganizationButton
+        )
+
+        GuiLocalization.addElement(
+            "ui.clear_organizations",
+            clearOrganizationsButton
+        )
+
+        GuiLocalization.addElement(
+            "ui.clear_address",
+            clearOrganizationAddressButton
+        )
+
+        GuiLocalization.addElement(
+            "ui.remove_all_by_address",
+            removeAllByPostalAddressButton
+        )
+    }
+}

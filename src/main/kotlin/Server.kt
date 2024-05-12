@@ -1,5 +1,5 @@
-import lib.Localization
 import database.Database
+import lib.CliLocalization
 import server.CollectionCommandsReceiver
 
 object Server {
@@ -11,7 +11,7 @@ object Server {
         val serverPassword = System.getenv("SERVER_PASSWORD") ?: null
         val database = Database()
 
-        Localization.loadBundle("localization/localization", "en")
+        CliLocalization.setLanguage("en")
         database.connect(serverURL, serverLogin, serverPassword)
 
         CollectionCommandsReceiver(

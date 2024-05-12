@@ -3,6 +3,7 @@ package ui.table
 import collection.CollectionInterface
 import collection.Organization
 import ui.Visualization
+import ui.lib.GuiLocalization
 import ui.lib.Table
 import ui.table.panels.TablePanel
 
@@ -12,18 +13,18 @@ abstract class TablePageWithOrganizationPanels(collection: CollectionInterface) 
     protected val visualPanel by lazy { Visualization(this) }
 
     val columnValuesSetters = mapOf(
-        1 to tablePanel::setOrgName,
-        2 to tablePanel::setCoordinateX,
-        3 to tablePanel::setCoordinateY,
-        5 to tablePanel::setAnnualTurnover,
-        6 to tablePanel::setFullName,
-        7 to tablePanel::setEmployeesCount,
-        8 to tablePanel::setType,
-        9 to tablePanel::setPostalAddressZipCode,
-        10 to tablePanel::setPostalAddressTownX,
-        11 to tablePanel::setPostalAddressTownY,
-        12 to tablePanel::setPostalAddressTownZ,
-        13 to tablePanel::setPostalAddressTownName
+        Table.NAME_COLUMN to tablePanel::setOrgName,
+        Table.COORDINATE_X_COLUMN to tablePanel::setCoordinateX,
+        Table.COORDINATE_Y_COLUMN to tablePanel::setCoordinateY,
+        Table.ANNUAL_TURNOVER_COLUMN to tablePanel::setAnnualTurnover,
+        Table.FULL_NAME_COLUMN to tablePanel::setFullName,
+        Table.EMPLOYEES_COUNT_COLUMN to tablePanel::setEmployeesCount,
+        Table.TYPE_COLUMN to tablePanel::setType,
+        Table.ZIP_CODE_COLUMN to tablePanel::setPostalAddressZipCode,
+        Table.LOCATION_X_COLUMN to tablePanel::setPostalAddressTownX,
+        Table.LOCATION_Y_COLUMN to tablePanel::setPostalAddressTownY,
+        Table.LOCATION_Z_COLUMN to tablePanel::setPostalAddressTownZ,
+        Table.LOCATION_NAME_COLUMN to tablePanel::setPostalAddressTownName
     )
 
     fun filterChanged() = executeCatching {
@@ -39,11 +40,12 @@ abstract class TablePageWithOrganizationPanels(collection: CollectionInterface) 
     fun getOrganizationById(id: Int) = organizationStorage.getOrganizationById(id)
 
     fun getOrganizationByRow(row: Int) = organizationStorage.getOrganizationById(
-        organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row][Table.ORGANIZATION_ID_COLUMN]?.toIntOrNull()
-            ?: -1
+        GuiLocalization.toInt(
+            organizationStorage.getFilteredOrganizationAsArrayOfStrings()[row][Table.ID_COLUMN]
+        ) ?: -1
     )
 
-    fun modifyOrganization(organization: Organization) = executeCatching{
+    fun modifyOrganization(organization: Organization) = executeCatching {
         organizationStorage.collection.modifyOrganization(organization)
         requestReload()
     }
@@ -53,6 +55,13 @@ abstract class TablePageWithOrganizationPanels(collection: CollectionInterface) 
     fun clearOrganizations() = executeCatching {
         organizationStorage.collection.clear()
         requestReload()
+    }
+
+    fun removeAllByPostalAddress() = executeCatching {
+        organizationPanel.getOrganizationAddress()?.let {
+            organizationStorage.collection.removeAllByPostalAddress(it)
+            requestReload()
+        }
     }
 
     fun addOrganization() = executeCatching {

@@ -2,6 +2,7 @@ package ui.lib
 
 import collection.CollectionInterface
 import collection.Organization
+import kotlinx.datetime.toJavaLocalDate
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -63,21 +64,22 @@ class OrganizationStorage(
 
         return getSortedOrganizationsList().map {
             arrayOf(
-                it.id.toString(),
+                GuiLocalization.format(it.id),
                 it.name,
-                it.coordinates?.x.toString(),
-                it.coordinates?.y.toString(),
-                it.creationDate.toString(),
-                it.annualTurnover.toString(),
+                GuiLocalization.format(it.coordinates?.x),
+                GuiLocalization.format(it.coordinates?.y),
+                GuiLocalization.format(it.creationDate?.toJavaLocalDate()),
+                GuiLocalization.format(it.annualTurnover),
                 it.fullName,
-                it.employeesCount.toString(),
+                GuiLocalization.format(it.employeesCount),
                 it.type.toString(),
                 it.postalAddress?.zipCode ?: "null",
-                it.postalAddress?.town?.x.toString(),
-                it.postalAddress?.town?.y.toString(),
-                it.postalAddress?.town?.z.toString(),
+                GuiLocalization.format(it.postalAddress?.town?.x),
+                GuiLocalization.format(it.postalAddress?.town?.y),
+                GuiLocalization.format(it.postalAddress?.town?.z),
                 it.postalAddress?.town?.name,
-                it.creatorId.toString()
+                it.creatorName,
+                GuiLocalization.format(it.creatorId)
             )
         }.toList()
     }
