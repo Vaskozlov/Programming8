@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
+import lib.CliLocalization
 import lib.Localization
 import lib.LocalizedClass
 import java.awt.Component
@@ -42,6 +43,7 @@ object GuiLocalization : LocalizedClass {
     }
 
     suspend fun setLanguage(language: String) {
+        CliLocalization.setLanguage(language)
         localization = Localization(LOCALE_FILENAME, language)
         numberFormat = NumberFormat.getInstance(localization.locale)
         updateUiElements()
