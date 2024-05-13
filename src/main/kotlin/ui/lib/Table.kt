@@ -78,7 +78,7 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
             return
         }
 
-        //columnModel.removeColumn(columnModel.getColumn(CREATOR_ID_COLUMN))
+        columnModel.removeColumn(columnModel.getColumn(CREATOR_ID_COLUMN))
     }
 
     init {
