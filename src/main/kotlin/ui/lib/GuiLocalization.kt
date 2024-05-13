@@ -1,5 +1,6 @@
 package ui.lib
 
+import collection.OrganizationType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,8 +26,36 @@ object GuiLocalization : LocalizedClass {
     var localeName = "en"
         private set
 
+    fun format(type: OrganizationType?): String {
+        if (type == null) {
+            return get("ui.type.null")
+        }
+
+        return when (type) {
+            OrganizationType.COMMERCIAL -> get("ui.type.commercial")
+            OrganizationType.PUBLIC -> get("ui.type.public")
+            OrganizationType.PRIVATE_LIMITED_COMPANY -> get("ui.type.private_limited_company")
+            OrganizationType.OPEN_JOINT_STOCK_COMPANY -> get("ui.type.open_joint_stock_company")
+        }
+    }
+
     override fun format(number: Number?) = localization.format(number)
     override fun format(date: java.time.LocalDate?) = localization.format(date)
+
+    fun parseOrganizationType(text: String?): OrganizationType? {
+        if (text == null) {
+            return null
+        }
+
+        return when (text) {
+            get("ui.type.commercial") -> OrganizationType.COMMERCIAL
+            get("ui.type.public") -> OrganizationType.PUBLIC
+            get("ui.type.private_limited_company") -> OrganizationType.PRIVATE_LIMITED_COMPANY
+            get("ui.type.open_joint_stock_company") -> OrganizationType.OPEN_JOINT_STOCK_COMPANY
+            else -> null
+        }
+    }
+
     override fun parse(text: String?) = localization.parse(text)
 
     fun addElement(key: String, component: Component) {
