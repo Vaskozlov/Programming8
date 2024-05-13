@@ -21,7 +21,7 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
     private val databaseCommunicationLockCondition = databaseCommunicationLock.newCondition()
 
     private val layout = MigFontLayout(
-        "",
+        "insets 0",
         "[fill,grow,65%][fill,grow,35%]",
         "[fill,grow]"
     ) {
@@ -88,13 +88,13 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
         tableModel.setDataVector(organizationStorage.getFilteredOrganizationAsArrayOfStrings(), columnNames)
         val sportColumn = table.columnModel.getColumn(8)
         sportColumn.cellEditor = DefaultCellEditor(tablePanel.organizationPanel.typeEditor)
-        tableModel.fireTableDataChanged()
         repaintVisualPanel()
 
         tableViewScope.launch(Dispatchers.Swing) {
             table.clearSelection()
             selectedRows.forEach { table.addRowSelectionInterval(it, it) }
             table.hideCreatorIdColumn()
+            tableModel.fireTableDataChanged()
         }
     }
 
@@ -112,7 +112,10 @@ class TablePage(collection: CollectionInterface, userLogin: String) :
                 "${GuiLocalization.get("ui.your_id_is")}: ${GuiLocalization.format(getUserId())}"
 
         tableViewScope.launch {
-            GuiLocalization.setLanguage("en")
+            delay(100)
+            GuiLocalization.updateUiElements()
+
+            GuiLocalization.addActionBefore { requestReload() }
         }
     }
 }

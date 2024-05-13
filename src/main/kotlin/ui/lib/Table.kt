@@ -74,7 +74,11 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
     }
 
     fun hideCreatorIdColumn() {
-        columnModel.removeColumn(columnModel.getColumn(CREATOR_ID_COLUMN))
+        if (columnModel.columnCount == CREATOR_ID_COLUMN) {
+            return
+        }
+
+        //columnModel.removeColumn(columnModel.getColumn(CREATOR_ID_COLUMN))
     }
 
     init {

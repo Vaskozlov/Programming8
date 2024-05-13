@@ -69,10 +69,11 @@ abstract class BasicTablePage : JFrame() {
             GuiLocalization.get("ui.table.header.location_name")
         columnNames[Table.CREATOR_NAME_COLUMN] = GuiLocalization.get("ui.table.header.user")
         columnNames[Table.CREATOR_ID_COLUMN] = GuiLocalization.get("ui.table.header.creator_id")
+        requestReload()
     }
 
     init {
         defaultCloseOperation = EXIT_ON_CLOSE
-        GuiLocalization.addAction { localizeTableHeader() }
+        GuiLocalization.addActionAfter { localizeTableHeader() }
     }
 }

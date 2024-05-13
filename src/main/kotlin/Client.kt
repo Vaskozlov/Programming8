@@ -1,6 +1,6 @@
 import application.Application
 import client.RemoteCollection
-import ui.LoginPage
+import ui.login.LoginPage
 import java.util.*
 import javax.swing.SwingUtilities
 

@@ -1,4 +1,4 @@
-package ui
+package ui.login
 
 import client.RemoteCollection
 import database.auth.AuthorizationInfo
@@ -11,6 +11,7 @@ import ui.lib.GuiLocalization
 import ui.lib.MigFontLayout
 import ui.lib.buttonClickAdapter
 import ui.lib.calculateFontSize
+import ui.panels.SelectLanguagePanel
 import ui.table.TablePage
 import java.util.concurrent.TimeoutException
 import javax.swing.JFrame
@@ -31,17 +32,17 @@ class LoginPage : JFrame() {
     private val passwordLabel = JLabel()
     private val welcomeLabel = JLabel()
 
+    private val selectLangaugePanel = SelectLanguagePanel(24, loginScope)
+
     private val addressEditor = JTextField(FIELDS_LENGTH)
     private val portEditor = JTextField(FIELDS_LENGTH)
     private val loginEditor = JTextField(FIELDS_LENGTH)
     private val passwordEditor = JTextField(FIELDS_LENGTH)
-    private val loginButton = buttonClickAdapter {
-        loginPressed()
-    }
+    private val loginButton = buttonClickAdapter { loginPressed() }
 
     private val layout = MigFontLayout(
         "",
-        "[fill,40%][fill,50%]",
+        "[fill,grow,40%][fill,grow,50%]",
         "[fill,grow]"
     ) {
         fontSize = calculateFontSize(24)
@@ -122,9 +123,9 @@ class LoginPage : JFrame() {
         defaultCloseOperation = EXIT_ON_CLOSE
         contentPane.layout = layout
 
-        add(welcomeLabel, "wrap,dock center")
+        add(welcomeLabel, "span 2,wrap")
 
-        add(addressLabel, "")
+        add(addressLabel)
         add(addressEditor, "wrap")
 
         add(portLabel)
@@ -136,9 +137,13 @@ class LoginPage : JFrame() {
         add(passwordLabel)
         add(passwordEditor, "wrap")
 
-        add(loginButton, "dock center")
+        add(selectLangaugePanel, "span 2,wrap")
 
-        GuiLocalization.addElement("ui.welcome", welcomeLabel)
+        add(loginButton)
+
+        GuiLocalization.addElement(
+            "ui.welcome", welcomeLabel
+        )
         GuiLocalization.addElement("ui.address", addressLabel)
         GuiLocalization.addElement("ui.port", portLabel)
         GuiLocalization.addElement("ui.login", loginLabel)
@@ -146,7 +151,7 @@ class LoginPage : JFrame() {
         GuiLocalization.addElement("ui.login_button", loginButton)
 
         loginScope.launch {
-            GuiLocalization.setLanguage("en")
+            GuiLocalization.updateUiElements()
         }
     }
 }

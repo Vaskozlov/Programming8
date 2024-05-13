@@ -4,20 +4,16 @@ import ui.lib.GuiLocalization
 import ui.lib.MigFontLayout
 import ui.lib.buttonClickAdapter
 import ui.lib.buttonDoubleClickAdapter
+import ui.panels.SelectLanguagePanel
 import javax.swing.JPanel
 
 class ActionPanel(tablePanel: TablePanel) : JPanel() {
-    private val layout = MigFontLayout()
+    private val layout = MigFontLayout("insets 0")
 
     private val tablePage = tablePanel.tablePage
     private val unselectOrganizationButton = buttonClickAdapter { tablePage.unselectOrganization() }
-    private val addOrganizationButton = buttonClickAdapter {
-        tablePage.addOrganization()
-    }
-
-    private val addOrganizationIfMaxButton = buttonClickAdapter {
-        tablePage.addOrganizationIfMax()
-    }
+    private val addOrganizationButton = buttonClickAdapter { tablePage.addOrganization() }
+    private val addOrganizationIfMaxButton = buttonClickAdapter { tablePage.addOrganizationIfMax() }
 
     private val clearOrganizationsButton = buttonDoubleClickAdapter { mouseEvent ->
         if (mouseEvent.clickCount == 2) {
@@ -25,16 +21,15 @@ class ActionPanel(tablePanel: TablePanel) : JPanel() {
         }
     }
 
-    private val clearOrganizationAddressButton = buttonClickAdapter {
-        tablePage.clearOrganizationAddress()
-    }
+    private val clearOrganizationAddressButton = buttonClickAdapter { tablePage.clearOrganizationAddress() }
+    private val removeAllByPostalAddressButton = buttonClickAdapter { tablePage.removeAllByPostalAddress() }
 
-    private val removeAllByPostalAddressButton = buttonClickAdapter {
-        tablePage.removeAllByPostalAddress()
-    }
+    private val selectLangaugePanel = SelectLanguagePanel(15, tablePanel.tablePage.tableViewScope)
 
     init {
         setLayout(layout)
+
+        add(selectLangaugePanel, "wrap")
         add(addOrganizationButton)
         add(addOrganizationIfMaxButton)
         add(unselectOrganizationButton, "wrap")

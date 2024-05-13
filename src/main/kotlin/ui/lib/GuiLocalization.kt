@@ -20,7 +20,10 @@ object GuiLocalization : LocalizedClass {
     private var localization = Localization(LOCALE_FILENAME)
     private val uiElements = mutableMapOf<String, Component>()
     private val actionsOnLanguageChange = mutableListOf<suspend () -> Unit>()
+    private val actionsAfterLanguageChange = mutableListOf<suspend () -> Unit>()
     private var numberFormat = NumberFormat.getInstance(localization.locale)
+    var localeName = "en"
+        private set
 
     override fun format(number: Number?) = localization.format(number)
     override fun format(date: java.time.LocalDate?) = localization.format(date)
@@ -30,8 +33,12 @@ object GuiLocalization : LocalizedClass {
         uiElements[key] = component
     }
 
-    fun addAction(action: suspend () -> Unit) {
+    fun addActionBefore(action: suspend () -> Unit) {
         actionsOnLanguageChange.add(action)
+    }
+
+    fun addActionAfter(action: suspend () -> Unit) {
+        actionsAfterLanguageChange.add(action)
     }
 
     fun clearElements() = uiElements.clear()
@@ -43,13 +50,14 @@ object GuiLocalization : LocalizedClass {
     }
 
     suspend fun setLanguage(language: String) {
+        localeName = language
         CliLocalization.setLanguage(language)
         localization = Localization(LOCALE_FILENAME, language)
         numberFormat = NumberFormat.getInstance(localization.locale)
         updateUiElements()
     }
 
-    private suspend fun updateUiElements() {
+    suspend fun updateUiElements() {
         localizationSupervisorScope.launch {
             actionsOnLanguageChange.forEach { it() }
         }
@@ -62,6 +70,8 @@ object GuiLocalization : LocalizedClass {
                     else -> throw IllegalArgumentException("Unsupported component type")
                 }
             }
+
+            actionsAfterLanguageChange.forEach { it() }
         }
     }
 }
