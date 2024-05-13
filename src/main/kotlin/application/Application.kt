@@ -204,7 +204,7 @@ class Application(
     }
 
     private fun localize() {
-        askUserForALanguage(bufferedReaderWithQueueOfStreams)
+        //askUserForALanguage(bufferedReaderWithQueueOfStreams)
         loadCommands()
     }
 

@@ -310,20 +310,24 @@ class LocalCollection(private val database: Database, private val authorizationM
         return lastUpdateTime
     }
 
-    private fun completeModification(organization: Organization, updatedOrganization: Organization) = lock.withLock {
-        if (!isModificationLegal(organization, updatedOrganization)) {
-            throw OrganizationAlreadyPresentedException()
+    private fun completeModification(organization: Organization, updatedOrganization: Organization): Unit =
+        lock.withLock {
+            if (!isModificationLegal(organization, updatedOrganization)) {
+                throw OrganizationAlreadyPresentedException()
+            }
+
+            updatedOrganization.id = organization.id
+            organizations[organizations.indexOf(organization)] = updatedOrganization
+            storedOrganizations[storedOrganizations.indexOf(organization.toPairOfFullNameAndType())] =
+                updatedOrganization.toPairOfFullNameAndType()
+
+            databaseToCollection.runCatching {
+                modifyOrganization(updatedOrganization)
+            }.onFailure {
+                updateModificationTime()
+                throw it
+            }
         }
-
-        updatedOrganization.id = organization.id
-        organizations[organizations.indexOf(organization)] = updatedOrganization
-        storedOrganizations[storedOrganizations.indexOf(organization.toPairOfFullNameAndType())] =
-            updatedOrganization.toPairOfFullNameAndType()
-
-        databaseToCollection.modifyOrganization(updatedOrganization)
-
-        updateModificationTime()
-    }
 
     private fun isModificationLegal(previous: Organization, newVersion: Organization): Boolean {
         if (previous.creatorId == newVersion.creatorId &&

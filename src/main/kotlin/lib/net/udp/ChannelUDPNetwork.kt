@@ -7,7 +7,7 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 
-open class ChannelUDPNetwork(private val delayMS: Long = 10, private val timeWaitingForPacket: Long = 1000) :
+open class ChannelUDPNetwork(private val delayMS: Long = 10, private val timeWaitingForPacket: Long = 100) :
     UDPNetwork() {
     private val channel = DatagramChannel.open()
 

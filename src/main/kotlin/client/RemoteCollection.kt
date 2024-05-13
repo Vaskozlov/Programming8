@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import lib.CircledStorage
 import lib.ExecutionStatus
 import lib.net.udp.ResultFrame
 import org.example.exceptions.UnauthorizedException
@@ -24,30 +25,32 @@ class RemoteCollection(
     companion object {
         private val nullJsonElement = Json.encodeToJsonElement(null as Int?)
     }
-
+    
     private val lock = ReentrantLock()
     private var userId: Int? = null
     private var commandSender: CommandSender? = null
-
+    private var localHistory = CircledStorage<String>(11)
+    
     constructor(address: String, port: Int)
             : this(InetSocketAddress(address, port))
-
+    
     override fun login(authorizationInfo: AuthorizationInfo) {
         commandSender = CommandSender(authorizationInfo, address)
     }
-
+    
     private fun sendCommandAndReceiveResult(
         command: DatabaseCommand,
         argument: JsonElement,
     ): Result<JsonElement> = lock.withLock {
         checkNotNull(commandSender) { "You must login before using the database" }
-
+        
         commandSender!!.sendCommand(command, argument)
         val json = commandSender!!.network.receiveStringInPackets()
         val frame = Json.decodeFromJsonElement<ResultFrame>(json.jsonNodeRoot)
         val code = frame.code
+        localHistory.add("$command: $argument")
         userId = frame.userId
-
+        
         return when (code) {
             NetworkCode.SUCCESS -> Result.success(frame.value)
             NetworkCode.NOT_SUPPOERTED_COMMAND -> Result.failure(CommandNotExistsException())
@@ -64,19 +67,19 @@ class RemoteCollection(
             NetworkCode.FAILURE -> Result.failure(Exception())
         }
     }
-
+    
     override fun getInfo(): String {
         val result = sendCommandAndReceiveResult(DatabaseCommand.INFO, nullJsonElement)
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
-
+    
     override fun getHistory(): String {
         val result = sendCommandAndReceiveResult(DatabaseCommand.HISTORY, nullJsonElement)
         result.onFailure { throw it }
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
-
+    
     override fun getSumOfAnnualTurnover(): Double {
         return sendCommandAndReceiveResult(DatabaseCommand.SUM_OF_ANNUAL_TURNOVER, nullJsonElement)
             .onFailure { throw it }
@@ -84,7 +87,7 @@ class RemoteCollection(
                 Json.decodeFromJsonElement<Double>(it.getOrNull()!!)
             }
     }
-
+    
     override fun maxByFullName(): Organization? {
         return sendCommandAndReceiveResult(
             DatabaseCommand.MAX_BY_FULL_NAME,
@@ -94,41 +97,41 @@ class RemoteCollection(
                 Json.decodeFromJsonElement<Organization>(it.getOrNull()!!)
             }
     }
-
+    
     override fun add(organization: Organization) {
         sendCommandAndReceiveResult(
             DatabaseCommand.ADD,
             Json.encodeToJsonElement(organization)
         ).onFailure { throw it }
     }
-
+    
     override fun addIfMax(newOrganization: Organization): ExecutionStatus =
         sendCommandAndReceiveResult(
             DatabaseCommand.ADD_IF_MAX,
             Json.encodeToJsonElement(newOrganization)
         ).let { ExecutionStatus.getByValue(it.isSuccess) }
-
-
+    
+    
     override fun modifyOrganization(updatedOrganization: Organization) {
         sendCommandAndReceiveResult(
             DatabaseCommand.UPDATE,
             Json.encodeToJsonElement(updatedOrganization)
         ).onFailure { throw it }
     }
-
+    
     override fun removeById(id: Int, creatorId: Int?): ExecutionStatus =
         sendCommandAndReceiveResult(
             DatabaseCommand.REMOVE_BY_ID,
             Json.encodeToJsonElement(id)
         ).let { ExecutionStatus.getByValue(it.isSuccess) }
-
+    
     override fun removeAllByPostalAddress(address: Address?, creatorId: Int?) {
         sendCommandAndReceiveResult(
             DatabaseCommand.REMOVE_ALL_BY_POSTAL_ADDRESS,
             Json.encodeToJsonElement(address)
         ).onFailure { throw it }
     }
-
+    
     override fun removeHead(creatorId: Int?): Organization? =
         sendCommandAndReceiveResult(
             DatabaseCommand.REMOVE_HEAD,
@@ -137,7 +140,7 @@ class RemoteCollection(
             ?.let {
                 Json.decodeFromJsonElement<Organization>(it.getOrNull()!!)
             }
-
+    
     override fun clear(creatorId: Int?): Result<Unit> {
         sendCommandAndReceiveResult(
             DatabaseCommand.CLEAR,
@@ -145,7 +148,7 @@ class RemoteCollection(
         ).onFailure { throw it }
         return Result.success(Unit)
     }
-
+    
     private fun sendShowCommand(): String =
         sendCommandAndReceiveResult(
             DatabaseCommand.SHOW,
@@ -154,22 +157,22 @@ class RemoteCollection(
             .let {
                 Json.decodeFromJsonElement<String>(it.getOrNull()!!)
             }
-
+    
     override fun toJson() = sendShowCommand()
-
+    
     override fun getCollection(): List<Organization> =
         sendShowCommand().let {
             Json.decodeFromString(it)
         }
-
+    
     override fun getLastModificationTime(): LocalDateTime {
         val result = sendCommandAndReceiveResult(
             DatabaseCommand.UPDATE_TIME,
             nullJsonElement
         ).onFailure { throw it }
-
+        
         return Json.decodeFromJsonElement(result.getOrNull()!!)
     }
-
+    
     override fun getCreatorId(): Int? = userId
 }

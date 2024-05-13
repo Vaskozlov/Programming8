@@ -126,26 +126,31 @@ COMMIT;
         val location = organization.postalAddress?.town
         val coordinates = organization.coordinates
 
-        database.executeUpdate(
-            MODIFY_ORGANIZATION, listOf(
-                organization.id,
-                coordinates?.x,
-                coordinates?.y,
-                organization.id,
-                location?.x,
-                location?.y,
-                location?.z,
-                location?.name,
-                organization.id,
-                organization.postalAddress?.zipCode,
-                organization.id,
-                organization.name,
-                organization.annualTurnover,
-                organization.fullName,
-                organization.employeesCount,
-                organizationType
+        runCatching {
+            database.executeUpdate(
+                MODIFY_ORGANIZATION, listOf(
+                    organization.id,
+                    coordinates?.x,
+                    coordinates?.y,
+                    organization.id,
+                    location?.x,
+                    location?.y,
+                    location?.z,
+                    location?.name,
+                    organization.id,
+                    organization.postalAddress?.zipCode,
+                    organization.id,
+                    organization.name,
+                    organization.annualTurnover,
+                    organization.fullName,
+                    organization.employeesCount,
+                    organizationType
+                )
             )
-        )
+        }.onFailure {
+            database.executeUpdate("ROLLBACK;")
+            throw IllegalArgumentsForOrganizationException()
+        }
     }
 
     fun removeOrganizationByID(id: Int) {

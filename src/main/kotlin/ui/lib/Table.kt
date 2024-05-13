@@ -54,10 +54,16 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
         val id = tablePage.getIdByRow(row)
 
         tablePage.tableViewScope.launch {
+            val argument = if (column == TYPE_COLUMN) {
+                GuiLocalization.parseOrganizationType(aValue.toString()).toString()
+            } else {
+                aValue.toString()
+            }
+
             val result =
                 tablePage.columnValuesSetters[column]?.invoke(
                     tablePage.getOrganizationById(id)!!,
-                    aValue.toString()
+                    argument
                 ) as Boolean
 
             if (result) {
@@ -74,11 +80,18 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
     }
 
     fun hideCreatorIdColumn() {
-        if (columnModel.columnCount == CREATOR_ID_COLUMN) {
+        if (columnModel.columnCount <= CREATOR_ID_COLUMN) {
             return
         }
 
         columnModel.removeColumn(columnModel.getColumn(CREATOR_ID_COLUMN))
+    }
+
+    fun updateTable() {
+        val sportColumn = columnModel.getColumn(TYPE_COLUMN)
+        sportColumn.cellEditor = DefaultCellEditor(tablePage.tablePanel.organizationPanel.typeCellEditor)
+
+        setSelectionMode(SINGLE_SELECTION)
     }
 
     init {
@@ -114,9 +127,6 @@ class Table(model: TableModel, private val tablePage: TablePageWithOrganizationP
         tableHeader.table.rowHeight = calculateFontSize(30)
         tableHeader.reorderingAllowed = false
 
-        val sportColumn = columnModel.getColumn(TYPE_COLUMN)
-        sportColumn.cellEditor = DefaultCellEditor(tablePage.tablePanel.organizationPanel.typeEditor)
-
-        setSelectionMode(SINGLE_SELECTION)
+        updateTable()
     }
 }

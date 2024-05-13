@@ -32,6 +32,7 @@ class OrganizationPanel(internal val parent: TablePanel) {
 
     private val tableViewScope = parent.tablePage.tableViewScope
     val typeEditor = TypeEditor(this)
+    val typeCellEditor = TypeEditor(this)
 
     val uiElements = mapOf<String, Pair<JLabel, JComponent>>(
         UI_ID to (JLabel() to object : JTextField() {

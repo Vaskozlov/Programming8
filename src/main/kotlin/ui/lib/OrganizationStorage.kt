@@ -72,7 +72,7 @@ class OrganizationStorage(
                 GuiLocalization.format(it.annualTurnover),
                 it.fullName,
                 GuiLocalization.format(it.employeesCount),
-                it.type.toString(),
+                GuiLocalization.format(it.type),
                 it.postalAddress?.zipCode ?: "null",
                 GuiLocalization.format(it.postalAddress?.town?.x),
                 GuiLocalization.format(it.postalAddress?.town?.y),

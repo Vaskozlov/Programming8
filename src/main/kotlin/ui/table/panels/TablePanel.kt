@@ -25,7 +25,7 @@ class TablePanel(internal val tablePage: TablePageWithOrganizationPanels) : JPan
 
     private val columnComboBox = object : JComboBox<String>() {
         init {
-            GuiLocalization.addActionAfter {
+            GuiLocalization.addActionAfterLanguageUpdate {
                 val selected = selectedIndex
                 removeAllItems()
 

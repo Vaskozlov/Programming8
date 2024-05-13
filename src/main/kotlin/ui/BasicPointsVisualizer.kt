@@ -7,7 +7,7 @@ import java.awt.event.MouseEvent
 
 abstract class BasicPointsVisualizer : Canvas() {
     companion object {
-        private const val SCALE_FACTOR_TO_FIT_ORGANIZATION_WITH_LARGE_COORDINATES = 0.95
+        private const val SCALE_FACTOR_TO_FIT_ORGANIZATION_WITH_LARGE_COORDINATES = 0.90
         private const val DEFAULT_LEFT_BORDER = 0
         private const val DEFAULT_RIGHT_BORDER = 100
         private const val DEFAULT_TOP_BORDER = 0
@@ -55,7 +55,7 @@ abstract class BasicPointsVisualizer : Canvas() {
 
     private fun drawPoint(g: Graphics, point: PointWithInfo) {
         val x = (point.x - x.x) * xScale
-        val y = (point.y - y.x) * yScale
+        val y = height - (point.y - y.x) * yScale
         val virtualPoint = PointWithInfo(
             x.toInt(),
             y.toInt(),

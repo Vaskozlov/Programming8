@@ -3,7 +3,7 @@ package ui.lib
 import java.awt.Dimension
 import java.awt.Toolkit
 
-internal const val DEFAULT_SCREEN_WIDTH = 1920
+const val DEFAULT_SCREEN_WIDTH = 1920
 
 fun calculateFontSize(defaultFontSize: Int): Int {
     val screenSize: Dimension = Toolkit.getDefaultToolkit().screenSize

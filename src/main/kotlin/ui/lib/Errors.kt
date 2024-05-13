@@ -11,6 +11,7 @@ import java.awt.Color
 import java.awt.Component
 import javax.swing.JOptionPane
 import javax.swing.JTextField
+import kotlin.math.absoluteValue
 
 suspend fun setColorToTablePanelLabel(parentComponent: TablePanel, keys: List<String>, color: Color) =
     withContext(Dispatchers.Swing) {
@@ -39,78 +40,80 @@ internal fun isNullString(value: String?): Boolean {
 
 suspend fun validateOrganizationName(parentComponent: Component, name: String?): Boolean {
     if (isNullString(name)) {
-        showMessageDialog(parentComponent, GuiLocalization.get("ui.validate.invalid_name"))
+        showMessageDialog(parentComponent, GuiLocalization.currentLocale.uiValidateInvalidName())
         return false
     }
-
+    
     return true
 }
 
 suspend fun validateOrganizationCoordinateX(parentComponent: Component, x: String?): Boolean {
     val newX = GuiLocalization.toLong(x)
-
+    
     if (newX == null) {
-        showMessageDialog(parentComponent, GuiLocalization.get("ui.validate.invalid_coordinate_x"))
+        showMessageDialog(parentComponent, GuiLocalization.currentLocale.uiValidateInvalidCoordinateX())
         return false
     }
-
+    
     return true
 }
 
 suspend fun validateOrganizationCoordinateY(parentComponent: Component, y: String?): Boolean {
     val newY = GuiLocalization.toDouble(y)
-
-    if (newY == null) {
-        showMessageDialog(parentComponent, GuiLocalization.get("ui.validate.invalid_coordinate_y"))
+    
+    if (newY == null || newY.absoluteValue > 464) {
+        showMessageDialog(parentComponent, GuiLocalization.currentLocale.uiValidateInvalidCoordinateY())
         return false
     }
-
+    
     return true
 }
 
 suspend fun validateOrganizationAnnualTurnover(parentComponent: Component, turnover: String?): Boolean {
     val newTurnover = GuiLocalization.toDouble(turnover)
-
+    
     if (newTurnover == null || newTurnover < 0) {
-        showMessageDialog(parentComponent, GuiLocalization.get("ui.validate.invalid_annual_turnover"))
+        showMessageDialog(
+            parentComponent, GuiLocalization.currentLocale.uiValidateInvalidAnnualTurnover()
+        )
         return false
     }
-
+    
     return true
 }
 
 suspend fun validateOrganizationFullName(parentComponent: Component, fullName: String?): Boolean {
     if (fullName.isNullOrBlank()) {
-        showMessageDialog(parentComponent, GuiLocalization.get("ui.validate.invalid_full_name"))
+        showMessageDialog(parentComponent, GuiLocalization.currentLocale.uiValidateInvalidFullName())
         return false
     }
-
+    
     return true
 }
 
 suspend fun validateOrganizationEmployeesCount(parentComponent: Component, employeesCount: String?): Boolean {
     val newEmployeesCount = GuiLocalization.toInt(employeesCount)
-
+    
     if (newEmployeesCount != null && newEmployeesCount < 0) {
-        showMessageDialog(parentComponent, GuiLocalization.get("ui.validate.invalid_employees_count"))
+        showMessageDialog(parentComponent, GuiLocalization.currentLocale.uiValidateInvalidEmployeesCount())
         return false
     }
-
+    
     return true
 }
 
 suspend fun validateOrganizationZipCode(parentComponent: Component, zipCode: String?): Boolean {
     if (!isNullString(zipCode) && (zipCode!!.length < 3 || GuiLocalization.toLong(zipCode) == null)) {
-        showMessageDialog(parentComponent, GuiLocalization.get("ui.validate.invalid_zip_code"))
+        showMessageDialog(parentComponent, GuiLocalization.currentLocale.uiValidateInvalidZipCode())
         return false
     }
-
+    
     return true
 }
 
 suspend fun validateOrganizationLocationX(parentComponent: TablePanel, x: String?): Boolean {
     val newX = GuiLocalization.toDouble(x)
-
+    
     if (x != null && newX == null) {
         setColorToTablePanelLabel(
             parentComponent,
@@ -119,19 +122,19 @@ suspend fun validateOrganizationLocationX(parentComponent: TablePanel, x: String
         )
         return false
     }
-
+    
     setColorToTablePanelLabel(
         parentComponent,
         listOf(OrganizationPanel.UI_LOCATION_X),
         Color.WHITE
     )
-
+    
     return true
 }
 
 suspend fun validateOrganizationLocationY(parentComponent: TablePanel, y: String?): Boolean {
     val newY = GuiLocalization.parse(y)?.toFloat()
-
+    
     if (y != null && newY == null) {
         setColorToTablePanelLabel(
             parentComponent,
@@ -140,19 +143,19 @@ suspend fun validateOrganizationLocationY(parentComponent: TablePanel, y: String
         )
         return false
     }
-
+    
     setColorToTablePanelLabel(
         parentComponent,
         listOf(OrganizationPanel.UI_LOCATION_Y),
         Color.WHITE
     )
-
+    
     return true
 }
 
 suspend fun validateOrganizationLocationZ(parentComponent: TablePanel, z: String?): Boolean {
     val newZ = GuiLocalization.toLong(z)
-
+    
     if (z != null && newZ == null) {
         setColorToTablePanelLabel(
             parentComponent,
@@ -161,36 +164,36 @@ suspend fun validateOrganizationLocationZ(parentComponent: TablePanel, z: String
         )
         return false
     }
-
+    
     setColorToTablePanelLabel(
         parentComponent,
         listOf(OrganizationPanel.UI_LOCATION_Z),
         Color.WHITE
     )
-
+    
     return true
 }
 
 suspend fun validateLocationInOrganization(parentComponent: TablePanel, organization: Organization): Boolean {
     val location = organization.postalAddress?.town
-
+    
     if (location != null && !location.allNull()) {
         if (location.x == null) {
             setColorToTablePanelLabel(parentComponent, listOf(OrganizationPanel.UI_LOCATION_X), Color.RED)
             return false
         }
-
+        
         if (location.y == null) {
             setColorToTablePanelLabel(parentComponent, listOf(OrganizationPanel.UI_LOCATION_Y), Color.RED)
             return false
         }
-
+        
         if (location.z == null) {
             setColorToTablePanelLabel(parentComponent, listOf(OrganizationPanel.UI_LOCATION_Z), Color.RED)
             return false
         }
     }
-
+    
     return true
 }
 

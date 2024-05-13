@@ -2,11 +2,14 @@ package ui.lib
 
 import kotlinx.coroutines.launch
 import ui.table.panels.OrganizationPanel
+import java.awt.event.ItemEvent
 import javax.swing.JComboBox
 
 class TypeEditor(private val panel: OrganizationPanel) : JComboBox<String>() {
-    @Volatile
-    private var isUnderTextModification = false
+    companion object {
+        @Volatile
+        var isUnderTextModification = false
+    }
 
     private val tableViewScope = panel.parent.tablePage.tableViewScope
 
@@ -19,20 +22,31 @@ class TypeEditor(private val panel: OrganizationPanel) : JComboBox<String>() {
         isUnderTextModification = false
     }
 
+    private fun updateType(itemEvent: ItemEvent) = tableViewScope.launch {
+        val type = GuiLocalization.parseOrganizationType(itemEvent.item.toString())
+
+        panel.getOrganizationByIdInUI()?.let { org ->
+            panel.parent.setType(org, type.toString())
+        }
+    }
+
     init {
-        addItem("COMMERCIAL")
-        addItem("PUBLIC")
-        addItem("PRIVATE_LIMITED_COMPANY")
-        addItem("OPEN_JOINT_STOCK_COMPANY")
-        addItem("null")
+        GuiLocalization.addActionAfterLanguageUpdate {
+            val selected = selectedIndex
+            removeAllItems()
+
+            addItem(GuiLocalization.currentLocale.uiTypeNull())
+            addItem(GuiLocalization.currentLocale.uiTypeCommercial())
+            addItem(GuiLocalization.currentLocale.uiTypePublic())
+            addItem(GuiLocalization.currentLocale.uiTypePrivateLimitedCompany())
+            addItem(GuiLocalization.currentLocale.uiTypeOpenJointStockCompany())
+
+            selectedIndex = selected
+        }
 
         addItemListener {
             if (!isUnderTextModification) {
-                tableViewScope.launch {
-                    panel.getOrganizationByIdInUI()?.let { org ->
-                        panel.parent.setType(org, it.item.toString())
-                    }
-                }
+                updateType(it)
             }
         }
     }

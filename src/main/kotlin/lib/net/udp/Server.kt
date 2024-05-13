@@ -2,7 +2,6 @@ package lib.net.udp
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import lib.net.udp.slice.PacketSlicer
 import org.apache.logging.log4j.kotlin.Logging
 import java.util.concurrent.atomic.AtomicBoolean
@@ -31,10 +30,7 @@ abstract class Server protected constructor(port: Int) : Logging {
     private fun loopCycle() {
         try {
             val packet = network.receiveStringInPackets()
-
-            serverScope.launch {
-                handlePacket(packet.user, packet)
-            }
+            handlePacket(packet.user, packet)
         } catch (e: Exception) {
             logger.error("Error while receiving packet: $e")
         }
